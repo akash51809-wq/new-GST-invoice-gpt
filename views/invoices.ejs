@@ -1,0 +1,97 @@
+<%- include('partials/header') %>
+<div class="top">
+    <div>
+        <div class="title">Invoice Report</div>
+        <div class="sub">MongoDB index से तेज़ report</div>
+    </div>
+    <a class="btn" href="/reports/export.csv">Export CSV</a>
+</div>
+<div class="panel">
+    <form class="grid2" method="get">
+        <div class="form">
+            <label>Buy / Sell
+                <select name="type">
+                    <option value="ALL">All</option>
+                    <option value="BUY" <%=query.type==='BUY'?'selected':''%>>Buy</option>
+                    <option value="SELL" <%=query.type==='SELL'?'selected':''%>>Sell</option>
+                </select>
+            </label>
+            <label>Party
+                <select name="party">
+                    <option value="">All Parties</option>
+                    <% parties.forEach(p=>{ %>
+                        <option value="<%=p._id%>" <%=String(query.party||'')===String(p._id)?'selected':''%>><%=p.name%></option>
+                    <% }) %>
+                </select>
+            </label>
+        </div>
+        <div class="form">
+            <label>Search
+                <input name="search" value="<%=query.search||''%>" placeholder="Invoice No / Party">
+            </label>
+            <label>Month
+                <input name="month" value="<%=query.month||''%>" placeholder="April">
+            </label>
+        </div>
+        <div>
+            <button class="btn">Filter</button>
+        </div>
+    </form>
+</div>
+<div class="panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>S.No.</th>
+                <th>Date</th>
+                <th>Invoice No.</th>
+                <th>Party</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% invoices.forEach((x,i)=>{ %>
+                <tr>
+                    <td><%=i+1%></td>
+                    <td><%=x.invoiceDate?new Date(x.invoiceDate).toLocaleDateString('en-IN'):''%></td>
+                    <td><%=x.invoiceNumber||''%></td>
+                    <td><%=x.invoiceType==='BUY'?x.sellerName:x.buyerName%></td>
+                    <td><span class="badge <%=x.invoiceType==='BUY'?'buy':'sell'%>"><%=x.invoiceType%></span></td>
+                    <td><%=x.invoiceAmount||0%></td>
+                    <td>
+                        <a class="btn secondary" href="/invoice/<%=x._id%>/view">View</a> 
+                        <a class="btn secondary" href="/invoice/<%=x._id%>/download">Download</a> 
+                        <form style="display:inline" method="post" action="/invoice/<%=x._id%>/email">
+                            <button class="btn secondary">Email</button>
+                        </form>
+                        <button type="button" class="btn secondary" style="background-color: #dc3545; color: white;" onclick="confirmDelete('<%= x._id %>')">Delete</button>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+function confirmDelete(invoiceId) {
+    let pin = prompt("सुरक्षा के लिए PIN दर्ज करें (डिफ़ॉल्ट PIN: 1234):");
+    if (pin !== null && pin !== "") {
+        let form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/invoice/' + invoiceId + '/delete';
+
+        let input = document.createElement('input');
+        input.type = 'password';
+        input.name = 'pin';
+        input.value = pin;
+
+        form.appendChild(input);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+<%- include('partials/footer') %>

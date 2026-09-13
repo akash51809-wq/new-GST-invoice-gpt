@@ -1,0 +1,193 @@
+<%- include('partials/header') %>
+<div class="top">
+    <div class="title">Upload Invoices</div>
+</div>
+<div class="panel">
+    <form id="uploadForm">
+        <div class="form">
+            <label>Select PDF Invoices (Max 50)
+                <input type="file" name="invoices" multiple accept="application/pdf" required>
+            </label>
+        </div>
+        <div>
+            <button type="submit" class="btn" id="uploadBtn">Upload & Process</button>
+        </div>
+    </form>
+    <div id="status" style="margin-top: 15px;"></div>
+    <div id="resultsTable" style="margin-top: 15px; display:none;"></div>
+</div>
+
+<!-- Modal Popup for Missing Email -->
+<div id="emailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:25px; border-radius:8px; width:420px; max-width:90%; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+        <h3 style="margin-top:0; color:#d9534f;">⚠️ Party Email Missing</h3>
+        <p style="color:#555; font-size:14px;">यह SELL इनवॉइस पिछले महीने का है। ईमेल भेजने के लिए पार्टी का ईमेल ज़रूरी है।</p>
+        <hr style="border:none; border-top:1px solid #eee;">
+        <p>Party: <strong id="modalPartyName"></strong></p>
+        <p>Invoice No: <strong id="modalInvNum"></strong></p>
+        <p id="modalQueueInfo" style="color:#888; font-size:13px; background:#f0f0f0; padding:6px 10px; border-radius:4px;"></p>
+        <input type="hidden" id="modalPartyId">
+        <input type="hidden" id="modalInvoiceId">
+        <div class="form" style="margin-bottom:15px;">
+            <label>ईमेल दर्ज करें:
+                <input type="email" id="modalEmailInput" placeholder="party@example.com" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;">
+            </label>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn secondary" id="skipBtn" onclick="skipEmailModal()">Skip / Ignore</button>
+            <button type="button" class="btn" id="sendBtn" onclick="saveAndSendModalEmail()">Save & Send Mail</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let pendingQueue = [];
+let totalPendingCount = 0;
+let currentIndex = 0;
+// Remember emails user has entered per partyId (auto-fill for same party across invoices)
+let partyEmailCache = {};
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const statusDiv = document.getElementById('status');
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.innerText = 'Processing...';
+    statusDiv.innerHTML = '<span style="color:#2196F3;">⏳ Uploading and processing invoices... Please wait.</span>';
+    document.getElementById('resultsTable').style.display = 'none';
+
+    // Reset state
+    pendingQueue = [];
+    totalPendingCount = 0;
+    currentIndex = 0;
+    partyEmailCache = {};
+
+    try {
+        const res = await fetch('/api/invoices/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        console.log('Server response:', JSON.stringify(data));
+        if (res.ok) {
+            renderResults(data.results);
+            console.log('pendingEmails:', data.pendingEmails);
+            if (data.pendingEmails && data.pendingEmails.length > 0) {
+                pendingQueue = data.pendingEmails;
+                totalPendingCount = pendingQueue.length;
+                currentIndex = 0;
+                statusDiv.innerHTML = '<span style="color:#FF9800;">⚠️ ' + totalPendingCount + ' SELL इनवॉइस में पार्टी ईमेल नहीं मिला। कृपया popup में ईमेल दें या Skip करें।</span>';
+                showNextEmailModal();
+            } else {
+                statusDiv.innerHTML = '<span style="color:#4CAF50;">✅ Upload पूरा हो गया!</span>';
+            }
+        } else {
+            statusDiv.innerHTML = '<span style="color:#f44336;">❌ Error: ' + (data.error || 'Upload failed') + '</span>';
+        }
+    } catch (err) {
+        statusDiv.innerHTML = '<span style="color:#f44336;">❌ Network Error: ' + err.message + '</span>';
+    } finally {
+        uploadBtn.disabled = false;
+        uploadBtn.innerText = 'Upload & Process';
+    }
+});
+
+function renderResults(results) {
+    const container = document.getElementById('resultsTable');
+    let html = '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
+    html += '<tr style="background:#f5f5f5;"><th style="padding:8px; border:1px solid #ddd; text-align:left;">#</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">File</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Invoice No</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Type</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Status</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Email</th></tr>';
+    for (const r of results) {
+        let statusBadge = '';
+        if (r.status === 'completed') statusBadge = '<span style="color:#4CAF50;">✅ Done</span>';
+        else if (r.status === 'duplicate') statusBadge = '<span style="color:#FF9800;">⚠️ Duplicate</span>';
+        else statusBadge = '<span style="color:#f44336;">❌ ' + (r.error || 'Failed') + '</span>';
+
+        let emailBadge = '-';
+        if (r.invoiceType === 'SELL') {
+            if (r.autoEmailSent) emailBadge = '<span style="color:#4CAF50;">📧 Sent</span>';
+            else if (r.emailMissing) emailBadge = '<span style="color:#FF9800;">📧 Pending (no email)</span>';
+            else if (r.autoEmailError) emailBadge = '<span style="color:#f44336;">📧 Error</span>';
+            else emailBadge = '<span style="color:#888;">— (not prev month)</span>';
+        }
+
+        html += '<tr><td style="padding:8px; border:1px solid #ddd;">' + r.index + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.file || '') + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.invoiceNumber || '-') + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.invoiceType || '-') + '</td><td style="padding:8px; border:1px solid #ddd;">' + statusBadge + '</td><td style="padding:8px; border:1px solid #ddd;">' + emailBadge + '</td></tr>';
+    }
+    html += '</table>';
+    container.innerHTML = html;
+    container.style.display = 'block';
+}
+
+function showNextEmailModal() {
+    if (pendingQueue.length === 0) {
+        document.getElementById('emailModal').style.display = 'none';
+        document.getElementById('status').innerHTML = '<span style="color:#4CAF50;">✅ Upload और ईमेल प्रोसेसिंग पूरी हो गई!</span>';
+        return;
+    }
+    currentIndex++;
+    const current = pendingQueue[0];
+
+    document.getElementById('modalPartyName').innerText = current.partyName;
+    document.getElementById('modalInvNum').innerText = current.invoiceNumber;
+    document.getElementById('modalPartyId').value = current.partyId;
+    document.getElementById('modalInvoiceId').value = current.invoiceId;
+
+    // Auto-fill email if same party was already given email earlier
+    const cachedEmail = partyEmailCache[current.partyId] || '';
+    document.getElementById('modalEmailInput').value = cachedEmail;
+
+    document.getElementById('modalQueueInfo').innerText = '📋 Invoice ' + currentIndex + ' of ' + totalPendingCount + ' (email missing)';
+
+    // Reset button states
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('sendBtn').innerText = 'Save & Send Mail';
+    document.getElementById('skipBtn').disabled = false;
+
+    document.getElementById('emailModal').style.display = 'flex';
+}
+
+function skipEmailModal() {
+    pendingQueue.shift();
+    showNextEmailModal();
+}
+
+async function saveAndSendModalEmail() {
+    const partyId = document.getElementById('modalPartyId').value;
+    const invoiceId = document.getElementById('modalInvoiceId').value;
+    const email = document.getElementById('modalEmailInput').value.trim();
+
+    if (!email) {
+        alert('कृपया एक valid ईमेल डालें!');
+        return;
+    }
+
+    // Disable buttons while sending
+    const sendBtn = document.getElementById('sendBtn');
+    const skipBtn = document.getElementById('skipBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerText = 'Sending...';
+    skipBtn.disabled = true;
+
+    try {
+        const res = await fetch('/api/parties/save-email-and-send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ partyId, email, invoiceId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            // Cache this email for same party's other invoices
+            partyEmailCache[partyId] = email;
+            alert('✅ ' + data.message);
+        } else {
+            alert('❌ Error: ' + (data.error || 'Failed to send mail'));
+        }
+    } catch (err) {
+        alert('❌ Network error: ' + err.message);
+    }
+    pendingQueue.shift();
+    showNextEmailModal();
+}
+</script>
+
+<%- include('partials/footer') %>

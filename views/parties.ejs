@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+
+<div class="top">
+    <div>
+        <div class="title">Customer & Supplier Directory</div>
+        <div class="sub">Invoice upload के साथ parties automatic create होती हैं।</div>
+    </div>
+</div>
+
+<div class="panel">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Party</th>
+                <th>GSTIN</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% parties.forEach(p => { %>
+                <tr>
+                    <td><%= p.name %></td>
+                    <td><%= p.gstin || '' %></td>
+                    <td><%= p.email || '' %></td>
+                    <td><%= p.mobile || '' %></td>
+                    <td>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="openEditModal('<%= p._id %>', '<%= p.name %>', '<%= p.email || '' %>', '<%= p.mobile || '' %>')">
+                            Edit
+                        </button>
+                    </td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Edit Party Modal -->
+<div class="modal fade" id="editPartyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="editPartyForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Party Details: <span id="modalPartyName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="editEmail" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editMobile" class="form-label">Mobile Number</label>
+                        <input type="text" class="form-control" id="editMobile" name="mobile">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openEditModal(id, name, email, mobile) {
+    document.getElementById('modalPartyName').innerText = name;
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editMobile').value = mobile;
+    
+    const form = document.getElementById('editPartyForm');
+    form.action = '/parties/update/' + id;
+    
+    var myModalEl = document.getElementById('editPartyModal');
+    var myModal = bootstrap.Modal.getInstance(myModalEl) || new bootstrap.Modal(myModalEl);
+    myModal.show();
+}
+</script>
+
+<%- include('partials/footer') %>
