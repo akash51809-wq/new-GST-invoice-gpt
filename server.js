@@ -91,18 +91,6 @@ app.post('/logout', (req, res) => {
     res.redirect('/login');
   }
 });
-// Fallback GET support for logout links if needed
-app.get('/logout', (req, res) => {
-  if (req.session) {
-    req.session.destroy((err) => {
-      if (err) console.error('Session destroy error:', err);
-      res.clearCookie('connect.sid');
-      res.redirect('/login');
-    });
-  } else {
-    res.redirect('/login');
-  }
-});
 
 app.get('/', requireAuth, (req, res) => res.redirect('/dashboard'));
 app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
@@ -112,11 +100,7 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     Invoice.countDocuments({ invoiceType: 'SELL', status: 'completed' }),
     Party.countDocuments()
   ]);
-  const amounts = await Invoice.aggregate([
-    { $match: { status: 'completed' } },
-    { $group: { _id: '$invoiceType', total: { $sum: '$invoiceAmount' } } }
-  ]);
-  res.render('dashboard', { total, buy, sell, parties, amounts });
+  res.render('dashboard', { total, buy, sell, parties });
 }));
 
 app.get('/invoices/upload', requireAuth, (req, res) => res.render('upload', { message: null }));
@@ -325,6 +309,11 @@ app.get('/reports/export.csv', requireAuth, asyncRoute(async (req, res) => {
   res.setHeader('Content-Disposition', 'attachment; filename=invoices.csv');
   res.send(rows.map(r => r.map(csvEscape).join(',')).join('\n'));
 }));
+
+// --- Keep-Alive / Auto-Ping Route added here ---
+app.get('/ping', (req, res) => {
+  res.status(200).send('Pong! Server is active.');
+});
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 
