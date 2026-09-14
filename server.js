@@ -79,7 +79,6 @@ app.post('/login', asyncRoute(async (req, res) => {
   res.redirect('/dashboard');
 }));
 
-// Fixed logout route (handles missing/undefined session safely)
 app.post('/logout', (req, res) => {
   if (req.session) {
     req.session.destroy((err) => {
@@ -174,8 +173,15 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
   const q = {};
   if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
   if (req.query.party) q.partyId = req.query.party;
-  if (req.query.search) q.$or = [{ invoiceNumber: new RegExp(req.query.search, 'i') }, { buyerName: new RegExp(req.query.search, 'i') }, { sellerName: new RegExp(req.query.search, 'i') }];
+  if (req.query.financialYear) q.financialYear = req.query.financialYear;
   if (req.query.month) q.month = req.query.month;
+  if (req.query.search) {
+    q.$or = [
+      { invoiceNumber: new RegExp(req.query.search, 'i') }, 
+      { buyerName: new RegExp(req.query.search, 'i') }, 
+      { sellerName: new RegExp(req.query.search, 'i') }
+    ];
+  }
   const invoices = await Invoice.find(q).populate('partyId').sort({ invoiceDate: -1 }).limit(1000);
   const parties = await Party.find().sort({ name: 1 });
   res.render('invoices', { invoices, parties, query: req.query });
@@ -310,7 +316,6 @@ app.get('/reports/export.csv', requireAuth, asyncRoute(async (req, res) => {
   res.send(rows.map(r => r.map(csvEscape).join(',')).join('\n'));
 }));
 
-// --- Keep-Alive / Auto-Ping Route added here ---
 app.get('/ping', (req, res) => {
   res.status(200).send('Pong! Server is active.');
 });

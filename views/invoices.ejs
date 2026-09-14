@@ -6,38 +6,82 @@
     </div>
     <a class="btn" href="/reports/export.csv">Export CSV</a>
 </div>
+
+<style>
+  .compact-filter-form {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    align-items: center;
+    background: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+  }
+  .compact-filter-form select,
+  .compact-filter-form input {
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+  }
+  .compact-filter-form .filter-btn {
+    padding: 6px 16px;
+    background-color: #1d4ed8;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+  .compact-filter-form .filter-btn:hover {
+    background-color: #1e40af;
+  }
+</style>
+
 <div class="panel">
-    <form class="grid2" method="get">
-        <div class="form">
-            <label>Buy / Sell
-                <select name="type">
-                    <option value="ALL">All</option>
-                    <option value="BUY" <%=query.type==='BUY'?'selected':''%>>Buy</option>
-                    <option value="SELL" <%=query.type==='SELL'?'selected':''%>>Sell</option>
-                </select>
-            </label>
-            <label>Party
-                <select name="party">
-                    <option value="">All Parties</option>
-                    <% parties.forEach(p=>{ %>
-                        <option value="<%=p._id%>" <%=String(query.party||'')===String(p._id)?'selected':''%>><%=p.name%></option>
-                    <% }) %>
-                </select>
-            </label>
-        </div>
-        <div class="form">
-            <label>Search
-                <input name="search" value="<%=query.search||''%>" placeholder="Invoice No / Party">
-            </label>
-            <label>Month
-                <input name="month" value="<%=query.month||''%>" placeholder="April">
-            </label>
-        </div>
-        <div>
-            <button class="btn">Filter</button>
-        </div>
+    <form method="GET" action="/reports/invoices" class="compact-filter-form">
+        <!-- 1. Financial Year Filter -->
+        <select name="financialYear">
+            <option value="">All Financial Years</option>
+            <option value="2024-25" <%= query.financialYear === '2024-25' ? 'selected' : '' %>>2024-25</option>
+            <option value="2025-26" <%= query.financialYear === '2025-26' ? 'selected' : '' %>>2025-26</option>
+            <option value="2026-27" <%= query.financialYear === '2026-27' ? 'selected' : '' %>>2026-27</option>
+        </select>
+
+        <!-- 2. Month Filter -->
+        <select name="month">
+            <option value="">All Months</option>
+            <% ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].forEach(m => { %>
+                <option value="<%= m %>" <%= query.month === m ? 'selected' : '' %>><%= m %></option>
+            <% }) %>
+        </select>
+
+        <!-- 3. Buy / Sell Filter -->
+        <select name="type">
+            <option value="ALL" <%= (!query.type || query.type === 'ALL') ? 'selected' : '' %>>Buy / Sell (All)</option>
+            <option value="BUY" <%= query.type === 'BUY' ? 'selected' : '' %>>Buy</option>
+            <option value="SELL" <%= query.type === 'SELL' ? 'selected' : '' %>>Sell</option>
+        </select>
+
+        <!-- 4. Party Name Filter -->
+        <select name="party">
+            <option value="">All Parties</option>
+            <% parties.forEach(p => { %>
+                <option value="<%= p._id %>" <%= query.party === String(p._id) ? 'selected' : '' %>><%= p.name %></option>
+            <% }) %>
+        </select>
+
+        <!-- 5. Search Box -->
+        <input type="text" name="search" placeholder="Invoice No / Party..." value="<%= query.search || '' %>" style="flex-grow: 1;">
+
+        <!-- 6. Submit Button -->
+        <button type="submit" class="filter-btn">Filter</button>
     </form>
 </div>
+
 <div class="panel">
     <table class="table">
         <thead>
