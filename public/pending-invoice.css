@@ -1,0 +1,42 @@
+/* Pending Invoice uses the same visual system as Upload Invoice Report. */
+#pending-invoice.report-subpage{padding:0;margin:0}
+#pending-invoice .report-upload-shell{display:flex;flex-direction:column;gap:14px;margin-top:0}
+#pending-invoice .report-filter-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr auto auto;gap:10px;align-items:end;padding:14px;border:1px solid #E2E8F0;border-radius:20px;background:linear-gradient(145deg,#fff,#F7FAFC);box-shadow:10px 13px 26px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.95)}
+#pending-invoice .report-filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+#pending-invoice .report-filter-field label{font-size:10px;font-weight:900;color:#334155;letter-spacing:.3px}
+#pending-invoice .report-filter-field select,#pending-invoice .report-filter-field input{width:100%;height:40px;border:1px solid #CBD5E1;border-radius:12px;background:#fff;color:#0F172A;padding:0 11px;font-size:11px;font-weight:750;outline:none;box-shadow:inset 2px 2px 5px rgba(15,23,42,.035),3px 4px 8px rgba(15,23,42,.04);transition:.2s}
+#pending-invoice .report-filter-field select:focus,#pending-invoice .report-filter-field input:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.08),inset 2px 2px 5px rgba(15,23,42,.035)}
+#pending-invoice .report-search-btn,#pending-invoice .report-reset-btn{height:40px;border:0;border-radius:12px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:10px;font-weight:950;cursor:pointer;white-space:nowrap;transition:.22s;position:relative;overflow:hidden}
+#pending-invoice .report-search-btn{color:#fff;background:linear-gradient(145deg,#3B82F6,#1E3A8A);box-shadow:7px 8px 14px rgba(37,99,235,.22),inset 1px 1px 2px rgba(255,255,255,.35)}
+#pending-invoice .report-search-btn:hover{transform:translateY(-3px);box-shadow:10px 12px 19px rgba(37,99,235,.28)}
+#pending-invoice .report-reset-btn{color:#475569;background:linear-gradient(145deg,#fff,#E2E8F0);border:1px solid #CBD5E1;box-shadow:5px 6px 11px rgba(15,23,42,.09),inset 1px 1px 2px #fff}
+#pending-invoice .report-reset-btn:hover{transform:translateY(-2px);color:#1E3A8A;border-color:#93C5FD}
+#pending-invoice .report-filter-count{font-size:9px;font-weight:850;color:#64748B;padding:4px 2px 0;grid-column:1/-1}
+#pending-invoice .report-table-card{border:1px solid #E2E8F0;border-radius:20px;background:#fff;box-shadow:11px 14px 28px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.95);overflow:hidden}
+#pending-invoice .report-table-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #E2E8F0;background:linear-gradient(90deg,#F8FAFC,#fff)}
+#pending-invoice .report-table-head h3{margin:0;font-size:15px;font-weight:950;color:#0F172A;letter-spacing:.2px}
+#pending-invoice .report-table-head span{font-size:9px;font-weight:850;color:#64748B}
+#pending-invoice .report-table-wrap{overflow:auto}
+#pending-invoice table{width:100%;border-collapse:separate;border-spacing:0;min-width:1050px}
+#pending-invoice th{height:42px;padding:0 12px;text-align:left;background:#F1F5F9;color:#475569;font-size:9px;font-weight:950;letter-spacing:.45px;white-space:nowrap;border-bottom:1px solid #E2E8F0}
+#pending-invoice td{height:55px;padding:7px 12px;color:#334155;font-size:10px;font-weight:700;border-bottom:1px solid #EEF2F7;white-space:nowrap;background:#fff}
+#pending-invoice tbody tr{transition:.2s}
+#pending-invoice tbody tr:hover td{background:linear-gradient(90deg,#F8FBFF,#F8FFFC)}
+#pending-invoice tbody tr:last-child td{border-bottom:0}
+#pending-invoice .sl-cell{color:#94A3B8;font-weight:900;width:50px}
+#pending-invoice .party-cell strong{display:block;color:#0F172A;font-size:10px;font-weight:900}
+#pending-invoice .party-cell small{display:block;margin-top:3px;color:#94A3B8;font-size:8px;font-weight:700}
+#pending-invoice .type-pill{display:inline-flex;align-items:center;padding:6px 9px;border-radius:9px;font-size:8px;font-weight:950;box-shadow:inset 1px 1px 2px #fff,3px 4px 8px rgba(15,23,42,.06)}
+#pending-invoice .type-buy{background:#ECFDF5;color:#047857}
+#pending-invoice .type-sell{background:#EFF6FF;color:#1D4ED8}
+#pending-invoice .amount-cell{font-size:10px;font-weight:950;color:#0F172A}
+#pending-invoice .action-group{display:flex;align-items:center;gap:7px}
+#pending-invoice .report-action{width:32px;height:32px;border:1px solid transparent;border-radius:11px;display:grid;place-items:center;font-size:13px;cursor:pointer;transition:.22s;box-shadow:5px 6px 10px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.7)}
+#pending-invoice .report-action:hover{transform:translateY(-4px) rotate(-2deg)}
+#pending-invoice .action-view{background:linear-gradient(145deg,#60A5FA,#2563EB);color:#fff}
+#pending-invoice .action-download{background:linear-gradient(145deg,#2DD4BF,#0D9488);color:#fff}
+#pending-invoice .pending-status-pill{display:inline-flex;align-items:center;padding:6px 9px;border-radius:9px;font-size:8px;font-weight:950;background:#FFF7ED;color:#C2410C;box-shadow:inset 1px 1px 2px #fff,3px 4px 8px rgba(15,23,42,.06)}
+#pending-invoice .report-empty{padding:35px;text-align:center;color:#94A3B8;font-size:11px;font-weight:800}
+@media(max-width:1050px){#pending-invoice .report-filter-bar{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:760px){#pending-invoice .report-filter-bar{grid-template-columns:1fr 1fr;padding:11px}#pending-invoice .report-filter-count{grid-column:1/-1}}
+@media(max-width:500px){#pending-invoice .report-filter-bar{grid-template-columns:1fr}#pending-invoice .report-filter-count,#pending-invoice .report-search-btn,#pending-invoice .report-reset-btn{grid-column:1}#pending-invoice .report-action{width:30px;height:30px}}

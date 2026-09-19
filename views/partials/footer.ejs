@@ -14,6 +14,14 @@
       const dropdown = document.getElementById('profileDropdown');
       if (dropdown) dropdown.addEventListener('click', (e) => e.stopPropagation());
     }
+
+    function toggleSubmenu(id) {
+      const submenu = document.getElementById(id);
+      if (!submenu) return;
+      const willOpen = !submenu.classList.contains('open');
+      submenu.classList.toggle('open', willOpen);
+      document.querySelector('.nav-parent')?.classList.toggle('active', willOpen);
+    }
   </script>
 </body>
 </html>

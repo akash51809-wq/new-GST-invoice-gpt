@@ -1,0 +1,320 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/ai-report.css">
+<style>
+  .ai-demo-message {
+    display: flex;
+    margin-bottom: 16px;
+    animation: aiFadeIn 0.25s ease both;
+  }
+  .ai-demo-user {
+    justify-content: flex-end;
+  }
+  .ai-demo-ai {
+    justify-content: flex-start;
+  }
+  .ai-demo-bubble {
+    max-width: 82%;
+    padding: 14px 18px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+  }
+  .ai-demo-user .ai-demo-bubble {
+    background: linear-gradient(145deg, #2563EB, #1D4ED8);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .ai-demo-ai .ai-demo-bubble {
+    background: #fff;
+    border: 1px solid #DCE7F2;
+    color: #1E293B;
+    border-bottom-left-radius: 4px;
+  }
+  .ai-demo-ai .ai-demo-bubble b.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #2563EB;
+    font-size: 11px;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+  .ai-typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 14px;
+    background: #F1F5F9;
+    border-radius: 12px;
+    color: #64748B;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .ai-typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3B82F6;
+    animation: typingPulse 1s infinite alternate;
+  }
+  .ai-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingPulse { from { opacity: 0.3; transform: translateY(0); } to { opacity: 1; transform: translateY(-4px); } }
+  @keyframes aiFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+
+<div id="ai-report" class="report-subpage active" style="padding-top:4px;">
+  <div class="ai-report-module">
+    <!-- Top Bar -->
+    <div class="ai-report-topbar">
+      <div class="ai-report-title-wrap">
+        <div class="ai-report-logo">✦</div>
+        <div>
+          <h2>GST AI Assistant</h2>
+          <p>Ask questions about your GST invoices, monthly billing, sales and parties.</p>
+        </div>
+      </div>
+      <div class="ai-report-actions">
+        <div class="ai-data-status">
+          <span></span>
+          <div>
+            <b>Data Ready</b>
+            <small><%= totalInvoices %> GST records available</small>
+          </div>
+        </div>
+        <button type="button" class="ai-top-btn" id="ai-new-chat" title="New Chat">
+          <span>＋</span>
+          <small>New Chat</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- Workspace -->
+    <div class="ai-workspace">
+      <!-- Left Sidebar (Chat History / Quick Topics) -->
+      <aside class="ai-history">
+        <div class="ai-history-head">
+          <strong>Quick Topics</strong>
+          <button type="button" id="ai-clear-history" title="Clear Chat">↺</button>
+        </div>
+        <div class="ai-history-label">SUGGESTED</div>
+        <button type="button" class="ai-history-item active" data-q="GST invoices ka overview aur summary bataiye">
+          <span>✦</span>
+          <div><b>GST Summary</b><small>Overview of all records...</small></div>
+        </button>
+        <button type="button" class="ai-history-item" data-q="Kitne invoices pending hain aur kaunse?">
+          <span>₹</span>
+          <div><b>Pending Invoices</b><small>Pending email / status...</small></div>
+        </button>
+        <button type="button" class="ai-history-item" data-q="Highest billing wali top parties kaunsi hain?">
+          <span>♙</span>
+          <div><b>Top Parties</b><small>Highest billing analysis...</small></div>
+        </button>
+        <button type="button" class="ai-history-item" data-q="BUY aur SELL invoices ka total amount compare kariye">
+          <span>▤</span>
+          <div><b>Buy vs Sell</b><small>Purchase vs Sales total...</small></div>
+        </button>
+        <div class="ai-history-empty" style="margin-top:20px;">
+          Ask any question below. AI calculates answers live from your MongoDB invoices.
+        </div>
+      </aside>
+
+      <!-- Main Chat Area -->
+      <section class="ai-chat">
+        <div class="ai-chat-scroll" id="ai-chat-scroll">
+          <div class="ai-welcome" id="ai-welcome">
+            <div class="ai-welcome-orb">✦</div>
+            <h3>Hello! I am your GST AI Assistant.</h3>
+            <p>Ask any question about invoices, GST amounts, top buyer/seller parties, or financial year summaries.</p>
+
+            <div class="ai-quick-grid">
+              <button type="button" class="ai-quick" data-question="How many invoices are there this month?">
+                <span>▤</span>
+                <b>Total Invoices</b>
+                <small>This month's count</small>
+              </button>
+              <button type="button" class="ai-quick" data-question="What is the total GST invoice amount in the system?">
+                <span>₹</span>
+                <b>Total Amount</b>
+                <small>Buy & Sell total</small>
+              </button>
+              <button type="button" class="ai-quick" data-question="Which parties have the highest invoice amounts?">
+                <span>♙</span>
+                <b>Top Parties</b>
+                <small>Party-wise analysis</small>
+              </button>
+              <button type="button" class="ai-quick" data-question="Which invoices are pending email?">
+                <span>◷</span>
+                <b>Pending Invoices</b>
+                <small>Unsent mail check</small>
+              </button>
+              <button type="button" class="ai-quick" data-question="Give me a monthly breakdown of all invoices.">
+                <span>⌘</span>
+                <b>Monthly Summary</b>
+                <small>Month-wise report</small>
+              </button>
+              <button type="button" class="ai-quick" data-question="Buy aur Sell ka total difference kya hai?">
+                <span>%</span>
+                <b>Profit / Margin</b>
+                <small>Turnover snapshot</small>
+              </button>
+            </div>
+          </div>
+
+          <div id="ai-messages-container" style="display:none;padding:10px 0;"></div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="ai-input-area">
+          <div class="ai-input-box">
+            <textarea id="ai-question-input" rows="1" placeholder="Ask anything about your GST data..."></textarea>
+            <div class="ai-input-tools">
+              <div class="ai-input-hint"><span>↵</span> Press Enter to ask</div>
+              <button type="button" class="ai-send-btn" id="ai-send-btn" title="Send Question">
+                <span>➤</span>
+              </button>
+            </div>
+          </div>
+          <div class="ai-input-note">AI answers strictly grounded in your active GST database records.</div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const input = document.getElementById('ai-question-input');
+  const sendBtn = document.getElementById('ai-send-btn');
+  const scrollArea = document.getElementById('ai-chat-scroll');
+  const welcome = document.getElementById('ai-welcome');
+  const messagesContainer = document.getElementById('ai-messages-container');
+  const newChatBtn = document.getElementById('ai-new-chat');
+  const clearBtn = document.getElementById('ai-clear-history');
+
+  const escapeHtml = str => String(str).replace(/[&<>'"]/g, tag => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+  }[tag] || tag));
+
+  function formatAiAnswer(text) {
+    let formatted = escapeHtml(text);
+    // Format markdown bold
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Format bullet points
+    formatted = formatted.replace(/^\s*[\-\*]\s+(.*)$/gm, '<li style="margin:3px 0 3px 18px;">$1</li>');
+    formatted = formatted.replace(/\n/g, '<br>');
+    return formatted;
+  }
+
+  async function ask(questionText) {
+    const q = (questionText || input.value || '').trim();
+    if (!q) return;
+
+    // Show message container, hide welcome on first prompt
+    welcome.style.display = 'none';
+    messagesContainer.style.display = 'block';
+
+    // Append User Message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'ai-demo-message ai-demo-user';
+    userMsg.innerHTML = `<div class="ai-demo-bubble">${escapeHtml(q)}</div>`;
+    messagesContainer.appendChild(userMsg);
+
+    input.value = '';
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+
+    // Append Typing Indicator
+    const typingMsg = document.createElement('div');
+    typingMsg.className = 'ai-demo-message ai-demo-ai';
+    typingMsg.id = 'ai-typing-temp';
+    typingMsg.innerHTML = `
+      <div class="ai-demo-bubble" style="background:#F8FAFC;">
+        <div class="ai-typing-indicator">
+          <span class="ai-typing-dot"></span>
+          <span class="ai-typing-dot"></span>
+          <span class="ai-typing-dot"></span>
+          <span style="margin-left:6px;">Gemini AI analyzing GST database...</span>
+        </div>
+      </div>`;
+    messagesContainer.appendChild(typingMsg);
+    scrollArea.scrollTop = scrollArea.scrollHeight;
+
+    sendBtn.disabled = true;
+
+    try {
+      const res = await fetch('/api/reports/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q })
+      });
+
+      const data = await res.json();
+      document.getElementById('ai-typing-temp')?.remove();
+
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'ai-demo-message ai-demo-ai';
+      const bodyText = res.ok && data.answer ? formatAiAnswer(data.answer) : (data.error || 'Unable to analyze at this moment.');
+      aiMsg.innerHTML = `
+        <div class="ai-demo-bubble">
+          <b class="ai-badge">✦ GST AI ASSISTANT</b>
+          <div>${bodyText}</div>
+        </div>`;
+      messagesContainer.appendChild(aiMsg);
+    } catch (err) {
+      document.getElementById('ai-typing-temp')?.remove();
+      const errEl = document.createElement('div');
+      errEl.className = 'ai-demo-message ai-demo-ai';
+      errEl.innerHTML = `<div class="ai-demo-bubble" style="color:#DC2626;">Error: ${escapeHtml(err.message)}</div>`;
+      messagesContainer.appendChild(errEl);
+    } finally {
+      sendBtn.disabled = false;
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+      input.focus();
+    }
+  }
+
+  // Quick buttons
+  document.querySelectorAll('.ai-quick').forEach(b => {
+    b.addEventListener('click', () => ask(b.dataset.question));
+  });
+
+  // History buttons
+  document.querySelectorAll('.ai-history-item').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.ai-history-item').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      ask(b.dataset.q);
+    });
+  });
+
+  // Send click
+  sendBtn.addEventListener('click', () => ask());
+
+  // Input Enter key
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      ask();
+    }
+  });
+
+  // New Chat
+  newChatBtn.addEventListener('click', () => {
+    messagesContainer.innerHTML = '';
+    messagesContainer.style.display = 'none';
+    welcome.style.display = 'block';
+    input.value = '';
+    input.focus();
+  });
+
+  // Clear chat button
+  clearBtn.addEventListener('click', () => {
+    messagesContainer.innerHTML = '';
+    messagesContainer.style.display = 'none';
+    welcome.style.display = 'block';
+  });
+})();
+</script>
+
+<%- include('partials/footer') %>

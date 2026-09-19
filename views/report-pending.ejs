@@ -1,0 +1,171 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/pending-invoice.css">
+
+<div id="pending-invoice" class="report-subpage active" style="padding-top:4px;">
+  <div class="report-upload-shell">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <h2 style="margin:0;font-size:22px;color:#0F172A;letter-spacing:-.5px;">Pending Invoices</h2>
+        <p style="margin:3px 0 0;font-size:12px;color:#64748B;">Invoices where email notification is pending or awaiting verification</p>
+      </div>
+      <a class="primary light" href="/reports/export.csv?status=pending" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:11px;">
+        ⬇ Export CSV
+      </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <form method="GET" action="/reports/pending" class="report-filter-bar">
+      <div class="report-filter-field">
+        <label for="pendingFinYear">Fin Year</label>
+        <select id="pendingFinYear" name="financialYear">
+          <option value="">All Financial Years</option>
+          <option value="2024-25" <%= query.financialYear === '2024-25' ? 'selected' : '' %>>2024-25</option>
+          <option value="2025-26" <%= query.financialYear === '2025-26' ? 'selected' : '' %>>2025-26</option>
+          <option value="2026-27" <%= query.financialYear === '2026-27' ? 'selected' : '' %>>2026-27</option>
+        </select>
+      </div>
+
+      <div class="report-filter-field">
+        <label for="pendingMonth">Month</label>
+        <select id="pendingMonth" name="month">
+          <option value="">All Months</option>
+          <% ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'].forEach(m => { %>
+            <option value="<%= m %>" <%= query.month === m ? 'selected' : '' %>><%= m %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <div class="report-filter-field">
+        <label for="pendingType">Buy / Sell</label>
+        <select id="pendingType" name="type">
+          <option value="ALL" <%= (!query.type || query.type === 'ALL') ? 'selected' : '' %>>All</option>
+          <option value="BUY" <%= query.type === 'BUY' ? 'selected' : '' %>>Buy</option>
+          <option value="SELL" <%= query.type === 'SELL' ? 'selected' : '' %>>Sell</option>
+        </select>
+      </div>
+
+      <div class="report-filter-field">
+        <label for="pendingParty">Party Name / Inv No</label>
+        <input id="pendingParty" name="search" type="search" placeholder="Search party or invoice..." value="<%= query.search || '' %>" autocomplete="off">
+      </div>
+
+      <button id="pendingSearchBtn" class="report-search-btn" type="submit">
+        <span>⌕</span> Search
+      </button>
+
+      <a id="pendingResetBtn" class="report-reset-btn" href="/reports/pending" style="text-decoration:none;">
+        <span>↺</span> Reset
+      </a>
+
+      <div id="pendingFilterCount" class="report-filter-count">
+        Showing <%= invoices.length %> pending invoice record<%= invoices.length === 1 ? '' : 's' %>
+      </div>
+    </form>
+
+    <!-- Table Card -->
+    <div class="report-table-card">
+      <div class="report-table-head">
+        <h3>Pending Invoice List</h3>
+        <span id="pendingRowCount"><%= invoices.length %> record<%= invoices.length === 1 ? '' : 's' %></span>
+      </div>
+
+      <div class="report-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sl No</th>
+              <th>Fin Year</th>
+              <th>Month</th>
+              <th>Inv No</th>
+              <th>Party Name</th>
+              <th>Invoice Type</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th style="text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody">
+            <% if (!invoices || !invoices.length) { %>
+              <tr>
+                <td colspan="9">
+                  <div class="report-empty">
+                    No pending invoices found matching your filters. All invoice workflows are up to date!
+                  </div>
+                </td>
+              </tr>
+            <% } else { %>
+              <% invoices.forEach((r, i) => { %>
+                <tr>
+                  <td class="sl-cell"><%= String(i + 1).padStart(2, '0') %></td>
+                  <td><%= r.financialYear || '-' %></td>
+                  <td><%= r.month || '-' %></td>
+                  <td><strong><%= r.invoiceNumber || '-' %></strong></td>
+                  <td class="party-cell">
+                    <strong><%= r.invoiceType === 'BUY' ? r.sellerName : r.buyerName %></strong>
+                    <small><%= r.invoiceType === 'BUY' ? (r.sellerGSTIN || '-') : (r.buyerGSTIN || '-') %></small>
+                  </td>
+                  <td>
+                    <span class="type-pill <%= r.invoiceType === 'BUY' ? 'type-buy' : 'type-sell' %>">
+                      <%= r.invoiceType === 'BUY' ? '↙ BUY' : '↗ SELL' %>
+                    </span>
+                  </td>
+                  <td class="amount-cell">₹ <%= (r.invoiceAmount || 0).toLocaleString('en-IN') %></td>
+                  <td>
+                    <span class="pending-status-pill">
+                      <%= r.emailSent ? 'Pending Verification' : 'Email Pending' %>
+                    </span>
+                  </td>
+                  <td style="text-align:center;">
+                    <div class="action-group" style="justify-content:center;">
+                      <a class="report-action action-view" href="/invoice/<%= r._id %>/view" title="View Details" style="text-decoration:none;">◉</a>
+                      <a class="report-action action-download" href="/invoice/<%= r._id %>/download" title="Download PDF" style="text-decoration:none;">↓</a>
+                      <form method="POST" action="/invoice/<%= r._id %>/email" style="display:inline;margin:0;">
+                        <button class="report-action" type="submit" title="Send Email Now" style="background:linear-gradient(145deg,#8B5CF6,#6D28D9);color:#fff;">✉</button>
+                      </form>
+                      <button class="report-action action-delete" type="button" title="Delete Invoice" onclick="openDeletePinModal('<%= r._id %>', '<%= (r.invoiceNumber || '').replace(/'/g, '\\\'') %>')">⌫</button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modern Delete PIN Modal -->
+<div id="deletePinModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:24px;width:400px;max-width:92%;padding:28px;box-shadow:0 25px 50px rgba(15,23,42,0.25);text-align:center;">
+    <div style="width:52px;height:52px;border-radius:16px;background:#FEE2E2;color:#EF4444;font-size:24px;display:grid;place-items:center;margin:0 auto 14px;">⌫</div>
+    <h3 style="margin:0 0 6px;font-size:18px;color:#0F172A;">Delete Invoice?</h3>
+    <p style="font-size:12px;color:#64748B;margin:0 0 16px;">
+      Invoice: <strong id="deleteModalInvNum" style="color:#0F172A;"></strong><br>
+      सुरक्षा के लिए सिक्योरिटी PIN दर्ज करें:
+    </p>
+    <form id="deleteInvoiceForm" method="POST">
+      <input id="deletePinInput" name="pin" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN (Default: 1234)" required style="width:100%;height:44px;text-align:center;font-size:16px;letter-spacing:4px;border:1px solid #CBD5E1;border-radius:12px;outline:none;margin-bottom:18px;">
+      <div style="display:flex;justify-content:center;gap:10px;">
+        <button type="button" class="primary light" onclick="closeDeletePinModal()" style="font-size:11px;min-width:90px;">Cancel</button>
+        <button type="submit" style="background:#EF4444;color:#fff;border:0;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openDeletePinModal(invoiceId, invNum) {
+  document.getElementById('deleteModalInvNum').innerText = invNum || 'Invoice';
+  document.getElementById('deleteInvoiceForm').action = '/invoice/' + invoiceId + '/delete?redirect=/reports/pending';
+  document.getElementById('deletePinInput').value = '';
+  document.getElementById('deletePinModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('deletePinInput').focus(), 100);
+}
+
+function closeDeletePinModal() {
+  document.getElementById('deletePinModal').style.display = 'none';
+}
+</script>
+
+<%- include('partials/footer') %>

@@ -8,7 +8,7 @@ const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
 const { google } = require('googleapis');
-const { processInvoice } = require('./services/gemini-service');
+const { processInvoice, askGeminiReport } = require('./services/gemini-service');
 const { ensureFolderPath, uploadFile, downloadFile, deleteFile } = require('./services/drive-service');
 const { sendInvoiceEmail } = require('./services/gmail-service');
 const { Invoice, Party, Setting, User } = require('./models');
@@ -268,6 +268,8 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
   res.json({ results, pendingEmails });
 }));
 
+app.get('/reports', requireAuth, (req, res) => res.redirect('/reports/invoices'));
+
 app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
   const q = {};
   if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
@@ -285,13 +287,101 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
   const parties = await Party.find().sort({ name: 1 });
   res.render('invoices', {
     page: 'reports',
+    subpage: 'upload-invoice-report',
     pageTitle: 'Invoice Reports',
-    pageHeading: 'Invoice Reports',
+    pageHeading: 'Upload Invoice Report',
     companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
     invoices,
     parties,
     query: req.query
   });
+}));
+
+app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
+  const q = {
+    $or: [{ emailSent: false }, { status: 'pending' }]
+  };
+  if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
+  if (req.query.party) q.partyId = req.query.party;
+  if (req.query.financialYear) q.financialYear = req.query.financialYear;
+  if (req.query.month) q.month = req.query.month;
+  if (req.query.search) {
+    const s = req.query.search;
+    q.$and = [{
+      $or: [
+        { invoiceNumber: new RegExp(s, 'i') },
+        { buyerName: new RegExp(s, 'i') },
+        { sellerName: new RegExp(s, 'i') }
+      ]
+    }];
+  }
+  const invoices = await Invoice.find(q).populate('partyId').sort({ invoiceDate: -1 }).limit(1000);
+  const parties = await Party.find().sort({ name: 1 });
+  res.render('report-pending', {
+    page: 'reports',
+    subpage: 'pending-invoice',
+    pageTitle: 'Pending Invoices',
+    pageHeading: 'Pending Invoice',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    invoices,
+    parties,
+    query: req.query
+  });
+}));
+
+app.get('/reports/ai', requireAuth, asyncRoute(async (req, res) => {
+  const totalInvoices = await Invoice.countDocuments();
+  res.render('report-ai', {
+    page: 'reports',
+    subpage: 'ai-report',
+    pageTitle: 'GST AI Assistant',
+    pageHeading: 'AI Report',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    totalInvoices
+  });
+}));
+
+app.post('/api/reports/ai-chat', requireAuth, asyncRoute(async (req, res) => {
+  const { question } = req.body;
+  if (!question || !question.trim()) return res.status(400).json({ error: 'Question required' });
+
+  const totalInvoices = await Invoice.countDocuments();
+  const buyInvoices = await Invoice.find({ invoiceType: 'BUY' }).select('invoiceNumber invoiceAmount invoiceDate sellerName financialYear month').sort({ invoiceDate: -1 }).limit(200);
+  const sellInvoices = await Invoice.find({ invoiceType: 'SELL' }).select('invoiceNumber invoiceAmount invoiceDate buyerName financialYear month').sort({ invoiceDate: -1 }).limit(200);
+  const parties = await Party.find().select('name gstin email mobile');
+  const pendingCount = await Invoice.countDocuments({ $or: [{ emailSent: false }, { status: 'pending' }] });
+
+  const totalBuyAmount = buyInvoices.reduce((s, x) => s + (x.invoiceAmount || 0), 0);
+  const totalSellAmount = sellInvoices.reduce((s, x) => s + (x.invoiceAmount || 0), 0);
+
+  const partyMap = {};
+  [...buyInvoices, ...sellInvoices].forEach(inv => {
+    const p = inv.sellerName || inv.buyerName || 'Unknown';
+    partyMap[p] = (partyMap[p] || 0) + (inv.invoiceAmount || 0);
+  });
+  const topParties = Object.entries(partyMap).sort((a,b) => b[1] - a[1]).slice(0, 5).map(([name, totalAmt]) => ({ name, totalAmount: '₹ ' + Math.round(totalAmt).toLocaleString('en-IN') }));
+
+  const dataSummary = {
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    totalInvoices,
+    pendingInvoicesCount: pendingCount,
+    totalBuyCount: buyInvoices.length,
+    totalBuyAmount: '₹ ' + Math.round(totalBuyAmount).toLocaleString('en-IN'),
+    totalSellCount: sellInvoices.length,
+    totalSellAmount: '₹ ' + Math.round(totalSellAmount).toLocaleString('en-IN'),
+    totalParties: parties.length,
+    topPartiesByAmount: topParties,
+    recentInvoicesSample: [...buyInvoices, ...sellInvoices].slice(0, 10).map(i => ({
+      num: i.invoiceNumber,
+      amt: '₹ ' + (i.invoiceAmount || 0),
+      party: i.sellerName || i.buyerName,
+      month: i.month,
+      fy: i.financialYear
+    }))
+  };
+
+  const answer = await askGeminiReport(question.trim(), dataSummary);
+  res.json({ answer });
 }));
 
 app.get('/invoice/:id/view', requireAuth, asyncRoute(async (req, res) => {

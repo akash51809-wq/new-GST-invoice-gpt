@@ -14,6 +14,11 @@
   <% } else if (typeof page !== 'undefined' && page === 'reports') { %>
     <link rel="stylesheet" href="/parties.css">
     <link rel="stylesheet" href="/report.css">
+    <% if (typeof subpage !== 'undefined' && subpage === 'pending-invoice') { %>
+      <link rel="stylesheet" href="/pending-invoice.css">
+    <% } else if (typeof subpage !== 'undefined' && subpage === 'ai-report') { %>
+      <link rel="stylesheet" href="/ai-report.css">
+    <% } %>
   <% } else if (typeof page !== 'undefined' && page === 'settings') { %>
     <link rel="stylesheet" href="/settings.css">
   <% } %>
@@ -54,7 +59,14 @@
         <a class="<%= (typeof page !== 'undefined' && page === 'dashboard') ? 'active' : '' %>" href="/dashboard"><span class="nav-icon">⌂</span><span>Dashboard</span><em>01</em></a>
         <a class="<%= (typeof page !== 'undefined' && page === 'upload') ? 'active' : '' %>" href="/invoices/upload"><span class="nav-icon">↥</span><span>Upload Invoice</span><em>02</em></a>
         <div class="nav-group">
-          <a class="nav-parent <%= (typeof page !== 'undefined' && page === 'reports') ? 'active' : '' %>" href="/reports/invoices"><span class="nav-icon">▤</span><span>Report</span><em>03</em></a>
+          <button class="nav-parent <%= (typeof page !== 'undefined' && page === 'reports') ? 'active' : '' %>" type="button" onclick="toggleSubmenu('reportSubmenu')">
+            <span class="nav-icon">▤</span><span>Report</span><em>03</em><b>⌄</b>
+          </button>
+          <div id="reportSubmenu" class="submenu <%= (typeof page !== 'undefined' && page === 'reports') ? 'open' : '' %>">
+            <a class="<%= (typeof subpage !== 'undefined' && subpage === 'pending-invoice') ? 'active' : '' %>" href="/reports/pending"><span>Pending Invoice</span></a>
+            <a class="<%= (typeof subpage !== 'undefined' && subpage === 'upload-invoice-report') ? 'active' : '' %>" href="/reports/invoices"><span>Upload Invoice</span></a>
+            <a class="<%= (typeof subpage !== 'undefined' && subpage === 'ai-report') ? 'active' : '' %>" href="/reports/ai"><span>AI Report</span></a>
+          </div>
         </div>
         <a class="<%= (typeof page !== 'undefined' && page === 'parties') ? 'active' : '' %>" href="/parties"><span class="nav-icon">♙</span><span>Party List</span><em>04</em></a>
         <a class="<%= (typeof page !== 'undefined' && page === 'settings') ? 'active' : '' %>" href="/settings/company"><span class="nav-icon">⚙</span><span>Settings</span><em>05</em></a>
