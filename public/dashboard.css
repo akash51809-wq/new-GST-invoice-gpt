@@ -1,0 +1,173 @@
+/* Dashboard page-only styles. */
+.dashboard-module{width:100%;margin:0;padding:0}.dashboard-mount{width:100%}
+/* Compact 5-card dashboard stats: same card language, with subtle 3D motion. */
+.dashboard-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:17px 0}.dashboard-stats .stat-card{min-height:124px;padding:15px 16px;position:relative;transform:translateZ(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+.dashboard-stats .stat-card:hover{transform:translateY(-5px) scale(1.015);box-shadow:13px 17px 28px rgba(15,23,42,.13),-5px -5px 12px rgba(255,255,255,.95),inset 1px 1px 2px rgba(255,255,255,.95)}
+.dashboard-stats .stat-card:active{transform:translateY(-1px) scale(.995)}
+.dashboard-stats .stat-icon{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}.dashboard-stats .stat-card:hover .stat-icon{transform:translateY(-2px) rotate(-4deg);box-shadow:7px 9px 14px rgba(15,23,42,.18),inset 1px 1px 3px rgba(255,255,255,.3)}
+.dashboard-stats .total-invoice{background:linear-gradient(145deg,#fff,#eef5ff)}.dashboard-stats .buy-invoice{background:linear-gradient(145deg,#fff,#ecfdf5)}.dashboard-stats .sale-invoice{background:linear-gradient(145deg,#fff,#fff7ed)}.dashboard-stats .pending-invoice{background:linear-gradient(145deg,#fff,#f5f3ff)}.dashboard-stats .total-party{background:linear-gradient(145deg,#fff,#fdf2f8)}
+.dashboard-stats .total-invoice:after,.dashboard-stats .buy-invoice:after,.dashboard-stats .sale-invoice:after,.dashboard-stats .pending-invoice:after,.dashboard-stats .total-party:after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .22s ease;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.55) 45%,transparent 65%)}
+.dashboard-stats .stat-card:hover:after{opacity:1}
+.dashboard-stats .pending-invoice .stat-icon{background:linear-gradient(145deg,#a78bfa,#7c3aed);color:#fff}.dashboard-stats .total-party .stat-icon{background:linear-gradient(145deg,#f472b6,#db2777);color:#fff}
+@media(max-width:1100px){.dashboard-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.dashboard-stats{grid-template-columns:1fr 1fr;gap:10px}.dashboard-stats .stat-card{min-height:118px;padding:13px}.dashboard-stats .stat-card strong{font-size:19px}}
+
+/* Invoice activity chart: dual purchase/sale candles + compact 3D filter. */
+.chart-panel .panel-head{align-items:center}
+.chart-filters{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.chart-filters select{height:34px;border:1px solid #dbe4ef;border-radius:10px;padding:0 10px;background:linear-gradient(145deg,#fff,#eef4fb);color:#334155;font-weight:700;font-size:11px;box-shadow:4px 5px 9px rgba(15,23,42,.10),inset 1px 1px 2px rgba(255,255,255,.95);outline:none;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}
+.chart-filters select:hover{transform:translateY(-2px);box-shadow:5px 7px 12px rgba(15,23,42,.14),inset 1px 1px 2px rgba(255,255,255,.95)}
+.chart-filters .chart-mode-filter{min-width:102px;background:linear-gradient(145deg,#e0f2fe,#bae6fd);border-color:#7dd3fc;color:#075985}
+.chart-filters select:focus{box-shadow:0 0 0 3px rgba(14,165,233,.12),4px 5px 9px rgba(15,23,42,.10)}
+.chart{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:100%;padding:0 8px}
+.candle-group{height:100%;flex:1;display:flex;align-items:flex-end;justify-content:center;gap:3px;min-width:0}
+.candle-group i{display:block;width:9px;max-width:42%;min-height:8px;border-radius:4px 4px 2px 2px;box-shadow:3px 5px 7px rgba(15,23,42,.16),inset 1px 1px 2px rgba(255,255,255,.45);transform-origin:bottom;animation:candleRise .55s ease both;transition:height .22s ease,transform .18s ease,opacity .18s ease}
+.candle-group i:hover{transform:translateY(-3px) scaleX(1.12)}
+.purchase-candle{background:linear-gradient(180deg,#34d399,#16a34a)}
+.sale-candle{background:linear-gradient(180deg,#fb923c,#ea580c)}
+.candle-group.is-buy .sale-candle,.candle-group.is-sale .purchase-candle{display:none}
+.chart-panel:has(.chart-mode-filter option[value="both"]:checked) .chart-mode-filter{}
+@keyframes candleRise{from{transform:scaleY(.25);opacity:.35}to{transform:scaleY(1);opacity:1}}
+.chart-legend{display:flex;gap:10px}
+@media(max-width:760px){
+  .chart-filters{gap:5px}
+  .chart-filters select{height:31px;font-size:10px;padding:0 7px}
+  .chart-filters .chart-mode-filter{min-width:88px}
+  .chart{gap:3px;padding:0 2px}
+  .candle-group{gap:2px}
+  .candle-group i{width:7px}
+  .months{font-size:9px;gap:2px}
+}
+
+.chart .purchase-candle{background:linear-gradient(180deg,#34d399 0%,#16a34a 100%) !important}
+.chart .sale-candle{background:linear-gradient(180deg,#fb923c 0%,#ea580c 100%) !important}
+.chart-legend{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:9px;font-size:10px;font-weight:700;color:#64748b}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.chart-legend .legend-dot{display:inline-block;width:9px;height:9px;border-radius:50%;box-shadow:2px 2px 4px rgba(15,23,42,.16),inset 1px 1px 2px rgba(255,255,255,.45)}
+.chart-legend .purchase-dot{background:linear-gradient(145deg,#34d399,#16a34a)}
+.chart-legend .sale-dot{background:linear-gradient(145deg,#fb923c,#ea580c)}
+.chart[data-mode="buy"] .sale-candle,.chart[data-mode="sale"] .purchase-candle{display:none !important}
+@media(max-width:760px){.chart-legend{font-size:9px;gap:11px;margin-top:7px}.chart-legend .legend-dot{width:8px;height:8px}}
+
+
+/* Final invoice chart alignment + reliable Buy/Sale filter. */
+.chart-area{height:205px;position:relative;margin-top:9px;padding-bottom:28px;overflow:visible}
+.chart-grid{inset:18px 8px 38px}
+.chart{height:100%;display:flex;align-items:stretch;justify-content:space-between;gap:5px;padding:18px 8px 0;position:relative;z-index:2;overflow:visible}
+.candle-group{height:100%;flex:1 1 0;min-width:0;position:relative;display:flex;align-items:flex-end;justify-content:center;gap:3px;padding-bottom:22px}
+.candle-group i{flex:0 0 9px;width:9px;max-width:9px;height:var(--candle-height);min-height:7px}
+.candle-month{position:absolute;left:50%;bottom:-1px;transform:translateX(-50%);width:100%;text-align:center;font-size:9px;line-height:1.1;font-weight:700;color:#94A3B8;white-space:nowrap;pointer-events:none}
+.chart-legend{position:relative;z-index:3}
+.chart[data-mode="buy"] .sale-candle,.chart[data-mode="sale"] .purchase-candle{display:none!important}
+.chart[data-mode="buy"] .candle-group,.chart[data-mode="sale"] .candle-group{gap:0}
+@media(max-width:760px){
+ .chart-area{height:190px;padding-bottom:27px}
+ .chart{gap:2px;padding:15px 2px 0}
+ .candle-group{gap:2px;padding-bottom:23px}
+ .candle-group i{flex-basis:7px;width:7px;max-width:7px}
+ .candle-month{font-size:7px}
+ .chart-grid{inset:16px 3px 39px}
+}
+
+/* Hard filter state: visibility is controlled by a class on each candle group. */
+.chart .candle-group.hide-buy .purchase-candle,.chart .candle-group.hide-sale .sale-candle{display:none!important}
+
+
+/* 3D Smart Shortcuts wheel — beveled segmented reference style. */
+.shortcut-hub-panel{
+  min-height:100%;
+  padding:15px 14px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  overflow:hidden;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,255,255,.98) 0,rgba(255,255,255,.92) 48%,rgba(242,246,251,.98) 100%);
+  border:1px solid #e3eaf2;
+  box-shadow:0 18px 34px rgba(15,23,42,.10),0 4px 10px rgba(15,23,42,.04),inset 1px 1px 0 #fff;
+}
+.donut-shortcut-panel:before{
+  content:"";
+  position:absolute;
+  width:360px;height:360px;border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,.075),transparent 67%);
+  pointer-events:none;
+}
+.shortcut-hub-head{
+  position:relative;z-index:5;width:100%;display:block;text-align:left;
+  margin-bottom:0;
+}
+.shortcut-hub-head h3{margin:3px 0 1px;color:#172033;font-size:16px;font-weight:800;letter-spacing:-.02em}
+.shortcut-hub-head p{margin:0;color:#718096;font-size:9px;font-weight:600}
+.shortcut-hub-head .panel-kicker{color:#6b7789;font-size:8px;letter-spacing:.2em;font-weight:900}
+
+.shortcut-donut{
+  width:min(344px,100%);aspect-ratio:1;position:relative;
+  margin:1px auto 0;display:grid;place-items:center;
+}
+.shortcut-wheel{
+  width:100%;height:100%;display:block;overflow:visible;
+  filter:drop-shadow(0 13px 13px rgba(15,23,42,.12));
+}
+.wheel-segment{
+  cursor:pointer;outline:none;
+  transform-box:fill-box;transform-origin:center;
+  transition:transform .2s cubic-bezier(.2,.8,.2,1),filter .2s ease;
+}
+.wheel-segment .wheel-face{
+  stroke:rgba(255,255,255,.96);
+  stroke-width:4;
+  stroke-linejoin:round;
+}
+.wheel-depth{
+  transform:translateY(5px);
+  opacity:.95;
+  stroke:rgba(15,23,42,.12);
+  stroke-width:3;
+  stroke-linejoin:round;
+}
+.wheel-gloss{
+  stroke:rgba(255,255,255,.48);
+  stroke-width:3;
+  stroke-linecap:round;
+  pointer-events:none;
+}
+.wheel-icon{fill:#fff;font-size:23px;font-weight:900;
+  font-family:Inter,Arial,sans-serif;
+  paint-order:stroke;
+  stroke:rgba(15,23,42,.20);stroke-width:1;
+  pointer-events:none;
+}
+.wheel-label{fill:#fff;font-size:10.5px;font-weight:900;
+  font-family:Inter,Arial,sans-serif;
+  letter-spacing:.01em;
+  paint-order:stroke;
+  stroke:rgba(15,23,42,.16);stroke-width:.7;
+  pointer-events:none;
+}
+.wheel-segment:hover,.wheel-segment:focus-visible{
+  transform:scale(1.035);
+  filter:drop-shadow(0 11px 9px rgba(15,23,42,.24)) brightness(1.06);
+}
+.wheel-segment:active{transform:scale(.995)}
+.wheel-hole-shadow{
+  fill:#cbd5e1;
+  filter:drop-shadow(0 7px 7px rgba(15,23,42,.18));
+}
+.wheel-hole{
+  stroke:#fff;
+  stroke-width:3;
+  filter:drop-shadow(0 4px 5px rgba(15,23,42,.10));
+}
+.wheel-hole-highlight{
+  fill:none;stroke:#fff;stroke-width:2;opacity:.9;
+}
+@media(max-width:1100px){.shortcut-donut{width:min(315px,96%)}}
+@media(max-width:760px){
+  .donut-shortcut-panel{padding:13px 10px}
+  .shortcut-donut{width:min(292px,96%)}
+  .wheel-icon{font-size:20px}.wheel-label{font-size:9px}
+}

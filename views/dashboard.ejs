@@ -1,1 +1,211 @@
-<%- include('partials/header') %><div class="top"><div><div class="title">Dashboard</div><div class="sub">GST Invoice Management का मुख्य overview</div></div><a class="btn" href="/invoices/upload">+ Upload Invoice</a></div><div class="cards"><div class="card"><h3>Total Invoices</h3><div class="num"><%=total%></div></div><div class="card"><h3>Buy</h3><div class="num"><%=buy%></div></div><div class="card"><h3>Sell</h3><div class="num"><%=sell%></div></div><div class="card"><h3>Parties</h3><div class="num"><%=parties%></div></div></div><div class="panel"><h3>Quick Links</h3><p><a class="btn secondary" href="/reports/invoices">Invoice Report</a> <a class="btn secondary" href="/parties">Party Directory</a> <a class="btn secondary" href="/settings/google">Google Settings</a></p></div><%- include('partials/footer') %>
+<%- include('partials/header') %>
+
+<!-- 3D Hero Banner -->
+<div class="hero-3d">
+  <div class="hero-content">
+    <div class="hero-kicker"><span class="live-dot"></span> SYSTEM READY</div>
+    <h2>Hello, <%= companyName %></h2>
+    <p>Manage your GST invoices, purchases and sales from one intelligent workspace.</p>
+    <div class="hero-meta">
+      <span style="<%= isDriveConnected ? 'color:#6EE7B7;' : 'color:#94A3B8;' %>">
+        <%= isDriveConnected ? '● Google Drive Connected' : '○ Google Drive Not Connected' %>
+      </span>
+      <span style="<%= isAiReady ? 'color:#6EE7B7;' : 'color:#94A3B8;' %>">
+        <%= isAiReady ? '● Gemini AI Ready' : '○ Gemini Key Missing' %>
+      </span>
+      <span style="<%= isEmailActive ? 'color:#6EE7B7;' : 'color:#94A3B8;' %>">
+        <%= isEmailActive ? '● Email Active' : '○ Email Inactive' %>
+      </span>
+    </div>
+  </div>
+  <div class="hero-action">
+    <div class="hero-orb">₹</div>
+    <a class="primary light" href="/invoices/upload" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">＋ Upload Invoice</a>
+  </div>
+  <div class="hero-shape shape-a"></div>
+  <div class="hero-shape shape-b"></div>
+</div>
+
+<!-- 5 Stat Cards with Real Database Data -->
+<div class="stats dashboard-stats">
+  <div class="stat-card stat-main total-invoice">
+    <div class="stat-top"><span>Total Invoice</span><div class="stat-icon">▣</div></div>
+    <strong><%= total.toLocaleString('en-IN') %></strong>
+    <div class="stat-bottom"><span class="trend">All-time</span><small>Processed invoices</small></div>
+    <div class="card-glow"></div>
+  </div>
+
+  <div class="stat-card buy-invoice">
+    <div class="stat-top"><span>Buy Invoice</span><div class="stat-icon green">↙</div></div>
+    <strong>₹ <%= buyTotalAmount.toLocaleString('en-IN') %></strong>
+    <div class="stat-bottom"><span class="neutral"><%= buy.toLocaleString('en-IN') %> Invoices</span><small>Total purchase</small></div>
+  </div>
+
+  <div class="stat-card sale-invoice">
+    <div class="stat-top"><span>Sale Invoice</span><div class="stat-icon orange">↗</div></div>
+    <strong>₹ <%= sellTotalAmount.toLocaleString('en-IN') %></strong>
+    <div class="stat-bottom"><span class="neutral"><%= sell.toLocaleString('en-IN') %> Invoices</span><small>Total sales</small></div>
+  </div>
+
+  <div class="stat-card pending-invoice">
+    <div class="stat-top"><span>Pending Action</span><div class="stat-icon purple">◷</div></div>
+    <strong><%= pending.toLocaleString('en-IN') %></strong>
+    <div class="stat-bottom"><span class="neutral">Needs action</span><small>Unsent sell invoices</small></div>
+  </div>
+
+  <div class="stat-card total-party">
+    <div class="stat-top"><span>Total Parties</span><div class="stat-icon party-icon">♙</div></div>
+    <strong><%= parties.toLocaleString('en-IN') %></strong>
+    <div class="stat-bottom"><span class="trend">Active</span><small>Customers & suppliers</small></div>
+  </div>
+</div>
+
+<!-- Grid: Chart & Smart Shortcuts Donut Wheel -->
+<div class="grid-2">
+  <!-- Invoice Activity Chart -->
+  <div class="panel chart-panel">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker">REAL-TIME OVERVIEW</span>
+        <h3>Invoice Activity</h3>
+        <p>Monthly invoice movement</p>
+      </div>
+      <div class="chart-filters">
+        <select class="chart-mode-filter" id="invoiceChartMode" aria-label="Invoice type" onchange="setInvoiceChartMode(this.value)">
+          <option value="both">Show Both</option>
+          <option value="buy">Buy Only</option>
+          <option value="sale">Sale Only</option>
+        </select>
+      </div>
+    </div>
+    <div class="chart-area">
+      <div class="chart-grid"><span></span><span></span><span></span><span></span></div>
+      <div class="chart" id="invoiceChart" data-mode="both">
+        <% chartMonths.forEach(function(m) { %>
+          <div class="candle-group" title="<%= m.name %>: <%= m.buyCount %> Buy, <%= m.saleCount %> Sale">
+            <i class="purchase-candle" style="height:<%= m.buyHeight %>%" title="Buy: <%= m.buyCount %>"></i>
+            <i class="sale-candle" style="height:<%= m.saleHeight %>%" title="Sale: <%= m.saleCount %>"></i>
+            <span class="candle-month"><%= m.name.slice(0, 3) %></span>
+          </div>
+        <% }); %>
+      </div>
+      <div class="chart-legend">
+        <span><i class="legend-dot purchase-dot"></i> Buy / Purchase</span>
+        <span><i class="legend-dot sale-dot"></i> Sale</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Smart Shortcuts Hub (Real Buttons & Links) -->
+  <aside class="shortcut-hub-panel donut-shortcut-panel">
+    <div class="shortcut-hub-head">
+      <div>
+        <span class="panel-kicker">QUICK ACCESS</span>
+        <h3>Smart Shortcuts</h3>
+        <p>Open your workspace tools instantly</p>
+      </div>
+    </div>
+
+    <div class="shortcut-donut" aria-label="Smart Shortcuts">
+      <svg class="shortcut-wheel" viewBox="0 0 360 360" role="group" aria-label="Smart Shortcuts">
+        <defs>
+          <filter id="wheelDepth" x="-30%" y="-30%" width="160%" height="175%">
+            <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#0f172a" flood-opacity=".25"/>
+          </filter>
+          <linearGradient id="segBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#66d7ff"/><stop offset=".45" stop-color="#28afe9"/><stop offset="1" stop-color="#0874bd"/></linearGradient>
+          <linearGradient id="segPink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8fb3"/><stop offset=".45" stop-color="#ef5d8d"/><stop offset="1" stop-color="#bb245b"/></linearGradient>
+          <linearGradient id="segPurple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c19cff"/><stop offset=".45" stop-color="#9365ee"/><stop offset="1" stop-color="#5d31bd"/></linearGradient>
+          <linearGradient id="segSlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8798aa"/><stop offset=".45" stop-color="#607287"/><stop offset="1" stop-color="#293a4d"/></linearGradient>
+          <linearGradient id="segViolet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d39af8"/><stop offset=".45" stop-color="#aa60e0"/><stop offset="1" stop-color="#7029a9"/></linearGradient>
+          <linearGradient id="segOrange" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd083"/><stop offset=".45" stop-color="#ff9d3e"/><stop offset="1" stop-color="#d95c0c"/></linearGradient>
+          <radialGradient id="centerGlow" cx="38%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f8fafc"/><stop offset="1" stop-color="#e7edf4"/></radialGradient>
+        </defs>
+
+        <!-- Segment 1: Upload Invoice -->
+        <a href="/invoices/upload" style="cursor:pointer;" aria-label="Upload Invoice">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M180 26 A154 154 0 0 1 313.4 103 L251.0 139 A82 82 0 0 0 180 98 Z" fill="#07558e"/>
+            <path class="wheel-face" d="M180 22 A154 154 0 0 1 313.4 99 L251.0 135 A82 82 0 0 0 180 94 Z" fill="url(#segBlue)" filter="url(#wheelDepth)"/>
+            <g transform="translate(239 78)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">₹</text><text class="wheel-label" text-anchor="middle" y="14">Upload</text>
+            </g>
+          </g>
+        </a>
+
+        <!-- Segment 2: Total Party -->
+        <a href="/parties" style="cursor:pointer;" aria-label="Party Directory">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M313.4 103 A154 154 0 0 1 313.4 257 L251 221 A82 82 0 0 0 251 139 Z" fill="#9f1c4d"/>
+            <path class="wheel-face" d="M313.4 99 A154 154 0 0 1 313.4 253 L251 217 A82 82 0 0 0 251 135 Z" fill="url(#segPink)" filter="url(#wheelDepth)"/>
+            <g transform="translate(298 180)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">♙</text><text class="wheel-label" text-anchor="middle" y="14">Parties</text>
+            </g>
+          </g>
+        </a>
+
+        <!-- Segment 3: Reports -->
+        <a href="/reports/invoices" style="cursor:pointer;" aria-label="Invoice Reports">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M313.4 257 A154 154 0 0 1 180 334 L180 262 A82 82 0 0 0 251 221 Z" fill="#4e25a1"/>
+            <path class="wheel-face" d="M313.4 253 A154 154 0 0 1 180 330 L180 258 A82 82 0 0 0 251 217 Z" fill="url(#segPurple)" filter="url(#wheelDepth)"/>
+            <g transform="translate(239 282)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">☷</text><text class="wheel-label" text-anchor="middle" y="14">Reports</text>
+            </g>
+          </g>
+        </a>
+
+        <!-- Segment 4: Settings -->
+        <a href="/settings/company" style="cursor:pointer;" aria-label="Settings">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M180 334 A154 154 0 0 1 46.6 257 L109 221 A82 82 0 0 0 180 262 Z" fill="#263547"/>
+            <path class="wheel-face" d="M180 330 A154 154 0 0 1 46.6 253 L109 217 A82 82 0 0 0 180 258 Z" fill="url(#segSlate)" filter="url(#wheelDepth)"/>
+            <g transform="translate(121 282)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">⚙</text><text class="wheel-label" text-anchor="middle" y="14">Settings</text>
+            </g>
+          </g>
+        </a>
+
+        <!-- Segment 5: Gemini AI Setup -->
+        <a href="/settings/gemini" style="cursor:pointer;" aria-label="Gemini AI Keys">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M46.6 257 A154 154 0 0 1 46.6 103 L109 139 A82 82 0 0 0 109 221 Z" fill="#642397"/>
+            <path class="wheel-face" d="M46.6 253 A154 154 0 0 1 46.6 99 L109 135 A82 82 0 0 0 109 217 Z" fill="url(#segViolet)" filter="url(#wheelDepth)"/>
+            <g transform="translate(62 180)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">✦</text><text class="wheel-label" text-anchor="middle" y="14">Gemini AI</text>
+            </g>
+          </g>
+        </a>
+
+        <!-- Segment 6: Excel / CSV Export -->
+        <a href="/reports/export.csv" style="cursor:pointer;" aria-label="Export Invoices to CSV">
+          <g class="wheel-segment" tabindex="0" role="button">
+            <path class="wheel-depth" d="M46.6 103 A154 154 0 0 1 180 26 L180 98 A82 82 0 0 0 109 139 Z" fill="#bf5009"/>
+            <path class="wheel-face" d="M46.6 99 A154 154 0 0 1 180 22 L180 94 A82 82 0 0 0 109 135 Z" fill="url(#segOrange)" filter="url(#wheelDepth)"/>
+            <g transform="translate(121 78)">
+              <text class="wheel-icon" text-anchor="middle" y="-4">⬇</text><text class="wheel-label" text-anchor="middle" y="14">Export CSV</text>
+            </g>
+          </g>
+        </a>
+
+        <circle class="wheel-hole-shadow" cx="180" cy="180" r="83"/>
+        <circle class="wheel-hole" cx="180" cy="180" r="78" fill="url(#centerGlow)"/>
+        <circle class="wheel-hole-highlight" cx="180" cy="180" r="73"/>
+        <text x="180" y="185" text-anchor="middle" font-size="14" font-weight="900" fill="#1E3A8A">SHORTCUTS</text>
+      </svg>
+    </div>
+  </aside>
+</div>
+
+<script>
+  function setInvoiceChartMode(value) {
+    const chart = document.getElementById('invoiceChart');
+    if (!chart) return;
+    chart.dataset.mode = value;
+    chart.querySelectorAll('.candle-group').forEach(group => {
+      group.classList.toggle('is-buy', value === 'buy');
+      group.classList.toggle('is-sale', value === 'sale');
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

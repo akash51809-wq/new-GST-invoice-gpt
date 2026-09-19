@@ -93,13 +93,106 @@ app.post('/logout', (req, res) => {
 
 app.get('/', requireAuth, (req, res) => res.redirect('/dashboard'));
 app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
-  const [total, buy, sell, parties] = await Promise.all([
+  const [
+    total,
+    buy,
+    sell,
+    parties,
+    pending,
+    buyAgg,
+    sellAgg,
+    monthlyAgg,
+    googleTokens,
+    currentUser
+  ] = await Promise.all([
     Invoice.countDocuments({ status: 'completed' }),
     Invoice.countDocuments({ invoiceType: 'BUY', status: 'completed' }),
     Invoice.countDocuments({ invoiceType: 'SELL', status: 'completed' }),
-    Party.countDocuments()
+    Party.countDocuments(),
+    Invoice.countDocuments({ invoiceType: 'SELL', emailSent: false, status: 'completed' }),
+    Invoice.aggregate([
+      { $match: { invoiceType: 'BUY', status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
+    ]),
+    Invoice.aggregate([
+      { $match: { invoiceType: 'SELL', status: 'completed' } },
+      { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
+    ]),
+    Invoice.aggregate([
+      { $match: { status: 'completed' } },
+      {
+        $group: {
+          _id: { month: '$month', type: '$invoiceType' },
+          count: { $sum: 1 },
+          amount: { $sum: '$invoiceAmount' }
+        }
+      }
+    ]),
+    Setting.findOne({ key: 'google_tokens' }),
+    User.findById(req.session.userId)
   ]);
-  res.render('dashboard', { total, buy, sell, parties });
+
+  const buyTotalAmount = buyAgg[0]?.total || 0;
+  const sellTotalAmount = sellAgg[0]?.total || 0;
+  const isDriveConnected = !!(googleTokens && googleTokens.value);
+  const isAiReady = !!(process.env.GEMINI_API_KEYS && process.env.GEMINI_API_KEYS.trim());
+  const isEmailActive = !!(process.env.EMAIL_SUBJECT_TEMPLATE || googleTokens);
+  const companyName = process.env.COMPANY_NAME || 'Easy Recharge Solution';
+  const userName = currentUser?.name || currentUser?.username || 'Administrator';
+
+  const monthOrder = ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'];
+  const monthlyStats = {};
+  monthOrder.forEach(m => { monthlyStats[m] = { buyCount: 0, saleCount: 0, buyAmount: 0, saleAmount: 0 }; });
+  
+  (monthlyAgg || []).forEach(item => {
+    const m = item._id?.month;
+    const type = item._id?.type;
+    if (m && monthlyStats[m]) {
+      if (type === 'BUY') {
+        monthlyStats[m].buyCount = item.count;
+        monthlyStats[m].buyAmount = item.amount;
+      } else if (type === 'SELL') {
+        monthlyStats[m].saleCount = item.count;
+        monthlyStats[m].saleAmount = item.amount;
+      }
+    }
+  });
+
+  let maxCount = 1;
+  monthOrder.forEach(m => {
+    maxCount = Math.max(maxCount, monthlyStats[m].buyCount, monthlyStats[m].saleCount);
+  });
+
+  const chartMonths = monthOrder.map(m => {
+    const buyH = maxCount > 0 && monthlyStats[m].buyCount > 0 ? Math.max(12, Math.round((monthlyStats[m].buyCount / maxCount) * 100)) : 6;
+    const saleH = maxCount > 0 && monthlyStats[m].saleCount > 0 ? Math.max(12, Math.round((monthlyStats[m].saleCount / maxCount) * 100)) : 6;
+    return {
+      name: m,
+      buyHeight: buyH,
+      saleHeight: saleH,
+      buyCount: monthlyStats[m].buyCount,
+      saleCount: monthlyStats[m].saleCount
+    };
+  });
+
+  res.render('dashboard', {
+    page: 'dashboard',
+    pageTitle: 'Dashboard',
+    pageHeading: 'Dashboard Overview',
+    total,
+    buy,
+    sell,
+    parties,
+    pending,
+    buyTotalAmount,
+    sellTotalAmount,
+    companyName,
+    userName,
+    isDriveConnected,
+    isAiReady,
+    isEmailActive,
+    chartMonths
+  });
 }));
 
 app.get('/invoices/upload', requireAuth, (req, res) => res.render('upload', { message: null }));

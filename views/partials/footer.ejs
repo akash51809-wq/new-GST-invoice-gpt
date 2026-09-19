@@ -1,1 +1,19 @@
-</main></div></body></html>
+    </main>
+  </div>
+  <script>
+    const profileTrigger = document.getElementById('profileTrigger');
+    const profileMenuWrap = document.getElementById('profileMenuWrap');
+    if (profileTrigger && profileMenuWrap) {
+      profileTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        profileMenuWrap.classList.toggle('open');
+      });
+      document.addEventListener('click', () => {
+        profileMenuWrap.classList.remove('open');
+      });
+      const dropdown = document.getElementById('profileDropdown');
+      if (dropdown) dropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+  </script>
+</body>
+</html>
