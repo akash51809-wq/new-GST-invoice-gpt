@@ -18,6 +18,8 @@
       <link rel="stylesheet" href="/pending-invoice.css">
     <% } else if (typeof subpage !== 'undefined' && subpage === 'ai-report') { %>
       <link rel="stylesheet" href="/ai-report.css">
+    <% } else if (typeof subpage !== 'undefined' && (subpage === 'upload-invoice' || subpage === 'invoices' || subpage === 'upload-invoice-report')) { %>
+      <link rel="stylesheet" href="/upload-invoice.css">
     <% } %>
   <% } else if (typeof page !== 'undefined' && page === 'settings') { %>
     <link rel="stylesheet" href="/settings.css">
