@@ -1,10 +1,11 @@
 <%- include('partials/header') %>
 <link rel="stylesheet" href="/parties.css">
 
+<div id="parties" class="page-section">
 <div class="party-page">
   <div class="party-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
     <div class="party-search-box">
-      <span>⌕</span>
+      <span class="party-search-icon">⌕</span>
       <input type="text" id="partySearchInput" placeholder="Search parties by name or GSTIN..." aria-label="Search parties">
     </div>
     <div style="font-size:12px;color:#64748B;font-weight:700;">
@@ -13,6 +14,7 @@
   </div>
 
   <div class="party-table-card">
+    <div class="party-table-wrap">
     <table class="party-table">
       <thead>
         <tr>
@@ -43,7 +45,9 @@
         <% } %>
       </tbody>
     </table>
+    </div>
   </div>
+</div>
 </div>
 
 <!-- Modern Edit Party Modal -->

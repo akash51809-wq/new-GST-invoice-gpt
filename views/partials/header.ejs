@@ -7,6 +7,16 @@
   <title><%= typeof title !== 'undefined' ? title : 'GST Invoice Manager' %></title>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/dashboard.css">
+  <% if (typeof page !== 'undefined' && page === 'upload') { %>
+    <link rel="stylesheet" href="/upload.css">
+  <% } else if (typeof page !== 'undefined' && page === 'parties') { %>
+    <link rel="stylesheet" href="/parties.css">
+  <% } else if (typeof page !== 'undefined' && page === 'reports') { %>
+    <link rel="stylesheet" href="/parties.css">
+    <link rel="stylesheet" href="/report.css">
+  <% } else if (typeof page !== 'undefined' && page === 'settings') { %>
+    <link rel="stylesheet" href="/settings.css">
+  <% } %>
   <style>
     .profile-menu-wrap{position:relative}
     .profile-trigger{border:0;cursor:pointer}
@@ -26,7 +36,7 @@
     .sidebar-nav a.active{background:linear-gradient(135deg,rgba(37,99,235,.52),rgba(13,148,136,.38))!important;border-color:rgba(125,211,252,.4)!important;color:#fff!important}
   </style>
 </head>
-<body>
+<body class="<%= (typeof page !== 'undefined' && page === 'upload') ? 'upload-active' : ((typeof page !== 'undefined' && page === 'parties') ? 'party-active' : ((typeof page !== 'undefined' && page === 'settings') ? 'settings-active' : '')) %>">
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
   <div class="app-shell">
