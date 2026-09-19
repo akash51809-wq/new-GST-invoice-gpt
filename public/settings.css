@@ -1,0 +1,213 @@
+/* Settings page */
+.settings-module{width:100%;margin:0;padding:0 0 28px;font-family:inherit;color:var(--text,#172033)}
+.settings-shortcuts{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 22px;padding:0;position:relative;z-index:10}
+.settings-shortcut{position:relative;width:50px;height:50px;overflow:visible;border:1px solid rgba(148,163,184,.45);border-radius:14px;background:linear-gradient(145deg,#ffffff,#e7edf4);color:#475569;box-shadow:5px 6px 11px rgba(15,23,42,.13),inset 1px 1px 0 rgba(255,255,255,.9),inset -1px -1px 2px rgba(15,23,42,.06);cursor:pointer;display:grid;place-items:center;transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s,border-color .2s}
+.settings-shortcut span{font-size:20px;line-height:1;filter:drop-shadow(1px 2px 1px rgba(0,0,0,.14));transition:opacity .12s,transform .2s}
+.settings-shortcut:hover{transform:translateY(-3px) scale(1.22);z-index:20;box-shadow:8px 12px 19px rgba(15,23,42,.2),inset 1px 1px 0 rgba(255,255,255,.9);border-color:#38bdf8}
+.settings-shortcut:active{transform:translateY(1px) scale(1.08);box-shadow:inset 3px 3px 6px rgba(15,23,42,.15)}
+.settings-shortcut.active{border-color:#2563eb;background:linear-gradient(145deg,#60a5fa,#2563eb 60%,#1d4ed8);color:#fff;box-shadow:6px 8px 15px rgba(37,99,235,.28),inset 1px 1px 2px rgba(255,255,255,.35)}
+.settings-shortcut.active span{filter:brightness(0) invert(1) drop-shadow(1px 2px 1px rgba(0,0,0,.18))}
+.setting-label{display:none!important}
+.settings-shortcut::after{content:attr(title);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:4px;border-radius:13px;text-align:center;white-space:normal;overflow:hidden;background:#dff6ff;border:1px solid #7dd3fc;color:#0369a1;font-size:9px;font-weight:900;line-height:1.05;opacity:0;visibility:hidden;pointer-events:none;z-index:5;box-shadow:inset 1px 1px 2px rgba(255,255,255,.75),inset -1px -1px 2px rgba(3,105,161,.08);transition:opacity .15s ease,visibility .15s ease}
+.settings-shortcut:hover::after{opacity:1;visibility:visible}
+.settings-shortcut:hover>span{opacity:0;transform:scale(.8)}
+.settings-shortcut:nth-child(2)::after{background:#e1f8ea;border-color:#86efac;color:#15803d}
+.settings-shortcut:nth-child(3)::after{background:#fff0df;border-color:#fdba74;color:#c2410c}
+.settings-shortcut:nth-child(4)::after{background:#eee9ff;border-color:#c4b5fd;color:#6d28d9}
+.settings-shortcut:nth-child(5)::after{background:#ffe8ec;border-color:#fda4af;color:#be123c}
+.settings-shortcut:nth-child(2).active{background:linear-gradient(145deg,#4ade80,#16a34a 60%,#15803d);border-color:#16a34a}
+.settings-shortcut:nth-child(3).active{background:linear-gradient(145deg,#fb923c,#f59e0b 60%,#d97706);border-color:#d97706}
+.settings-shortcut:nth-child(4).active{background:linear-gradient(145deg,#a78bfa,#7c3aed 60%,#6d28d9);border-color:#7c3aed}
+.settings-shortcut:nth-child(5).active{background:linear-gradient(145deg,#fb7185,#e11d48 60%,#be123c);border-color:#e11d48}
+.settings-panel{display:none;animation:settingsFade .22s ease}
+.settings-panel.active{display:block}
+@keyframes settingsFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.settings-panel-title{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.panel-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-size:22px;background:linear-gradient(145deg,#fff,#e6edf5);box-shadow:5px 5px 12px rgba(15,23,42,.11),-4px -4px 9px #fff}
+.settings-panel-title h2{margin:0;font-size:22px;font-weight:850}
+.settings-panel-title p{margin:4px 0 0;font-size:14px;color:#64748b}
+.company-settings-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#ffffff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.setting-row{min-height:92px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:20px 24px;border-bottom:1px solid #e3e9f1}
+.setting-row:last-child{border-bottom:0}
+.setting-info{display:flex;align-items:center;gap:14px;min-width:0}
+.setting-icon{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#eef5fb;color:#168bc0;font-size:19px;font-weight:800;box-shadow:inset 2px 2px 5px rgba(15,23,42,.07),inset -2px -2px 5px #fff}
+.setting-info h3{margin:0;font-size:16px;font-weight:800}
+.setting-info p{margin:5px 0 0;font-size:13px;line-height:1.45;color:#718096}
+.setting-control{min-width:300px}
+.company-input{width:100%;height:46px;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:15px;font-weight:600;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.company-input:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.logo-control{display:flex;align-items:center;gap:12px;min-width:0}
+.logo-preview{width:76px;height:76px;border-radius:16px;border:1px dashed #9fb4c8;background:linear-gradient(145deg,#f8fbff,#eaf1f7);display:grid;place-items:center;overflow:hidden;color:#94a3b8;font-size:11px;font-weight:800;box-shadow:inset 2px 2px 5px rgba(15,23,42,.05),inset -2px -2px 4px #fff}
+.logo-preview img{width:100%;height:100%;object-fit:contain;background:#fff}
+.logo-upload-btn{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 13px;border-radius:11px;background:linear-gradient(145deg,#00abe4,#008fbe);color:#fff;font-size:12px;font-weight:800;cursor:pointer;box-shadow:5px 6px 12px rgba(0,139,190,.24),inset 0 1px 0 rgba(255,255,255,.3);transition:.16s}
+.logo-upload-btn:hover{transform:translateY(-2px);box-shadow:7px 8px 15px rgba(0,139,190,.28)}
+.logo-upload-btn:active{transform:translateY(1px)}
+.three-toggle{display:block;position:relative;cursor:pointer;user-select:none}
+.three-toggle input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.three-toggle-track{position:relative;display:flex;align-items:center;width:88px;height:38px;padding:4px;box-sizing:border-box;border-radius:22px;background:linear-gradient(145deg,#ffb4b4,#ef4444 55%,#b91c1c);border:1px solid #dc2626;box-shadow:inset 3px 3px 7px rgba(127,29,29,.28),inset -2px -2px 4px rgba(255,255,255,.28),4px 6px 11px rgba(15,23,42,.16);transition:background .28s ease,box-shadow .28s ease,transform .18s ease}
+.three-toggle-track:hover{transform:translateY(-2px);box-shadow:inset 3px 3px 7px rgba(127,29,29,.22),inset -2px -2px 4px rgba(255,255,255,.3),5px 8px 14px rgba(15,23,42,.18)}
+.three-toggle-knob{position:absolute;left:5px;top:5px;width:28px;height:28px;border-radius:50%;background:linear-gradient(145deg,#fff,#e5e7eb);border:1px solid rgba(148,163,184,.35);box-shadow:3px 4px 7px rgba(15,23,42,.25),inset 2px 2px 3px rgba(255,255,255,.95),inset -2px -2px 3px rgba(15,23,42,.1);transition:left .3s cubic-bezier(.2,.8,.2,1),transform .25s ease;z-index:2}
+.three-toggle input:checked+.three-toggle-track{background:linear-gradient(145deg,#86efac,#22c55e 55%,#15803d);border-color:#16a34a;box-shadow:inset 3px 3px 7px rgba(20,83,45,.28),inset -2px -2px 4px rgba(255,255,255,.28),4px 6px 11px rgba(22,163,74,.22)}
+.three-toggle input:checked+.three-toggle-track .three-toggle-knob{left:55px;background:linear-gradient(145deg,#fff,#eafff1);transform:rotate(12deg)}
+.toggle-text{position:absolute;z-index:1;font-size:9px;font-weight:900;letter-spacing:.6px;transition:.2s}
+.toggle-text.on{right:9px;color:#fff}.toggle-text.off{left:8px;color:#fff}
+.three-toggle input:checked+.three-toggle-track .off{color:rgba(255,255,255,.45)}
+.three-toggle input:not(:checked)+.three-toggle-track .on{color:rgba(255,255,255,.5)}
+.three-toggle:focus-within .three-toggle-track{box-shadow:0 0 0 4px rgba(37,99,235,.12),inset 3px 3px 7px rgba(127,29,29,.28),inset -2px -2px 4px rgba(255,255,255,.28),4px 6px 11px rgba(15,23,42,.16)}
+.three-toggle:active .three-toggle-track{transform:translateY(1px) scale(.98)}
+.settings-save-note{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#64748b}
+.settings-save-note span{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#dcfce7;color:#16a34a;font-weight:900}
+.settings-placeholder{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:35px;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#fff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.08),-7px -7px 18px #fff}
+.placeholder-icon{font-size:35px;margin-bottom:10px}
+.settings-placeholder strong{font-size:21px}.settings-placeholder p{margin:8px 0 0;font-size:14px;color:#64748b}
+@media(max-width:700px){.setting-row{align-items:flex-start;flex-direction:column}.setting-control,.logo-control{width:100%;min-width:0}.three-toggle{align-self:flex-end}.settings-shortcuts{gap:7px}.settings-shortcut{width:47px;height:47px;border-radius:13px}}
+
+/* Google Drive settings */
+.drive-settings-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#ffffff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.drive-form-row{min-height:92px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:20px 24px;border-bottom:1px solid #e3e9f1}
+.drive-form-row:last-child{border-bottom:0}
+.drive-field-info{display:flex;align-items:center;gap:14px;min-width:260px}
+.drive-field-icon{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#e9f7ff,#cfeeff);color:#008fbe;font-size:19px;font-weight:900;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(15,23,42,.09),3px 4px 8px rgba(15,23,42,.1)}
+.drive-field-info h3{margin:0;font-size:16px;font-weight:800}
+.drive-field-info p{margin:5px 0 0;font-size:13px;line-height:1.4;color:#718096}
+.drive-field-control{width:420px}
+.drive-input{width:100%;height:46px;box-sizing:border-box;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:14px;font-weight:600;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.drive-input:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.drive-input::placeholder{color:#94a3b8;font-weight:500}
+.google-connect-row{display:flex;justify-content:flex-end;padding:18px 24px;background:linear-gradient(180deg,#f8fbfe,#eef5fa);border-top:1px solid #e3e9f1}
+.google-connect-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:190px;height:44px;padding:0 18px;border:0;border-radius:12px;background:linear-gradient(145deg,#ffffff,#e5edf5);color:#1f2937;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 5px 0 #c3d0dc,0 9px 16px rgba(15,23,42,.14),inset 0 2px 2px rgba(255,255,255,.95),inset 0 -2px 4px rgba(15,23,42,.12);transition:transform .16s ease,box-shadow .16s ease}
+.google-connect-btn .google-g{font-size:18px;font-weight:900;color:#4285f4}
+.google-connect-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #c3d0dc,0 13px 20px rgba(15,23,42,.17),inset 0 2px 2px rgba(255,255,255,.95),inset 0 -2px 4px rgba(15,23,42,.12)}
+.google-connect-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c3d0dc,0 5px 9px rgba(15,23,42,.12),inset 0 2px 4px rgba(15,23,42,.18)}
+.drive-status{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#64748b}
+.drive-status-dot{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.drive-status.connected .drive-status-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+@media(max-width:700px){.drive-form-row{align-items:flex-start;flex-direction:column}.drive-field-info,.drive-field-control{width:100%;min-width:0}.google-connect-row{justify-content:stretch}.google-connect-btn{width:100%}}
+
+/* Gemini settings */
+.gemini-settings-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#ffffff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.gemini-form-row{min-height:92px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:20px 24px}
+.gemini-field-info{display:flex;align-items:center;gap:14px;min-width:260px}
+.gemini-field-icon{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#f2eaff,#ddc7ff);color:#7c3aed;font-size:19px;font-weight:900;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(76,29,149,.1),3px 4px 8px rgba(15,23,42,.1)}
+.gemini-field-info h3{margin:0;font-size:16px;font-weight:800}
+.gemini-field-info p{margin:5px 0 0;font-size:13px;line-height:1.4;color:#718096}
+.gemini-field-control{width:420px}
+.gemini-input{width:100%;height:46px;box-sizing:border-box;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:14px;font-weight:600;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.gemini-input:focus{border-color:#8b5cf6;box-shadow:0 0 0 4px rgba(139,92,246,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.gemini-input::placeholder{color:#94a3b8;font-weight:500}
+.gemini-save-row{display:flex;justify-content:flex-end;padding:18px 24px;background:linear-gradient(180deg,#faf8ff,#f3efff);border-top:1px solid #e7def7}
+.gemini-save-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:165px;height:44px;padding:0 18px;border:0;border-radius:12px;background:linear-gradient(145deg,#a78bfa,#7c3aed 58%,#6d28d9);color:#fff;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 5px 0 #4c1d95,0 9px 16px rgba(124,58,237,.24),inset 0 2px 2px rgba(255,255,255,.35),inset 0 -2px 4px rgba(76,29,149,.3);transition:transform .16s ease,box-shadow .16s ease}
+.gemini-save-btn span{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.2);box-shadow:inset 1px 1px 2px rgba(255,255,255,.35),inset -1px -1px 2px rgba(76,29,149,.2)}
+.gemini-save-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #4c1d95,0 13px 20px rgba(124,58,237,.3),inset 0 2px 2px rgba(255,255,255,.4),inset 0 -2px 4px rgba(76,29,149,.3)}
+.gemini-save-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #4c1d95,0 5px 9px rgba(124,58,237,.18),inset 0 2px 4px rgba(76,29,149,.3)}
+.gemini-status{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:#64748b}
+.gemini-status-dot{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.gemini-status.saved .gemini-status-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+@media(max-width:700px){.gemini-form-row{align-items:flex-start;flex-direction:column}.gemini-field-info,.gemini-field-control{width:100%;min-width:0}.gemini-save-row{justify-content:stretch}.gemini-save-btn{width:100%}}
+
+/* Email Template settings */
+.email-template-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#ffffff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.email-subject-row{min-height:92px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:20px 24px;border-bottom:1px solid #e3e9f1}
+.email-template-label,.email-code-heading{display:flex;align-items:center;gap:14px;min-width:260px}
+.email-template-icon{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#fff0f3,#ffd5dd);color:#e11d48;font-size:19px;font-weight:900;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(159,18,57,.1),3px 4px 8px rgba(15,23,42,.1)}
+.email-template-icon.code-icon{background:linear-gradient(145deg,#e8f7ff,#c8ecff);color:#0284c7;font-size:16px}
+.email-template-icon.variable-icon{background:linear-gradient(145deg,#f2eaff,#ddc7ff);color:#7c3aed;font-size:15px}
+.email-template-label h3,.email-code-heading h3{margin:0;font-size:16px;font-weight:800}
+.email-template-label p,.email-code-heading p{margin:5px 0 0;font-size:13px;line-height:1.4;color:#718096}
+.email-subject-control{width:420px}
+.email-subject-input{width:100%;height:46px;box-sizing:border-box;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:14px;font-weight:600;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.email-subject-input:focus{border-color:#f472b6;box-shadow:0 0 0 4px rgba(244,114,182,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.email-subject-input::placeholder{color:#94a3b8;font-weight:500}
+.email-code-section{padding:22px 24px 20px;border-bottom:1px solid #e3e9f1}
+.email-template-card .email-code-heading{min-width:0;margin-bottom:14px}
+.email-template-code{display:block;width:100%;height:390px;box-sizing:border-box;resize:vertical;padding:17px 18px;border:1px solid #cbd5e1;border-radius:14px;background:linear-gradient(145deg,#111827,#0f172a);color:#dbeafe;outline:none;font-family:Consolas,Monaco,"Courier New",monospace;font-size:13px;line-height:1.55;tab-size:2;box-shadow:inset 4px 4px 10px rgba(0,0,0,.3),inset -2px -2px 5px rgba(255,255,255,.04),0 5px 12px rgba(15,23,42,.12);transition:.18s}
+.email-template-code:focus{border-color:#38bdf8;box-shadow:0 0 0 4px rgba(56,189,248,.12),inset 4px 4px 10px rgba(0,0,0,.3)}
+.email-template-code::placeholder{color:#64748b}
+.email-variables-section{padding:22px 24px;border-bottom:1px solid #e3e9f1}
+.email-variable-list{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px;padding:14px;border-radius:15px;background:linear-gradient(145deg,#f8fbff,#eaf1f7);border:1px solid #dce5ef;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),inset -2px -2px 5px rgba(255,255,255,.9)}
+.email-variable-chip{height:34px;padding:0 12px;border:1px solid #c4b5fd;border-radius:10px;background:linear-gradient(145deg,#ffffff,#eee9ff);color:#6d28d9;font-family:Consolas,Monaco,"Courier New",monospace;font-size:12px;font-weight:800;cursor:pointer;box-shadow:3px 4px 7px rgba(15,23,42,.1),inset 1px 1px 2px rgba(255,255,255,.95),inset -1px -1px 2px rgba(109,40,217,.08);transition:transform .15s,box-shadow .15s}
+.email-variable-chip:hover{transform:translateY(-2px);box-shadow:4px 6px 10px rgba(15,23,42,.14),inset 1px 1px 2px rgba(255,255,255,.95)}
+.email-variable-chip:active{transform:translateY(1px);box-shadow:inset 2px 2px 5px rgba(15,23,42,.14)}
+.email-template-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 24px;background:linear-gradient(180deg,#fbfdff,#eef5fa)}
+.email-template-status{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b}
+.email-status-dot{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.email-template-status.saved .email-status-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+.email-template-save-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:185px;height:44px;padding:0 18px;border:0;border-radius:12px;background:linear-gradient(145deg,#fb7185,#e11d48 58%,#be123c);color:#fff;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 5px 0 #9f1239,0 9px 16px rgba(225,29,72,.23),inset 0 2px 2px rgba(255,255,255,.35),inset 0 -2px 4px rgba(159,18,57,.3);transition:transform .16s ease,box-shadow .16s ease}
+.email-template-save-btn span{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.2);box-shadow:inset 1px 1px 2px rgba(255,255,255,.35)}
+.email-template-save-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #9f1239,0 13px 20px rgba(225,29,72,.3),inset 0 2px 2px rgba(255,255,255,.4),inset 0 -2px 4px rgba(159,18,57,.3)}
+.email-template-save-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #9f1239,0 5px 9px rgba(225,29,72,.18),inset 0 2px 4px rgba(159,18,57,.3)}
+@media(max-width:700px){.email-subject-row{align-items:flex-start;flex-direction:column}.email-template-label,.email-subject-control{width:100%;min-width:0}.email-template-code{height:330px}.email-template-actions{align-items:stretch;flex-direction:column}.email-template-save-btn{width:100%}}
+
+/* Gmail settings */
+.logo-upload-stack{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.logo-file-name{max-width:190px;font-size:10px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmail-settings-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#fff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.gmail-form-row{min-height:92px;display:flex;align-items:center;justify-content:space-between;gap:25px;padding:20px 24px;border-bottom:1px solid #e3e9f1}
+.gmail-field-info{display:flex;align-items:center;gap:14px;min-width:260px}
+.gmail-field-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#fff0f3,#ffd5dd);color:#e11d48;font-size:18px;font-weight:900;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(159,18,57,.1),3px 4px 8px rgba(15,23,42,.1)}
+.gmail-field-info h3{margin:0;font-size:16px;font-weight:800}.gmail-field-info p{margin:5px 0 0;font-size:13px;line-height:1.4;color:#718096}
+.gmail-field-control{width:420px}.gmail-input{width:100%;height:46px;box-sizing:border-box;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:14px;font-weight:600;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.gmail-input:focus{border-color:#f472b6;box-shadow:0 0 0 4px rgba(244,114,182,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.gmail-status-pill{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 13px;border-radius:10px;background:#fff1f2;border:1px solid #fecdd3;color:#be123c;font-size:11px;font-weight:800}
+.gmail-status-pill span{width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.1)}
+.gmail-action-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 24px;background:linear-gradient(180deg,#fffafe,#fff1f5);border-top:1px solid #f3dbe2}
+.gmail-note{font-size:12px;color:#64748b}.gmail-connect-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:170px;height:44px;padding:0 18px;border:0;border-radius:12px;background:linear-gradient(145deg,#fb7185,#e11d48 58%,#be123c);color:#fff;font-size:13px;font-weight:850;cursor:pointer;box-shadow:0 5px 0 #9f1239,0 9px 16px rgba(225,29,72,.23),inset 0 2px 2px rgba(255,255,255,.35);transition:.16s}
+.gmail-connect-btn span{font-weight:900}.gmail-connect-btn:hover{transform:translateY(-2px);box-shadow:0 7px 0 #9f1239,0 13px 20px rgba(225,29,72,.3),inset 0 2px 2px rgba(255,255,255,.4)}.gmail-connect-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #9f1239,0 5px 9px rgba(225,29,72,.18)}
+@media(max-width:700px){.gmail-form-row{align-items:flex-start;flex-direction:column}.gmail-field-info,.gmail-field-control{width:100%;min-width:0}.gmail-action-row{align-items:stretch;flex-direction:column}.gmail-connect-btn{width:100%}}
+
+
+/* WhatsApp settings */
+.whatsapp-shortcut span{display:grid;place-items:center}
+.whatsapp-shortcut-icon svg,.whatsapp-panel-icon svg{display:block}
+.whatsapp-shortcut:hover::after{background:#dcfce7;border-color:#86efac;color:#15803d}
+.whatsapp-shortcut.active{background:linear-gradient(145deg,#4ade80,#16a34a 60%,#15803d);border-color:#16a34a}
+.whatsapp-shortcut.active span{filter:brightness(0) invert(1) drop-shadow(1px 2px 1px rgba(0,0,0,.18))}
+.whatsapp-panel-icon{background:linear-gradient(145deg,#dcfce7,#bbf7d0);color:#16a34a;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(21,128,61,.12),3px 4px 8px rgba(15,23,42,.1)}
+.whatsapp-settings-card{overflow:hidden;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#fff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.09),-7px -7px 18px rgba(255,255,255,.95)}
+.whatsapp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #e3e9f1}
+.whatsapp-field{padding:20px 24px;min-width:0}
+.whatsapp-field:first-child{border-right:1px solid #e3e9f1}
+.whatsapp-field-heading{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.whatsapp-field-icon{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#dcfce7,#bbf7d0);color:#16a34a;font-size:19px;font-weight:900;box-shadow:inset 2px 2px 5px rgba(255,255,255,.9),inset -2px -2px 5px rgba(21,128,61,.1),3px 4px 8px rgba(15,23,42,.1)}
+.whatsapp-field-heading h3{margin:0;font-size:16px;font-weight:800}
+.whatsapp-field-heading p{margin:5px 0 0;font-size:13px;line-height:1.4;color:#718096}
+.whatsapp-input{width:100%;height:46px;box-sizing:border-box;padding:0 14px;border:1px solid #ccd8e5;border-radius:12px;background:#fff;outline:none;font-size:14px;font-weight:650;color:#172033;box-shadow:inset 2px 2px 6px rgba(15,23,42,.05),0 2px 4px rgba(15,23,42,.04);transition:.18s}
+.whatsapp-input:focus{border-color:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.12),inset 2px 2px 5px rgba(15,23,42,.04)}
+.whatsapp-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 24px;background:linear-gradient(180deg,#f8fff9,#eef9f1);border-top:1px solid #dff1e3}
+.whatsapp-action-buttons{display:flex;align-items:center;gap:10px}
+.whatsapp-submit-btn,.whatsapp-reset-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:125px;height:44px;padding:0 18px;border:0;border-radius:12px;color:#fff;font-size:13px;font-weight:850;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease}
+.whatsapp-submit-btn{background:linear-gradient(145deg,#4ade80,#16a34a 58%,#15803d);box-shadow:0 5px 0 #166534,0 9px 16px rgba(22,163,74,.24),inset 0 2px 2px rgba(255,255,255,.38),inset 0 -2px 4px rgba(21,128,61,.3)}
+.whatsapp-reset-btn{background:linear-gradient(145deg,#94a3b8,#64748b 58%,#475569);box-shadow:0 5px 0 #334155,0 9px 16px rgba(71,85,105,.22),inset 0 2px 2px rgba(255,255,255,.35),inset 0 -2px 4px rgba(51,65,85,.3)}
+.whatsapp-submit-btn span,.whatsapp-reset-btn span{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:rgba(255,255,255,.2);box-shadow:inset 1px 1px 2px rgba(255,255,255,.35)}
+.whatsapp-submit-btn:hover,.whatsapp-reset-btn:hover{transform:translateY(-2px)}
+.whatsapp-submit-btn:hover{box-shadow:0 7px 0 #166534,0 13px 20px rgba(22,163,74,.3),inset 0 2px 2px rgba(255,255,255,.4),inset 0 -2px 4px rgba(21,128,61,.3)}
+.whatsapp-reset-btn:hover{box-shadow:0 7px 0 #334155,0 13px 20px rgba(71,85,105,.28),inset 0 2px 2px rgba(255,255,255,.4),inset 0 -2px 4px rgba(51,65,85,.3)}
+.whatsapp-submit-btn:active,.whatsapp-reset-btn:active{transform:translateY(3px)}
+.whatsapp-submit-btn:active{box-shadow:0 2px 0 #166534,0 5px 9px rgba(22,163,74,.18),inset 0 2px 4px rgba(21,128,61,.3)}
+.whatsapp-reset-btn:active{box-shadow:0 2px 0 #334155,0 5px 9px rgba(71,85,105,.18),inset 0 2px 4px rgba(51,65,85,.3)}
+.whatsapp-status{display:flex;align-items:center;gap:8px;font-size:13px;color:#64748b}
+.whatsapp-status-dot{width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.12)}
+.whatsapp-status.saved .whatsapp-status-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.14)}
+.whatsapp-variables-section{padding:22px 24px;border:1px solid #dce5ef;border-radius:20px;background:linear-gradient(145deg,#fff,#f3f7fb);box-shadow:10px 12px 28px rgba(15,23,42,.08),-7px -7px 18px rgba(255,255,255,.95);margin-top:14px}
+.whatsapp-variable-icon{background:linear-gradient(145deg,#dcfce7,#bbf7d0);color:#16a34a}
+.whatsapp-variable-list{margin-top:14px}
+.whatsapp-variable-chip{border-color:#86efac;background:linear-gradient(145deg,#fff,#ecfdf5);color:#15803d}
+.whatsapp-variable-chip:hover{box-shadow:4px 6px 10px rgba(22,163,74,.16),inset 1px 1px 2px rgba(255,255,255,.95)}
+@media(max-width:700px){
+  .whatsapp-form-grid{grid-template-columns:1fr}
+  .whatsapp-field:first-child{border-right:0;border-bottom:1px solid #e3e9f1}
+  .whatsapp-actions{align-items:stretch;flex-direction:column}
+  .whatsapp-action-buttons{width:100%}
+  .whatsapp-submit-btn,.whatsapp-reset-btn{flex:1}
+  .whatsapp-variables-section{padding:20px 16px}
+}
+
+/* WhatsApp field proportions */
+.whatsapp-form-grid{grid-template-columns:125px minmax(0,1fr)}
+.whatsapp-field:first-child{padding-right:14px}
+.whatsapp-field:last-child{padding-left:18px}
+@media(max-width:700px){
+  .whatsapp-form-grid{grid-template-columns:1fr}
+  .whatsapp-field:first-child{padding-right:24px}
+  .whatsapp-field:last-child{padding-left:24px}
+}

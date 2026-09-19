@@ -195,7 +195,13 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
   });
 }));
 
-app.get('/invoices/upload', requireAuth, (req, res) => res.render('upload', { message: null }));
+app.get('/invoices/upload', requireAuth, (req, res) => res.render('upload', {
+  page: 'upload',
+  pageTitle: 'Upload Invoice',
+  pageHeading: 'Upload Invoices',
+  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+  message: null
+}));
 
 app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyncRoute(async (req, res) => {
   const files = req.files || [];
@@ -277,13 +283,27 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
   }
   const invoices = await Invoice.find(q).populate('partyId').sort({ invoiceDate: -1 }).limit(1000);
   const parties = await Party.find().sort({ name: 1 });
-  res.render('invoices', { invoices, parties, query: req.query });
+  res.render('invoices', {
+    page: 'reports',
+    pageTitle: 'Invoice Reports',
+    pageHeading: 'Invoice Reports',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    invoices,
+    parties,
+    query: req.query
+  });
 }));
 
 app.get('/invoice/:id/view', requireAuth, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id);
   if (!inv) return res.status(404).send('Not found');
-  res.render('invoice', { inv });
+  res.render('invoice', {
+    page: 'reports',
+    pageTitle: 'View Invoice',
+    pageHeading: 'Invoice Details',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    inv
+  });
 }));
 
 app.get('/invoice/:id/download', requireAuth, asyncRoute(async (req, res) => {
@@ -323,7 +343,13 @@ app.post('/invoice/:id/delete', requireAuth, asyncRoute(async (req, res) => {
 
 app.get('/parties', requireAuth, asyncRoute(async (req, res) => {
   const parties = await Party.find().sort({ name: 1 });
-  res.render('parties', { parties });
+  res.render('parties', {
+    page: 'parties',
+    pageTitle: 'Party List',
+    pageHeading: 'Customer & Supplier Directory',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    parties
+  });
 }));
 
 app.post('/parties/update/:id', requireAuth, asyncRoute(async (req, res) => {
@@ -347,10 +373,22 @@ app.post('/api/parties/save-email-and-send', requireAuth, asyncRoute(async (req,
   res.json({ message: `ईमेल भेज दिया गया ${email}` });
 }));
 
-app.get('/settings/company', requireAuth, (req, res) => res.render('settings-company', { saved: req.query.saved }));
+app.get('/settings/company', requireAuth, (req, res) => res.render('settings-company', {
+  page: 'settings',
+  pageTitle: 'Company Settings',
+  pageHeading: 'Settings',
+  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+  saved: req.query.saved
+}));
 app.post('/settings/company', requireAuth, asyncRoute(async (req, res) => { await saveEnv({ COMPANY_NAME: req.body.companyName }); res.redirect('/settings/company?saved=1'); }));
 
-app.get('/settings/google', requireAuth, (req, res) => res.render('settings-google', { saved: req.query.saved }));
+app.get('/settings/google', requireAuth, (req, res) => res.render('settings-google', {
+  page: 'settings',
+  pageTitle: 'Google Settings',
+  pageHeading: 'Settings',
+  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+  saved: req.query.saved
+}));
 app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
   await saveEnv({
     GOOGLE_CLIENT_ID: req.body.googleClientId,
@@ -362,6 +400,10 @@ app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 app.get('/settings/gemini', requireAuth, (req, res) => res.render('settings-gemini', {
+  page: 'settings',
+  pageTitle: 'Gemini AI Settings',
+  pageHeading: 'Settings',
+  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
   saved: req.query.saved,
   keys: (process.env.GEMINI_API_KEYS || '').split(',').map(s => s.trim()).filter(Boolean)
 }));
@@ -372,6 +414,10 @@ app.post('/settings/gemini', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 app.get('/settings/email', requireAuth, (req, res) => res.render('settings-email', {
+  page: 'settings',
+  pageTitle: 'Email Template',
+  pageHeading: 'Settings',
+  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
   saved: req.query.saved,
   subject: process.env.EMAIL_SUBJECT_TEMPLATE || '',
   body: process.env.EMAIL_BODY_TEMPLATE || ''

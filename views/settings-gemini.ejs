@@ -1,1 +1,48 @@
-<%- include('partials/header') %><div class="top"><div><div class="title">Gemini API Keys</div><div class="sub">एक key fail/rate-limit होने पर अगली configured key try की जाएगी।</div></div></div><% if(saved){ %><div class="alert">Gemini keys saved to .env</div><% } %><div class="panel"><form class="form" method="post"><label>Gemini API Keys <textarea name="keys" placeholder="हर line में एक key"><%=keys.join('\n')%></textarea></label><button class="btn">Submit & Save to .env</button></form><p class="small">ध्यान दें: Gemini quota project-level भी लागू हो सकता है; अलग keys हमेशा quota को multiply नहीं करतीं।</p></div><%- include('partials/footer') %>
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/settings.css">
+
+<div class="settings-module" style="padding-top:10px;">
+  <div class="settings-shortcuts" role="tablist">
+    <a href="/settings/company" class="settings-shortcut" style="text-decoration:none;">
+      <span>🏢</span><small class="setting-label">Company</small>
+    </a>
+    <a href="/settings/google" class="settings-shortcut" style="text-decoration:none;">
+      <span>☁</span><small class="setting-label">Google Auth</small>
+    </a>
+    <a href="/settings/gemini" class="settings-shortcut active" style="text-decoration:none;">
+      <span>✦</span><small class="setting-label">Gemini AI</small>
+    </a>
+    <a href="/settings/email" class="settings-shortcut" style="text-decoration:none;">
+      <span>📝</span><small class="setting-label">Email Template</small>
+    </a>
+  </div>
+
+  <% if(saved){ %>
+    <div style="background:#DCFCE7;border:1px solid #86EFAC;color:#15803D;padding:12px 18px;border-radius:14px;margin-bottom:18px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+      <span>✓</span> Gemini API keys saved successfully!
+    </div>
+  <% } %>
+
+  <div class="settings-panel active">
+    <div class="settings-panel-title">
+      <div class="panel-icon">✦</div>
+      <div>
+        <h2>Gemini AI Keys</h2>
+        <p>एक key fail या rate-limit होने पर अगली configured key अपने-आप try की जाएगी।</p>
+      </div>
+    </div>
+
+    <form method="POST" action="/settings/gemini">
+      <div style="padding:24px;border-radius:20px;background:#fff;border:1px solid #E2E8F0;box-shadow:10px 12px 22px rgba(15,23,42,0.06);">
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:8px;">Gemini API Keys (One per line)</label>
+          <textarea name="keys" placeholder="Paste your Gemini API Keys here (one per line)" style="width:100%;min-height:160px;padding:14px;border:1px solid #CBD5E1;border-radius:14px;font-size:13px;font-family:monospace;outline:none;resize:vertical;"><%= keys.join('\n') %></textarea>
+          <small style="color:#64748B;display:block;margin-top:6px;font-size:11px;">💡 अलग-अलग Google AI Studio प्रोजेक्ट्स की कीज़ डालने से रेट लिमिट बाईपास करने में मदद मिलती है।</small>
+        </div>
+        <button type="submit" class="primary" style="height:44px;padding:0 24px;font-size:12px;">Save Gemini Keys</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

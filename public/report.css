@@ -1,0 +1,51 @@
+/* Report > Upload Invoice page-only styles.
+ * Keep future changes here instead of adding more rules to index.html.
+ */
+#upload-invoice-report.report-subpage{padding:0;margin:0}
+    #upload-invoice-report .report-upload-shell{display:flex;flex-direction:column;gap:14px;margin-top:0}
+    #upload-invoice-report .report-filter-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr auto auto;gap:10px;align-items:end;padding:14px;border:1px solid #E2E8F0;border-radius:20px;background:linear-gradient(145deg,#fff,#F7FAFC);box-shadow:10px 13px 26px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.95)}
+    #upload-invoice-report .report-filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    #upload-invoice-report .report-filter-field label{font-size:10px;font-weight:900;color:#334155;letter-spacing:.3px}
+    #upload-invoice-report .report-filter-field select,#upload-invoice-report .report-filter-field input{width:100%;height:40px;border:1px solid #CBD5E1;border-radius:12px;background:#fff;color:#0F172A;padding:0 11px;font-size:11px;font-weight:750;outline:none;box-shadow:inset 2px 2px 5px rgba(15,23,42,.035),3px 4px 8px rgba(15,23,42,.04);transition:.2s}
+    #upload-invoice-report .report-filter-field select:focus,#upload-invoice-report .report-filter-field input:focus{border-color:#60A5FA;box-shadow:0 0 0 3px rgba(37,99,235,.08),inset 2px 2px 5px rgba(15,23,42,.035)}
+    #upload-invoice-report .report-search-btn,#upload-invoice-report .report-reset-btn{height:40px;border:0;border-radius:12px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:10px;font-weight:950;cursor:pointer;white-space:nowrap;transition:.22s;position:relative;overflow:hidden}
+    #upload-invoice-report .report-search-btn{color:#fff;background:linear-gradient(145deg,#3B82F6,#1E3A8A);box-shadow:7px 8px 14px rgba(37,99,235,.22),inset 1px 1px 2px rgba(255,255,255,.35);animation:reportSearchPulse 2.4s ease-in-out infinite}
+    #upload-invoice-report .report-search-btn:before{content:"";position:absolute;top:0;left:-90%;width:60%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.42),transparent);transform:skewX(-20deg);animation:reportButtonShine 3s ease-in-out infinite}
+    #upload-invoice-report .report-search-btn:hover{transform:translateY(-3px);box-shadow:10px 12px 19px rgba(37,99,235,.28)}
+    #upload-invoice-report .report-reset-btn{color:#475569;background:linear-gradient(145deg,#fff,#E2E8F0);border:1px solid #CBD5E1;box-shadow:5px 6px 11px rgba(15,23,42,.09),inset 1px 1px 2px #fff}
+    #upload-invoice-report .report-reset-btn:hover{transform:translateY(-2px);color:#1E3A8A;border-color:#93C5FD}
+    #upload-invoice-report .report-filter-count{font-size:9px;font-weight:850;color:#64748B;padding:4px 2px 0;grid-column:1/-1}
+    #upload-invoice-report .report-table-card{border:1px solid #E2E8F0;border-radius:20px;background:#fff;box-shadow:11px 14px 28px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.95);overflow:hidden}
+    #upload-invoice-report .report-table-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #E2E8F0;background:linear-gradient(90deg,#F8FAFC,#fff)}
+    #upload-invoice-report .report-table-head h3{margin:0;font-size:15px;font-weight:950;color:#0F172A;letter-spacing:.2px}
+    #upload-invoice-report .report-table-head span{font-size:9px;font-weight:850;color:#64748B}
+    #upload-invoice-report .report-table-wrap{overflow:auto}
+    #upload-invoice-report table{width:100%;border-collapse:separate;border-spacing:0;min-width:940px}
+    #upload-invoice-report th{height:42px;padding:0 12px;text-align:left;background:#F1F5F9;color:#475569;font-size:9px;font-weight:950;letter-spacing:.45px;white-space:nowrap;border-bottom:1px solid #E2E8F0}
+    #upload-invoice-report td{height:55px;padding:7px 12px;color:#334155;font-size:10px;font-weight:700;border-bottom:1px solid #EEF2F7;white-space:nowrap;background:#fff}
+    #upload-invoice-report tbody tr{transition:.2s}
+    #upload-invoice-report tbody tr:hover td{background:linear-gradient(90deg,#F8FBFF,#F8FFFC);transform:translateY(-1px)}
+    #upload-invoice-report tbody tr:last-child td{border-bottom:0}
+    #upload-invoice-report .sl-cell{color:#94A3B8;font-weight:900;width:50px}
+    #upload-invoice-report .party-cell strong{display:block;color:#0F172A;font-size:10px;font-weight:900}.party-cell small{display:block;margin-top:3px;color:#94A3B8;font-size:8px;font-weight:700}
+    #upload-invoice-report .type-pill{display:inline-flex;align-items:center;padding:6px 9px;border-radius:9px;font-size:8px;font-weight:950;box-shadow:inset 1px 1px 2px #fff,3px 4px 8px rgba(15,23,42,.06)}
+    #upload-invoice-report .type-buy{background:#ECFDF5;color:#047857}.type-sell{background:#EFF6FF;color:#1D4ED8}
+    #upload-invoice-report .amount-cell{font-size:10px;font-weight:950;color:#0F172A}
+    #upload-invoice-report .action-group{display:flex;align-items:center;gap:7px}
+    #upload-invoice-report .report-action{width:32px;height:32px;border:1px solid transparent;border-radius:11px;display:grid;place-items:center;font-size:13px;cursor:pointer;transition:.22s;box-shadow:5px 6px 10px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.7);position:relative}
+    #upload-invoice-report .report-action:hover{transform:translateY(-4px) rotate(-2deg);box-shadow:7px 10px 15px rgba(15,23,42,.14)}
+    #upload-invoice-report .report-action:active{transform:translateY(1px) scale(.94)}
+    #upload-invoice-report .action-view{background:linear-gradient(145deg,#60A5FA,#2563EB);color:#fff}.action-download{background:linear-gradient(145deg,#2DD4BF,#0D9488);color:#fff}.action-edit{background:linear-gradient(145deg,#FBBF24,#F59E0B);color:#fff}.action-delete{background:linear-gradient(145deg,#FB7185,#EF4444);color:#fff}
+    #upload-invoice-report .report-empty{padding:35px;text-align:center;color:#94A3B8;font-size:11px;font-weight:800}
+    #reportDeleteModal{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;z-index:500}
+    #reportDeleteModal.open{display:flex}
+    #reportDeleteModal .delete-dialog{width:min(390px,calc(100% - 30px));padding:20px;border-radius:22px;background:linear-gradient(145deg,#fff,#F8FAFC);border:1px solid #E2E8F0;box-shadow:18px 22px 45px rgba(15,23,42,.28),inset 1px 1px 2px #fff;animation:deleteModalIn .22s ease both}
+    #reportDeleteModal .delete-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,#FB7185,#EF4444);color:#fff;font-size:21px;box-shadow:7px 8px 14px rgba(239,68,68,.22),inset 2px 2px 3px rgba(255,255,255,.35);margin-bottom:11px}
+    #reportDeleteModal h3{margin:0;color:#0F172A;font-size:16px;font-weight:950}.delete-dialog p{margin:6px 0 14px;color:#64748B;font-size:9px;line-height:1.5}.delete-dialog label{display:block;margin-bottom:6px;color:#334155;font-size:9px;font-weight:900}.delete-dialog input{width:100%;height:42px;border:1px solid #CBD5E1;border-radius:12px;padding:0 12px;outline:none;font-size:12px;font-weight:900;letter-spacing:4px;box-shadow:inset 2px 2px 5px rgba(15,23,42,.04)}.delete-dialog input:focus{border-color:#EF4444;box-shadow:0 0 0 3px rgba(239,68,68,.08)}.delete-error{min-height:16px;color:#EF4444;font-size:8px;font-weight:900;margin-top:5px}.delete-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:9px}.delete-actions button{border:0;border-radius:11px;padding:9px 13px;font-size:9px;font-weight:950;cursor:pointer;box-shadow:4px 5px 10px rgba(15,23,42,.09);transition:.18s}.delete-cancel{background:#F1F5F9;color:#475569}.delete-confirm{background:linear-gradient(145deg,#FB7185,#EF4444);color:#fff}.delete-actions button:hover{transform:translateY(-2px)}
+    @keyframes reportSearchPulse{0%,100%{box-shadow:7px 8px 14px rgba(37,99,235,.22),0 0 0 0 rgba(37,99,235,.14)}50%{box-shadow:7px 8px 14px rgba(37,99,235,.22),0 0 0 6px rgba(37,99,235,0)}}
+    @keyframes reportButtonShine{0%,55%{left:-90%}80%,100%{left:140%}}
+    @keyframes deleteModalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+    @media(max-width:1050px){#upload-invoice-report .report-filter-bar{grid-template-columns:1fr 1fr 1fr}.report-filter-count{grid-column:1/-1}.report-search-btn,.report-reset-btn{grid-column:auto}}
+    @media(max-width:760px){#upload-invoice-report .report-filter-bar{grid-template-columns:1fr 1fr;padding:11px}.report-filter-count{grid-column:1/-1}.report-search-btn,.report-reset-btn{width:100%}.report-table-head{padding:12px}.report-table-head h3{font-size:13px}}
+    @media(max-width:500px){#upload-invoice-report .report-filter-bar{grid-template-columns:1fr}.report-filter-count,.report-search-btn,.report-reset-btn{grid-column:1}.report-action{width:30px!important;height:30px!important}}
+

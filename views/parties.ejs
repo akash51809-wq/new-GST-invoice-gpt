@@ -1,82 +1,104 @@
 <%- include('partials/header') %>
+<link rel="stylesheet" href="/parties.css">
 
-<div class="top">
-    <div>
-        <div class="title">Customer & Supplier Directory</div>
-        <div class="sub">Invoice upload के साथ parties automatic create होती हैं।</div>
+<div class="party-page">
+  <div class="party-toolbar" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div class="party-search-box">
+      <span>⌕</span>
+      <input type="text" id="partySearchInput" placeholder="Search parties by name or GSTIN..." aria-label="Search parties">
     </div>
-</div>
+    <div style="font-size:12px;color:#64748B;font-weight:700;">
+      Total Parties: <strong style="color:#2563EB;"><%= parties.length %></strong>
+    </div>
+  </div>
 
-<div class="panel">
-    <table class="table">
-        <thead>
+  <div class="party-table-card">
+    <table class="party-table">
+      <thead>
+        <tr>
+          <th>PARTY NAME</th>
+          <th>GSTIN</th>
+          <th>EMAIL</th>
+          <th>MOBILE</th>
+          <th style="text-align:center;width:110px;">ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="partyTableBody">
+        <% if (!parties || !parties.length) { %>
+          <tr class="party-empty-row"><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No parties created yet. Upload invoices to add parties automatically.</td></tr>
+        <% } else { %>
+          <% parties.forEach(p => { %>
             <tr>
-                <th>Party</th>
-                <th>GSTIN</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>Action</th>
+              <td><strong><%= p.name %></strong></td>
+              <td><span style="font-family:monospace;font-weight:700;color:#2563EB;"><%= p.gstin || '-' %></span></td>
+              <td><%= p.email || '-' %></td>
+              <td><span style="color:#10B981;font-weight:700;"><%= p.mobile || '-' %></span></td>
+              <td style="text-align:center;">
+                <button type="button" class="party-action edit" onclick="openEditModal('<%= p._id %>', '<%= p.name.replace(/'/g, '\\\'') %>', '<%= p.email || '' %>', '<%= p.mobile || '' %>')">
+                  Edit
+                </button>
+              </td>
             </tr>
-        </thead>
-        <tbody>
-            <% parties.forEach(p => { %>
-                <tr>
-                    <td><%= p.name %></td>
-                    <td><%= p.gstin || '' %></td>
-                    <td><%= p.email || '' %></td>
-                    <td><%= p.mobile || '' %></td>
-                    <td>
-                        <button type="button" class="btn btn-sm btn-primary" onclick="openEditModal('<%= p._id %>', '<%= p.name %>', '<%= p.email || '' %>', '<%= p.mobile || '' %>')">
-                            Edit
-                        </button>
-                    </td>
-                </tr>
-            <% }) %>
-        </tbody>
+          <% }) %>
+        <% } %>
+      </tbody>
     </table>
+  </div>
 </div>
 
-<!-- Edit Party Modal -->
-<div class="modal fade" id="editPartyModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="editPartyForm" method="POST">
-                <div class="modal-header">
-                    <h5 class="modal-title">Edit Party Details: <span id="modalPartyName"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="editEmail" class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="editEmail" name="email">
-                    </div>
-                    <div class="mb-3">
-                        <label for="editMobile" class="form-label">Mobile Number</label>
-                        <input type="text" class="form-control" id="editMobile" name="mobile">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">Save Changes</button>
-                </div>
-            </form>
-        </div>
+<!-- Modern Edit Party Modal -->
+<div id="editPartyModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:24px;width:440px;max-width:92%;padding:28px;box-shadow:0 25px 50px rgba(15,23,42,0.25);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <span style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#EFF6FF;color:#2563EB;font-size:18px;">✎</span>
+      <div>
+        <h3 style="margin:0;font-size:17px;color:#0F172A;">Edit Party Details</h3>
+        <small style="color:#64748B;" id="modalPartyName"></small>
+      </div>
     </div>
+    
+    <form id="editPartyForm" method="POST">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:#334155;margin-bottom:6px;">Email Address</label>
+        <input type="email" class="form-control" id="editEmail" name="email" placeholder="party@example.com" style="width:100%;height:44px;padding:0 14px;border:1px solid #CBD5E1;border-radius:12px;font-size:13px;outline:none;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:#334155;margin-bottom:6px;">Mobile Number</label>
+        <input type="text" class="form-control" id="editMobile" name="mobile" placeholder="+91 9876543210" style="width:100%;height:44px;padding:0 14px;border:1px solid #CBD5E1;border-radius:12px;font-size:13px;outline:none;">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="primary light" onclick="closeEditModal()" style="font-size:11px;">Cancel</button>
+        <button type="submit" class="primary" style="font-size:11px;">Save Changes</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
 function openEditModal(id, name, email, mobile) {
-    document.getElementById('modalPartyName').innerText = name;
-    document.getElementById('editEmail').value = email;
-    document.getElementById('editMobile').value = mobile;
-    
-    const form = document.getElementById('editPartyForm');
-    form.action = '/parties/update/' + id;
-    
-    var myModalEl = document.getElementById('editPartyModal');
-    var myModal = bootstrap.Modal.getInstance(myModalEl) || new bootstrap.Modal(myModalEl);
-    myModal.show();
+  document.getElementById('modalPartyName').innerText = name;
+  document.getElementById('editEmail').value = email;
+  document.getElementById('editMobile').value = mobile;
+  document.getElementById('editPartyForm').action = '/parties/update/' + id;
+  document.getElementById('editPartyModal').style.display = 'flex';
 }
+
+function closeEditModal() {
+  document.getElementById('editPartyModal').style.display = 'none';
+}
+
+// Live search for party names and GSTIN
+document.getElementById('partySearchInput').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  const rows = document.querySelectorAll('#partyTableBody tr:not(.party-empty-row)');
+  let visible = 0;
+  rows.forEach(r => {
+    const text = r.innerText.toLowerCase();
+    const match = !q || text.includes(q);
+    r.style.display = match ? '' : 'none';
+    if (match) visible++;
+  });
+});
 </script>
 
 <%- include('partials/footer') %>

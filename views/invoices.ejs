@@ -1,140 +1,178 @@
 <%- include('partials/header') %>
-<div class="top">
-    <div>
-        <div class="title">Invoice Report</div>
-        <div class="sub">MongoDB index से तेज़ report</div>
-    </div>
-    <a class="btn" href="/reports/export.csv">Export CSV</a>
-</div>
+<link rel="stylesheet" href="/parties.css">
 
 <style>
-  .compact-filter-form {
+  .report-filter-bar {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    background: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    background: rgba(255,255,255,0.95);
+    padding: 14px 18px;
+    border-radius: 18px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 10px 12px 22px rgba(15,23,42,0.06);
     margin-bottom: 20px;
   }
-  .compact-filter-form select,
-  .compact-filter-form input {
-    padding: 6px 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  .report-filter-bar select,
+  .report-filter-bar input {
+    height: 42px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #CBD5E1;
+    border-radius: 12px;
     outline: none;
+    background: #F8FAFC;
+    color: #1E293B;
   }
-  .compact-filter-form .filter-btn {
-    padding: 6px 16px;
-    background-color: #1d4ed8;
-    color: white;
-    border: none;
-    border-radius: 4px;
+  .report-filter-bar select:focus,
+  .report-filter-bar input:focus {
+    border-color: #2563EB;
+    background: #fff;
+  }
+  .report-action-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid transparent;
     cursor: pointer;
-    font-weight: 500;
+    transition: .15s;
   }
-  .compact-filter-form .filter-btn:hover {
-    background-color: #1e40af;
-  }
+  .report-action-btn.view { background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; }
+  .report-action-btn.download { background: #ECFDF5; color: #059669; border-color: #A7F3D0; }
+  .report-action-btn.email { background: #FAF5FF; color: #7C3AED; border-color: #DDD6FE; }
+  .report-action-btn.delete { background: #FEF2F2; color: #EF4444; border-color: #FECACA; }
+  .report-action-btn:hover { transform: translateY(-1px); filter: brightness(0.96); }
 </style>
 
-<div class="panel">
-    <form method="GET" action="/reports/invoices" class="compact-filter-form">
-        <!-- 1. Financial Year Filter -->
-        <select name="financialYear">
-            <option value="">All Financial Years</option>
-            <option value="2024-25" <%= query.financialYear === '2024-25' ? 'selected' : '' %>>2024-25</option>
-            <option value="2025-26" <%= query.financialYear === '2025-26' ? 'selected' : '' %>>2025-26</option>
-            <option value="2026-27" <%= query.financialYear === '2026-27' ? 'selected' : '' %>>2026-27</option>
-        </select>
+<div class="party-page">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+    <div>
+      <h2 style="margin:0;font-size:22px;color:#0F172A;">Invoice Reports</h2>
+      <p style="margin:4px 0 0;font-size:12px;color:#64748B;">Showing <%= invoices.length %> invoices matching your filters</p>
+    </div>
+    <a class="primary light" href="/reports/export.csv" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;font-size:11px;">
+      ⬇ Export CSV
+    </a>
+  </div>
 
-        <!-- 2. Month Filter -->
-        <select name="month">
-            <option value="">All Months</option>
-            <% ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].forEach(m => { %>
-                <option value="<%= m %>" <%= query.month === m ? 'selected' : '' %>><%= m %></option>
-            <% }) %>
-        </select>
+  <!-- Filter Bar -->
+  <form method="GET" action="/reports/invoices" class="report-filter-bar">
+    <select name="financialYear" aria-label="Financial Year">
+      <option value="">All FY</option>
+      <option value="2024-25" <%= query.financialYear === '2024-25' ? 'selected' : '' %>>FY 2024-25</option>
+      <option value="2025-26" <%= query.financialYear === '2025-26' ? 'selected' : '' %>>FY 2025-26</option>
+      <option value="2026-27" <%= query.financialYear === '2026-27' ? 'selected' : '' %>>FY 2026-27</option>
+    </select>
 
-        <!-- 3. Buy / Sell Filter -->
-        <select name="type">
-            <option value="ALL" <%= (!query.type || query.type === 'ALL') ? 'selected' : '' %>>Buy / Sell (All)</option>
-            <option value="BUY" <%= query.type === 'BUY' ? 'selected' : '' %>>Buy</option>
-            <option value="SELL" <%= query.type === 'SELL' ? 'selected' : '' %>>Sell</option>
-        </select>
+    <select name="month" aria-label="Month">
+      <option value="">All Months</option>
+      <% ['April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December', 'January', 'February', 'March'].forEach(m => { %>
+        <option value="<%= m %>" <%= query.month === m ? 'selected' : '' %>><%= m %></option>
+      <% }) %>
+    </select>
 
-        <!-- 4. Party Name Filter -->
-        <select name="party">
-            <option value="">All Parties</option>
-            <% parties.forEach(p => { %>
-                <option value="<%= p._id %>" <%= query.party === String(p._id) ? 'selected' : '' %>><%= p.name %></option>
-            <% }) %>
-        </select>
+    <select name="type" aria-label="Type">
+      <option value="ALL" <%= (!query.type || query.type === 'ALL') ? 'selected' : '' %>>All Types</option>
+      <option value="BUY" <%= query.type === 'BUY' ? 'selected' : '' %>>Buy Only</option>
+      <option value="SELL" <%= query.type === 'SELL' ? 'selected' : '' %>>Sell Only</option>
+    </select>
 
-        <!-- 5. Search Box -->
-        <input type="text" name="search" placeholder="Invoice No / Party..." value="<%= query.search || '' %>" style="flex-grow: 1;">
+    <select name="party" aria-label="Party" style="max-width:180px;">
+      <option value="">All Parties</option>
+      <% parties.forEach(p => { %>
+        <option value="<%= p._id %>" <%= query.party === String(p._id) ? 'selected' : '' %>><%= p.name %></option>
+      <% }) %>
+    </select>
 
-        <!-- 6. Submit Button -->
-        <button type="submit" class="filter-btn">Filter</button>
-    </form>
+    <input type="text" name="search" placeholder="Search Invoice No / Party..." value="<%= query.search || '' %>" style="flex:1;min-width:180px;">
+
+    <button type="submit" class="primary" style="height:42px;padding:0 20px;font-size:12px;">Filter</button>
+  </form>
+
+  <!-- Invoices Table Card -->
+  <div class="party-table-card">
+    <table class="party-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">#</th>
+          <th>DATE</th>
+          <th>INVOICE NO</th>
+          <th>PARTY NAME</th>
+          <th>TYPE</th>
+          <th>AMOUNT</th>
+          <th style="text-align:center;width:240px;">ACTIONS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!invoices || !invoices.length) { %>
+          <tr><td colspan="7" style="text-align:center;padding:28px;color:#94A3B8;">No invoices found matching the filters.</td></tr>
+        <% } else { %>
+          <% invoices.forEach((x, i) => { %>
+            <tr>
+              <td><%= i + 1 %></td>
+              <td><%= x.invoiceDate ? new Date(x.invoiceDate).toLocaleDateString('en-IN') : '-' %></td>
+              <td><strong style="color:#2563EB;"><%= x.invoiceNumber || '-' %></strong></td>
+              <td><%= x.invoiceType === 'BUY' ? x.sellerName : x.buyerName %></td>
+              <td>
+                <span style="padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;<%= x.invoiceType === 'BUY' ? 'background:#DCFCE7;color:#16A34A;' : 'background:#FEF3C7;color:#D97706;' %>">
+                  <%= x.invoiceType %>
+                </span>
+              </td>
+              <td><strong>₹ <%= (x.invoiceAmount || 0).toLocaleString('en-IN') %></strong></td>
+              <td style="text-align:center;">
+                <div style="display:inline-flex;gap:6px;align-items:center;">
+                  <a class="report-action-btn view" href="/invoice/<%= x._id %>/view">View</a>
+                  <a class="report-action-btn download" href="/invoice/<%= x._id %>/download">Download</a>
+                  <form style="display:inline;margin:0;" method="POST" action="/invoice/<%= x._id %>/email">
+                    <button type="submit" class="report-action-btn email">Email</button>
+                  </form>
+                  <button type="button" class="report-action-btn delete" onclick="openDeletePinModal('<%= x._id %>', '<%= (x.invoiceNumber || '').replace(/'/g, '\\\'') %>')">Delete</button>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
 </div>
 
-<div class="panel">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>S.No.</th>
-                <th>Date</th>
-                <th>Invoice No.</th>
-                <th>Party</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% invoices.forEach((x,i)=>{ %>
-                <tr>
-                    <td><%=i+1%></td>
-                    <td><%=x.invoiceDate?new Date(x.invoiceDate).toLocaleDateString('en-IN'):''%></td>
-                    <td><%=x.invoiceNumber||''%></td>
-                    <td><%=x.invoiceType==='BUY'?x.sellerName:x.buyerName%></td>
-                    <td><span class="badge <%=x.invoiceType==='BUY'?'buy':'sell'%>"><%=x.invoiceType%></span></td>
-                    <td><%=x.invoiceAmount||0%></td>
-                    <td>
-                        <a class="btn secondary" href="/invoice/<%=x._id%>/view">View</a> 
-                        <a class="btn secondary" href="/invoice/<%=x._id%>/download">Download</a> 
-                        <form style="display:inline" method="post" action="/invoice/<%=x._id%>/email">
-                            <button class="btn secondary">Email</button>
-                        </form>
-                        <button type="button" class="btn secondary" style="background-color: #dc3545; color: white;" onclick="confirmDelete('<%= x._id %>')">Delete</button>
-                    </td>
-                </tr>
-            <% }) %>
-        </tbody>
-    </table>
+<!-- Modern Delete PIN Modal from GSTUI-main -->
+<div id="deletePinModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:24px;width:400px;max-width:92%;padding:28px;box-shadow:0 25px 50px rgba(15,23,42,0.25);text-align:center;">
+    <div style="width:52px;height:52px;border-radius:16px;background:#FEE2E2;color:#EF4444;font-size:24px;display:grid;place-items:center;margin:0 auto 14px;">⌫</div>
+    <h3 style="margin:0 0 6px;font-size:18px;color:#0F172A;">Delete Invoice?</h3>
+    <p style="font-size:12px;color:#64748B;margin:0 0 16px;">
+      Invoice: <strong id="deleteModalInvNum" style="color:#0F172A;"></strong><br>
+      सुरक्षा के लिए एडमिन PIN दर्ज करें:
+    </p>
+    <form id="deleteInvoiceForm" method="POST">
+      <input id="deletePinInput" name="pin" type="password" inputmode="numeric" maxlength="8" placeholder="Enter PIN (Default: 1234)" required style="width:100%;height:44px;text-align:center;font-size:16px;letter-spacing:4px;border:1px solid #CBD5E1;border-radius:12px;outline:none;margin-bottom:18px;">
+      <div style="display:flex;justify-content:center;gap:10px;">
+        <button type="button" class="primary light" onclick="closeDeletePinModal()" style="font-size:11px;min-width:90px;">Cancel</button>
+        <button type="submit" style="background:#EF4444;color:#fff;border:0;padding:10px 18px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;">Delete Permanently</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-function confirmDelete(invoiceId) {
-    let pin = prompt("सुरक्षा के लिए PIN दर्ज करें (डिफ़ॉल्ट PIN: 1234):");
-    if (pin !== null && pin !== "") {
-        let form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/invoice/' + invoiceId + '/delete';
+function openDeletePinModal(invoiceId, invNum) {
+  document.getElementById('deleteModalInvNum').innerText = invNum || 'Invoice';
+  document.getElementById('deleteInvoiceForm').action = '/invoice/' + invoiceId + '/delete';
+  document.getElementById('deletePinInput').value = '';
+  document.getElementById('deletePinModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('deletePinInput').focus(), 100);
+}
 
-        let input = document.createElement('input');
-        input.type = 'password';
-        input.name = 'pin';
-        input.value = pin;
-
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
+function closeDeletePinModal() {
+  document.getElementById('deletePinModal').style.display = 'none';
 }
 </script>
 

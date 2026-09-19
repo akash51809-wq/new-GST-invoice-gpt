@@ -1,193 +1,338 @@
 <%- include('partials/header') %>
-<div class="top">
-    <div class="title">Upload Invoices</div>
-</div>
-<div class="panel">
-    <form id="uploadForm">
-        <div class="form">
-            <label>Select PDF Invoices (Max 50)
-                <input type="file" name="invoices" multiple accept="application/pdf" required>
-            </label>
+<link rel="stylesheet" href="/upload.css">
+
+<div class="upload-page">
+  <div class="upload-layout">
+    <section class="upload-main-card">
+      <div class="dropzone" id="invoiceDropzone">
+        <div class="upload-box-title"><h2>Upload Invoices</h2></div>
+        <div class="dropzone-center">
+          <div class="dropzone-icon" aria-hidden="true">
+            <svg class="upload-cloud-art" viewBox="0 0 180 130" role="img">
+              <defs>
+                <linearGradient id="uploadCloudGrad" x1="20" y1="15" x2="150" y2="115" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stop-color="#38BDF8"/>
+                  <stop offset="1" stop-color="#2563EB"/>
+                </linearGradient>
+                <filter id="uploadCloudShadow" x="-30%" y="-30%" width="160%" height="170%">
+                  <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#2563EB" flood-opacity=".24"/>
+                </filter>
+              </defs>
+              <path d="M43 102h83c20 0 34-13 34-30 0-16-12-29-28-31-5-18-21-30-40-30-21 0-38 15-42 35C32 47 18 61 18 77c0 15 11 25 25 25Z"
+                fill="url(#uploadCloudGrad)" filter="url(#uploadCloudShadow)"/>
+              <path d="M88 79V43m0 0-14 14m14-14 14 14" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <g transform="rotate(9 133 83)">
+                <rect x="112" y="62" width="42" height="51" rx="7" fill="#fff" stroke="#D7E5F4" stroke-width="2"/>
+                <path d="M143 62v12h11" fill="#E8F3FF"/>
+                <rect x="117" y="82" width="32" height="18" rx="5" fill="#FF4D55"/>
+                <text x="133" y="95" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="900" fill="#fff">PDF</text>
+              </g>
+              <circle cx="25" cy="31" r="3" fill="#38BDF8"/>
+              <circle cx="157" cy="28" r="3" fill="#2563EB"/>
+            </svg>
+          </div>
+          <h3>Drop invoice PDFs here</h3>
+          <p>Drag & drop your GST invoice files here, or select them from your computer.</p>
+          <input id="invoiceFileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
+          <div class="upload-actions">
+            <button class="primary" id="chooseInvoiceBtn" type="button">＋ Choose PDF Files</button>
+            <button class="primary light" id="processInvoiceBtn" type="button">↑ Upload &amp; Process</button>
+          </div>
+          <small>Maximum 50 files • 25 MB per file • PDF format</small>
+          <div class="upload-progress" id="uploadProgress" hidden>
+            <div class="upload-progress-top"><span id="uploadStatus">Ready</span><strong id="uploadPercent">0%</strong></div>
+            <div class="upload-progress-track"><i id="uploadProgressFill"></i></div>
+          </div>
         </div>
-        <div>
-            <button type="submit" class="btn" id="uploadBtn">Upload & Process</button>
-        </div>
-    </form>
-    <div id="status" style="margin-top: 15px;"></div>
-    <div id="resultsTable" style="margin-top: 15px; display:none;"></div>
+
+        <section class="upload-process-card" aria-label="Invoice processing steps">
+          <div class="process-track">
+            <div class="process-line"><i id="processLineFill" style="width:0%;"></i></div>
+            <div class="process-step active" id="step1"><b>01</b><span>Upload</span></div>
+            <div class="process-step" id="step2"><b>02</b><span>AI Extract</span></div>
+            <div class="process-step" id="step3"><b>03</b><span>Validate</span></div>
+            <div class="process-step" id="step4"><b>04</b><span>Drive Store</span></div>
+            <div class="process-step" id="step5"><b>05</b><span>Complete</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="workflow-card">
+      <div class="workflow-glow"></div>
+      <div class="workflow-head">
+        <span class="workflow-icon">✦</span>
+        <div><strong>AUTOMATED WORKFLOW</strong><small>Live AI invoice processing pipeline</small></div>
+      </div>
+      <div class="workflow-list">
+        <div class="workflow-item"><b>01</b><span>Gemini AI extraction</span><em>READY</em></div>
+        <div class="workflow-item"><b>02</b><span>Buyer / Seller classification</span><em>READY</em></div>
+        <div class="workflow-item"><b>03</b><span>Duplicate invoice detection</span><em>READY</em></div>
+        <div class="workflow-item"><b>04</b><span>Google Drive auto-storage</span><em>READY</em></div>
+        <div class="workflow-item"><b>05</b><span>Automated email workflow</span><em>READY</em></div>
+      </div>
+      <div class="workflow-foot"><span class="pulse"></span> System active & listening</div>
+    </aside>
+  </div>
+
+  <section class="upload-table-card" style="margin-top:22px;">
+    <div class="table-head">
+      <div><span class="process-kicker">QUEUE & RESULTS</span><h3 id="tableHeading">Selected Invoices</h3></div>
+      <span class="table-live"><i id="liveIndicatorDot"></i> <span id="fileCountBadge">0 files</span></span>
+    </div>
+    <div class="invoice-table-wrap">
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Invoice File</th>
+            <th>Size</th>
+            <th>Type / Party</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="invoiceTableBody">
+          <tr class="empty-row"><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No invoices selected yet. Choose PDF files above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>
 
-<!-- Modal Popup for Missing Email -->
-<div id="emailModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#fff; padding:25px; border-radius:8px; width:420px; max-width:90%; box-shadow:0 4px 16px rgba(0,0,0,0.3);">
-        <h3 style="margin-top:0; color:#d9534f;">⚠️ Party Email Missing</h3>
-        <p style="color:#555; font-size:14px;">यह SELL इनवॉइस पिछले महीने का है। ईमेल भेजने के लिए पार्टी का ईमेल ज़रूरी है।</p>
-        <hr style="border:none; border-top:1px solid #eee;">
-        <p>Party: <strong id="modalPartyName"></strong></p>
-        <p>Invoice No: <strong id="modalInvNum"></strong></p>
-        <p id="modalQueueInfo" style="color:#888; font-size:13px; background:#f0f0f0; padding:6px 10px; border-radius:4px;"></p>
-        <input type="hidden" id="modalPartyId">
-        <input type="hidden" id="modalInvoiceId">
-        <div class="form" style="margin-bottom:15px;">
-            <label>ईमेल दर्ज करें:
-                <input type="email" id="modalEmailInput" placeholder="party@example.com" style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border:1px solid #ccc; border-radius:4px;">
-            </label>
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:10px;">
-            <button type="button" class="btn secondary" id="skipBtn" onclick="skipEmailModal()">Skip / Ignore</button>
-            <button type="button" class="btn" id="sendBtn" onclick="saveAndSendModalEmail()">Save & Send Mail</button>
-        </div>
+<!-- Modern Glassmorphic Email Modal for Unsent Previous Month Invoices -->
+<div id="emailModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.65);backdrop-filter:blur(6px);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #E2E8F0;border-radius:24px;width:440px;max-width:92%;padding:28px;box-shadow:0 25px 50px rgba(15,23,42,0.25);">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <span style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#FEF3C7;color:#D97706;font-size:18px;">✉</span>
+      <div>
+        <h3 style="margin:0;font-size:17px;color:#0F172A;">Party Email Required</h3>
+        <small style="color:#64748B;">SELL invoice auto-email workflow</small>
+      </div>
     </div>
+    <p style="font-size:12px;color:#475569;margin-bottom:16px;line-height:1.6;">यह SELL इनवॉइस पिछले महीने का है। पार्टी को इनवॉइस ऑटो-ईमेल करने के लिए कृपया ईमेल दर्ज करें:</p>
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;font-size:12px;margin-bottom:16px;">
+      <div style="margin-bottom:4px;">Party: <strong id="modalPartyName" style="color:#0F172A;"></strong></div>
+      <div>Invoice No: <strong id="modalInvNum" style="color:#2563EB;"></strong></div>
+      <div id="modalQueueInfo" style="margin-top:6px;font-size:10px;color:#64748B;"></div>
+    </div>
+    <input type="hidden" id="modalPartyId">
+    <input type="hidden" id="modalInvoiceId">
+    <label style="display:block;font-size:11px;font-weight:700;color:#334155;margin-bottom:6px;">पार्टी का ईमेल:</label>
+    <input type="email" id="modalEmailInput" placeholder="party@example.com" style="width:100%;height:44px;padding:0 14px;border:1px solid #CBD5E1;border-radius:12px;font-size:13px;outline:none;margin-bottom:18px;">
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="primary light" onclick="skipEmailModal()" style="font-size:11px;">Skip</button>
+      <button type="button" class="primary" id="sendEmailBtn" onclick="saveAndSendModalEmail()" style="font-size:11px;">Save &amp; Send Mail</button>
+    </div>
+  </div>
 </div>
 
 <script>
-let pendingQueue = [];
-let totalPendingCount = 0;
-let currentIndex = 0;
-// Remember emails user has entered per partyId (auto-fill for same party across invoices)
-let partyEmailCache = {};
+(function(){
+  const fileInput = document.getElementById('invoiceFileInput');
+  const dropzone = document.getElementById('invoiceDropzone');
+  const chooseBtn = document.getElementById('chooseInvoiceBtn');
+  const processBtn = document.getElementById('processInvoiceBtn');
+  const tableBody = document.getElementById('invoiceTableBody');
+  const badge = document.getElementById('fileCountBadge');
+  const progressDiv = document.getElementById('uploadProgress');
+  const fill = document.getElementById('uploadProgressFill');
+  const statusSpan = document.getElementById('uploadStatus');
+  const percentStrong = document.getElementById('uploadPercent');
+  const lineFill = document.getElementById('processLineFill');
 
-document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const statusDiv = document.getElementById('status');
-    const uploadBtn = document.getElementById('uploadBtn');
-    uploadBtn.disabled = true;
-    uploadBtn.innerText = 'Processing...';
-    statusDiv.innerHTML = '<span style="color:#2196F3;">⏳ Uploading and processing invoices... Please wait.</span>';
-    document.getElementById('resultsTable').style.display = 'none';
+  let selectedFiles = [];
+  const formatBytes = b => b < 1048576 ? Math.round(b / 1024) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
 
-    // Reset state
-    pendingQueue = [];
-    totalPendingCount = 0;
-    currentIndex = 0;
-    partyEmailCache = {};
+  function renderQueue() {
+    badge.textContent = selectedFiles.length + ' file' + (selectedFiles.length === 1 ? '' : 's');
+    if (!selectedFiles.length) {
+      tableBody.innerHTML = '<tr class="empty-row"><td colspan="5" style="text-align:center;padding:24px;color:#94A3B8;">No invoices selected yet. Choose PDF files above.</td></tr>';
+      return;
+    }
+    tableBody.innerHTML = selectedFiles.map((f, i) => `
+      <tr>
+        <td>${String(i + 1).padStart(2, '0')}</td>
+        <td><strong>${f.name.replace(/</g, '&lt;')}</strong></td>
+        <td>${formatBytes(f.size)}</td>
+        <td><span style="color:#64748B;">Ready to parse</span></td>
+        <td><span style="background:#EFF6FF;color:#2563EB;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;">READY</span></td>
+      </tr>
+    `).join('');
+  }
+
+  function addFiles(files) {
+    const pdfs = Array.from(files || []).filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
+    selectedFiles = [...selectedFiles, ...pdfs].slice(0, 50);
+    renderQueue();
+  }
+
+  chooseBtn.onclick = () => fileInput.click();
+  fileInput.onchange = () => { addFiles(fileInput.files); fileInput.value = ''; };
+
+  ['dragenter', 'dragover'].forEach(e => dropzone.addEventListener(e, x => { x.preventDefault(); dropzone.classList.add('dragover'); }));
+  ['dragleave', 'drop'].forEach(e => dropzone.addEventListener(e, x => { x.preventDefault(); dropzone.classList.remove('dragover'); }));
+  dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+  // Process pipeline animation
+  function setPipelineStep(stepIdx) {
+    for (let i = 1; i <= 5; i++) {
+      const step = document.getElementById('step' + i);
+      if (!step) continue;
+      step.classList.toggle('active', i === stepIdx);
+      step.classList.toggle('done', i < stepIdx);
+    }
+    lineFill.style.width = ((stepIdx - 1) * 25) + '%';
+  }
+
+  processBtn.onclick = async () => {
+    if (!selectedFiles.length) {
+      fileInput.click();
+      return;
+    }
+
+    processBtn.disabled = true;
+    chooseBtn.disabled = true;
+    progressDiv.hidden = false;
+    statusSpan.textContent = 'Uploading ' + selectedFiles.length + ' invoices...';
+    percentStrong.textContent = '20%';
+    fill.style.width = '20%';
+    setPipelineStep(1);
+
+    const formData = new FormData();
+    selectedFiles.forEach(f => formData.append('invoices', f));
+
+    // Animate to Step 2 (AI Extract)
+    setTimeout(() => {
+      setPipelineStep(2);
+      statusSpan.textContent = 'Gemini AI parsing & extracting invoice data...';
+      percentStrong.textContent = '45%';
+      fill.style.width = '45%';
+    }, 1200);
 
     try {
-        const res = await fetch('/api/invoices/upload', {
-            method: 'POST',
-            body: formData
-        });
-        const data = await res.json();
-        console.log('Server response:', JSON.stringify(data));
-        if (res.ok) {
-            renderResults(data.results);
-            console.log('pendingEmails:', data.pendingEmails);
-            if (data.pendingEmails && data.pendingEmails.length > 0) {
-                pendingQueue = data.pendingEmails;
-                totalPendingCount = pendingQueue.length;
-                currentIndex = 0;
-                statusDiv.innerHTML = '<span style="color:#FF9800;">⚠️ ' + totalPendingCount + ' SELL इनवॉइस में पार्टी ईमेल नहीं मिला। कृपया popup में ईमेल दें या Skip करें।</span>';
-                showNextEmailModal();
-            } else {
-                statusDiv.innerHTML = '<span style="color:#4CAF50;">✅ Upload पूरा हो गया!</span>';
-            }
-        } else {
-            statusDiv.innerHTML = '<span style="color:#f44336;">❌ Error: ' + (data.error || 'Upload failed') + '</span>';
-        }
+      const res = await fetch('/api/invoices/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      setPipelineStep(4);
+      statusSpan.textContent = 'Storing in Google Drive & creating records...';
+      percentStrong.textContent = '80%';
+      fill.style.width = '80%';
+
+      const data = await res.json();
+      setPipelineStep(5);
+      fill.style.width = '100%';
+      percentStrong.textContent = '100%';
+      statusSpan.textContent = 'Processing completed!';
+
+      // Render actual results from backend
+      if (data.results && data.results.length) {
+        document.getElementById('tableHeading').textContent = 'Processed Invoices Results';
+        tableBody.innerHTML = data.results.map((r, i) => {
+          let statusBadge = '';
+          if (r.status === 'completed') {
+            statusBadge = '<span style="background:#DCFCE7;color:#16A34A;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;">✓ COMPLETED</span>';
+          } else if (r.status === 'duplicate') {
+            statusBadge = '<span style="background:#FEF3C7;color:#D97706;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;">⚠ DUPLICATE</span>';
+          } else {
+            statusBadge = `<span style="background:#FEE2E2;color:#EF4444;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;" title="${(r.error||'').replace(/"/g,'&quot;')}">✕ FAILED</span>`;
+          }
+
+          const partyInfo = r.partyName ? `<strong>${r.partyName}</strong><br><small style="color:#64748B;">Inv: ${r.invoiceNumber || '-'} (${r.invoiceType || '-'})</small>` : (r.error || '-');
+
+          return `
+            <tr>
+              <td>${String(i + 1).padStart(2, '0')}</td>
+              <td><strong>${(r.file || '').replace(/</g, '&lt;')}</strong></td>
+              <td>PDF</td>
+              <td>${partyInfo}</td>
+              <td>${statusBadge}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Check for pending email queue
+      if (data.pendingEmails && data.pendingEmails.length) {
+        window.startEmailQueue(data.pendingEmails);
+      }
+
     } catch (err) {
-        statusDiv.innerHTML = '<span style="color:#f44336;">❌ Network Error: ' + err.message + '</span>';
+      statusSpan.textContent = 'Error: ' + err.message;
+      statusSpan.style.color = '#EF4444';
     } finally {
-        uploadBtn.disabled = false;
-        uploadBtn.innerText = 'Upload & Process';
+      processBtn.disabled = false;
+      chooseBtn.disabled = false;
+      selectedFiles = [];
     }
-});
+  };
 
-function renderResults(results) {
-    const container = document.getElementById('resultsTable');
-    let html = '<table style="width:100%; border-collapse:collapse; font-size:14px;">';
-    html += '<tr style="background:#f5f5f5;"><th style="padding:8px; border:1px solid #ddd; text-align:left;">#</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">File</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Invoice No</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Type</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Status</th><th style="padding:8px; border:1px solid #ddd; text-align:left;">Email</th></tr>';
-    for (const r of results) {
-        let statusBadge = '';
-        if (r.status === 'completed') statusBadge = '<span style="color:#4CAF50;">✅ Done</span>';
-        else if (r.status === 'duplicate') statusBadge = '<span style="color:#FF9800;">⚠️ Duplicate</span>';
-        else statusBadge = '<span style="color:#f44336;">❌ ' + (r.error || 'Failed') + '</span>';
+  // Missing email workflow
+  let pendingQueue = [];
+  let currentIndex = 0;
+  let partyEmailCache = {};
 
-        let emailBadge = '-';
-        if (r.invoiceType === 'SELL') {
-            if (r.autoEmailSent) emailBadge = '<span style="color:#4CAF50;">📧 Sent</span>';
-            else if (r.emailMissing) emailBadge = '<span style="color:#FF9800;">📧 Pending (no email)</span>';
-            else if (r.autoEmailError) emailBadge = '<span style="color:#f44336;">📧 Error</span>';
-            else emailBadge = '<span style="color:#888;">— (not prev month)</span>';
-        }
-
-        html += '<tr><td style="padding:8px; border:1px solid #ddd;">' + r.index + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.file || '') + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.invoiceNumber || '-') + '</td><td style="padding:8px; border:1px solid #ddd;">' + (r.invoiceType || '-') + '</td><td style="padding:8px; border:1px solid #ddd;">' + statusBadge + '</td><td style="padding:8px; border:1px solid #ddd;">' + emailBadge + '</td></tr>';
+  window.startEmailQueue = function(queue) {
+    pendingQueue = queue || [];
+    currentIndex = 0;
+    if (pendingQueue.length > 0) {
+      showCurrentEmailModal();
     }
-    html += '</table>';
-    container.innerHTML = html;
-    container.style.display = 'block';
-}
+  };
 
-function showNextEmailModal() {
-    if (pendingQueue.length === 0) {
-        document.getElementById('emailModal').style.display = 'none';
-        document.getElementById('status').innerHTML = '<span style="color:#4CAF50;">✅ Upload और ईमेल प्रोसेसिंग पूरी हो गई!</span>';
-        return;
+  function showCurrentEmailModal() {
+    if (currentIndex >= pendingQueue.length) {
+      document.getElementById('emailModal').style.display = 'none';
+      return;
     }
-    currentIndex++;
-    const current = pendingQueue[0];
-
-    document.getElementById('modalPartyName').innerText = current.partyName;
-    document.getElementById('modalInvNum').innerText = current.invoiceNumber;
-    document.getElementById('modalPartyId').value = current.partyId;
-    document.getElementById('modalInvoiceId').value = current.invoiceId;
-
-    // Auto-fill email if same party was already given email earlier
-    const cachedEmail = partyEmailCache[current.partyId] || '';
-    document.getElementById('modalEmailInput').value = cachedEmail;
-
-    document.getElementById('modalQueueInfo').innerText = '📋 Invoice ' + currentIndex + ' of ' + totalPendingCount + ' (email missing)';
-
-    // Reset button states
-    document.getElementById('sendBtn').disabled = false;
-    document.getElementById('sendBtn').innerText = 'Save & Send Mail';
-    document.getElementById('skipBtn').disabled = false;
-
+    const item = pendingQueue[currentIndex];
+    document.getElementById('modalPartyName').innerText = item.partyName;
+    document.getElementById('modalInvNum').innerText = item.invoiceNumber;
+    document.getElementById('modalPartyId').value = item.partyId;
+    document.getElementById('modalInvoiceId').value = item.invoiceId;
+    document.getElementById('modalQueueInfo').innerText = `Invoice ${currentIndex + 1} of ${pendingQueue.length}`;
+    document.getElementById('modalEmailInput').value = partyEmailCache[item.partyId] || '';
     document.getElementById('emailModal').style.display = 'flex';
-}
+  }
 
-function skipEmailModal() {
-    pendingQueue.shift();
-    showNextEmailModal();
-}
+  window.skipEmailModal = function() {
+    currentIndex++;
+    showCurrentEmailModal();
+  };
 
-async function saveAndSendModalEmail() {
+  window.saveAndSendModalEmail = async function() {
     const partyId = document.getElementById('modalPartyId').value;
     const invoiceId = document.getElementById('modalInvoiceId').value;
     const email = document.getElementById('modalEmailInput').value.trim();
-
     if (!email) {
-        alert('कृपया एक valid ईमेल डालें!');
-        return;
+      alert('कृपया ईमेल आईडी दर्ज करें!');
+      return;
     }
 
-    // Disable buttons while sending
-    const sendBtn = document.getElementById('sendBtn');
-    const skipBtn = document.getElementById('skipBtn');
+    const sendBtn = document.getElementById('sendEmailBtn');
     sendBtn.disabled = true;
     sendBtn.innerText = 'Sending...';
-    skipBtn.disabled = true;
 
     try {
-        const res = await fetch('/api/parties/save-email-and-send', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ partyId, email, invoiceId })
-        });
-        const data = await res.json();
-        if (res.ok) {
-            // Cache this email for same party's other invoices
-            partyEmailCache[partyId] = email;
-            alert('✅ ' + data.message);
-        } else {
-            alert('❌ Error: ' + (data.error || 'Failed to send mail'));
-        }
-    } catch (err) {
-        alert('❌ Network error: ' + err.message);
+      const res = await fetch('/api/parties/save-email-and-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partyId, email, invoiceId })
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Failed');
+      partyEmailCache[partyId] = email;
+      currentIndex++;
+      showCurrentEmailModal();
+    } catch (e) {
+      alert('Error: ' + e.message);
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.innerText = 'Save & Send Mail';
     }
-    pendingQueue.shift();
-    showNextEmailModal();
-}
+  };
+})();
 </script>
 
 <%- include('partials/footer') %>

@@ -1,0 +1,354 @@
+body.upload-active .topbar{display:none!important}
+body.upload-active .main{padding-top:28px!important}
+#upload .upload-page{width:100%;max-width:none;margin:0;padding:2px 0 24px}
+#upload .upload-layout{display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:18px;align-items:stretch}
+#upload .upload-main-card{min-width:0;display:flex;flex-direction:column}
+#upload .upload-title{display:none}
+#upload .dropzone{min-height:430px;border:1.5px dashed #7DB7F3;border-radius:24px;background:linear-gradient(145deg,#F8FBFF 0%,#EDF6FF 100%);display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;padding:24px 26px 0;position:relative;overflow:hidden;transition:.25s;box-shadow:0 18px 38px rgba(37,99,235,.09),inset 2px 2px 7px rgba(255,255,255,.9);flex:1}
+#upload .dropzone:before{content:"";position:absolute;width:340px;height:340px;border-radius:50%;right:-190px;top:-190px;background:radial-gradient(circle,rgba(56,189,248,.16),transparent 68%);pointer-events:none}
+#upload .dropzone:after{content:"";position:absolute;width:300px;height:300px;border-radius:50%;left:-200px;bottom:-210px;background:radial-gradient(circle,rgba(37,99,235,.09),transparent 68%);pointer-events:none}
+#upload .dropzone.dragover{border-color:#10B981;background:#F0FDF9;transform:translateY(-2px)}
+#upload .upload-box-title{position:relative;z-index:3;width:100%;text-align:left}
+#upload .upload-box-title h2{margin:0;color:#0F172A;font-size:25px;line-height:1.1;letter-spacing:-.7px}
+#upload .dropzone-center{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;width:100%;padding:4px 0 12px}
+#upload .dropzone-icon{width:82px;height:82px;border-radius:25px;padding:6px;background:linear-gradient(145deg,#FFFFFF,#DCEEFF);box-shadow:9px 12px 22px rgba(37,99,235,.15),inset 2px 2px 4px #fff;display:grid;place-items:center;position:relative;z-index:1}
+#upload .dropzone-icon span{width:70px;height:70px;border-radius:20px;display:grid;place-items:center;background:linear-gradient(145deg,#38BDF8,#2563EB);color:#fff;font-size:34px;font-weight:900;box-shadow:inset 2px 2px 4px rgba(255,255,255,.35),7px 9px 16px rgba(37,99,235,.22);animation:uploadFloat 2.5s ease-in-out infinite}
+#upload .dropzone h3{position:relative;z-index:1;margin:20px 0 6px;color:#0F172A;font-size:19px}
+#upload .dropzone p{position:relative;z-index:1;margin:0 0 19px;max-width:450px;color:#64748B;font-size:10px;line-height:1.65}
+#upload .upload-actions{position:relative;z-index:1;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+#upload .upload-actions button{font-size:10px}
+#upload .dropzone-center>small{position:relative;z-index:1;margin-top:14px;color:#94A3B8;font-size:8px}
+#upload .upload-progress{position:relative;z-index:1;width:min(450px,100%);margin-top:18px;text-align:left}
+#upload .upload-progress-top{display:flex;justify-content:space-between;color:#64748B;font-size:8px;font-weight:800;margin-bottom:6px}
+#upload .upload-progress-top strong{color:#2563EB}
+#upload .upload-progress-track{height:7px;border-radius:99px;background:#E2E8F0;overflow:hidden;box-shadow:inset 2px 2px 4px rgba(15,23,42,.06)}
+#upload .upload-progress-track i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#2563EB,#38BDF8,#10B981);transition:width .3s}
+#upload .workflow-card{position:relative;overflow:hidden;border-radius:24px;padding:22px 18px 16px;background:linear-gradient(145deg,#FFFFFF 0%,#F4F8FD 55%,#EAF3FF 100%);border:1px solid #D7E5F4;box-shadow:12px 18px 35px rgba(15,23,42,.11),inset 2px 2px 4px rgba(255,255,255,.95);isolation:isolate}
+#upload .workflow-card:before{content:"";position:absolute;inset:9px;border-radius:18px;border:1px solid rgba(255,255,255,.85);pointer-events:none}
+#upload .workflow-glow{position:absolute;width:180px;height:180px;right:-90px;top:-90px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,.2),transparent 70%);z-index:-1}
+#upload .workflow-head{position:relative;z-index:1;display:flex;align-items:center;gap:11px;padding:5px 5px 18px}
+#upload .workflow-icon{width:38px;height:38px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,#DBEAFE,#BFDBFE);color:#2563EB;font-size:17px;box-shadow:5px 7px 13px rgba(37,99,235,.13),inset 1px 1px 2px #fff}
+#upload .workflow-head strong{display:block;color:#173B73;font-size:18px;letter-spacing:1.05px}
+#upload .workflow-head small{display:block;margin-top:4px;color:#94A3B8;font-size:7px}
+#upload .workflow-list{position:relative;z-index:1}
+#upload .workflow-item{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:10px;padding:13px 5px;border-bottom:1px solid rgba(203,213,225,.7)}
+#upload .workflow-item:last-child{border-bottom:0}
+#upload .workflow-item b{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(145deg,#F8FBFF,#E3EEFC);color:#2563EB;font-size:18px;font-weight:900;box-shadow:4px 5px 9px rgba(15,23,42,.07),inset 1px 1px 2px #fff;animation:numberPulse 2.8s ease-in-out infinite}
+#upload .workflow-item:nth-child(2) b{animation-delay:.15s}
+#upload .workflow-item:nth-child(3) b{animation-delay:.3s}
+#upload .workflow-item:nth-child(4) b{animation-delay:.45s}
+#upload .workflow-item:nth-child(5) b{animation-delay:.6s}
+#upload .workflow-item span{color:#334155;font-size:12px;font-weight:800;line-height:1.3;white-space:nowrap;overflow:visible}
+#upload .workflow-item em{font-style:normal;color:#059669;background:#E9FBF2;border:1px solid #C7F2DA;border-radius:7px;padding:4px 3px;font-size:8px;font-weight:900;width:42px;min-width:42px;box-sizing:border-box;text-align:center;white-space:nowrap;justify-self:end;box-shadow:2px 3px 6px rgba(5,150,105,.07)}
+#upload .workflow-foot{position:relative;z-index:1;margin:17px 5px 0;padding:10px 11px;border-radius:11px;background:rgba(236,253,245,.8);border:1px solid #CFF5DD;color:#047857;font-size:11px;font-weight:800;white-space:nowrap}
+#upload .pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981;margin-right:6px;box-shadow:0 0 0 4px rgba(16,185,129,.1);animation:statusPulse 1.7s ease-in-out infinite}
+#upload .upload-process-card{position:relative!important;width:100%!important;box-sizing:border-box!important;margin:0!important;padding:12px 14px 10px!important;z-index:3!important;border-radius:16px 16px 0 0!important;box-shadow:0 -6px 18px rgba(37,99,235,.07)!important;background:rgba(255,255,255,.92)!important;border:1px solid rgba(215,229,244,.9)!important;border-bottom:0!important;backdrop-filter:blur(8px)!important}
+#upload .process-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin:0 0 8px!important}
+#upload .process-kicker{font-size:8px!important;letter-spacing:1.5px!important;font-weight:900!important;color:#2563EB!important;display:inline-block!important}
+#upload .process-head h3{font-size:14px!important;line-height:1.2!important;margin:2px 0!important;color:#173B73!important}
+#upload .process-head p{font-size:8px!important;line-height:1.3!important;margin:0!important;color:#94A3B8!important}
+#upload .process-count{min-width:44px!important;padding:5px 8px!important;border-radius:10px!important;background:#F0F7FF!important;border:1px solid #DCEBFA!important;text-align:center!important}
+#upload .process-count strong{font-size:16px!important;color:#2563EB!important;display:block!important;line-height:1!important}
+#upload .process-count small{font-size:6px!important;color:#64748B!important}
+#upload .process-track{min-height:38px!important}
+#upload .process-step b{font-size:9px!important}
+#upload .process-step span{font-size:8px!important}
+#upload .upload-table-card{margin-top:18px!important}
+@keyframes uploadFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes numberPulse{0%,100%{transform:translateY(0) scale(1);box-shadow:4px 5px 9px rgba(15,23,42,.07),inset 1px 1px 2px #fff}50%{transform:translateY(-2px) scale(1.06);box-shadow:0 8px 16px rgba(37,99,235,.16),inset 1px 1px 2px #fff}}
+@keyframes statusPulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.35);opacity:1}}
+@media(max-width:900px){#upload .upload-layout{grid-template-columns:1fr}#upload .workflow-card{min-height:auto}}
+@media(max-width:600px){#upload .upload-page{padding-top:0}#upload .dropzone{min-height:350px;padding:18px 16px 0}#upload .upload-box-title h2{font-size:22px}#upload .dropzone-center{padding-bottom:8px}#upload .upload-actions{flex-direction:column;width:100%}#upload .upload-actions button{width:100%}#upload .upload-process-card{padding:10px 10px 8px!important}.process-head p{display:none!important}}
+
+
+/* Upload Invoice — animated bottom processing rail */
+#upload .dropzone{position:relative!important;padding-bottom:0!important}
+#upload .dropzone-center{padding-bottom:98px!important}
+#upload .dropzone-icon{width:154px!important;height:112px!important;padding:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+#upload .upload-cloud-art{width:154px;height:112px;display:block;overflow:visible;animation:uploadArtFloat 3s ease-in-out infinite}
+#upload .upload-process-card{
+  position:absolute!important;
+  left:16px!important;
+  right:16px!important;
+  bottom:0!important;
+  width:auto!important;
+  margin:0!important;
+  padding:9px 12px 11px!important;
+  border-radius:18px 18px 0 0!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.98),rgba(247,251,255,.98))!important;
+  border:1px solid #D7E5F4!important;
+  border-bottom:0!important;
+  box-shadow:0 -10px 28px rgba(37,99,235,.10),inset 0 1px 0 #fff!important;
+  backdrop-filter:blur(12px)!important;
+  z-index:4!important;
+}
+#upload .process-track{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  align-items:start!important;
+  gap:0!important;
+  min-height:58px!important;
+  padding:0!important;
+}
+#upload .process-line{
+  position:absolute!important;
+  left:10%!important;
+  right:10%!important;
+  top:19px!important;
+  height:5px!important;
+  border-radius:99px!important;
+  background:#DCE8F5!important;
+  overflow:hidden!important;
+  z-index:0!important;
+}
+#upload .process-line:before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  background:linear-gradient(90deg,#7C3AED,#2563EB,#06B6D4,#10B981,#F59E0B)!important;
+  transform-origin:left center!important;
+  animation:pipelineProgress 5s ease-in-out infinite!important;
+}
+#upload .process-line i{
+  position:absolute!important;
+  inset:0!important;
+  width:0!important;
+  height:100%!important;
+  border-radius:99px!important;
+  background:linear-gradient(90deg,#7C3AED,#2563EB,#06B6D4,#10B981,#F59E0B)!important;
+  box-shadow:0 0 10px rgba(37,99,235,.25)!important;
+  transition:width .55s ease!important;
+}
+#upload .process-step{
+  position:relative!important;
+  z-index:1!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:5px!important;
+  min-width:0!important;
+}
+#upload .process-step b{
+  width:38px!important;
+  height:38px!important;
+  display:grid!important;
+  place-items:center!important;
+  box-sizing:border-box!important;
+  position:relative!important;
+  color:#fff!important;
+  border:2px solid rgba(255,255,255,.9)!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  letter-spacing:.2px!important;
+  box-shadow:0 7px 17px rgba(15,23,42,.13),inset 2px 2px 4px rgba(255,255,255,.45)!important;
+  transition:transform .35s ease,filter .35s ease,box-shadow .35s ease!important;
+  animation:processNode 2.5s ease-in-out infinite!important;
+}
+#upload .process-step b:after{
+  content:"✦"!important;
+  position:absolute!important;
+  right:-9px!important;
+  top:-9px!important;
+  font-size:8px!important;
+  color:currentColor!important;
+  opacity:.8!important;
+  animation:processSpark 1.8s ease-in-out infinite!important;
+}
+#upload .process-step:nth-child(2) b{
+  background:linear-gradient(145deg,#A855F7,#7C3AED)!important;
+  border-radius:50% 44% 56% 48%!important;
+  color:#7C3AED!important;
+}
+#upload .process-step:nth-child(3) b{
+  background:linear-gradient(145deg,#38BDF8,#0284C7)!important;
+  border-radius:13px 21px 12px 20px!important;
+  transform:rotate(-5deg)!important;
+  color:#0284C7!important;
+}
+#upload .process-step:nth-child(4) b{
+  background:linear-gradient(145deg,#34D399,#059669)!important;
+  clip-path:polygon(50% 0%,88% 24%,100% 70%,68% 100%,23% 92%,0% 54%,15% 15%)!important;
+  color:#059669!important;
+}
+#upload .process-step:nth-child(5) b{
+  background:linear-gradient(145deg,#FBBF24,#F97316)!important;
+  border-radius:49% 51% 43% 57%!important;
+  color:#F97316!important;
+}
+#upload .process-step:nth-child(6) b{
+  background:linear-gradient(145deg,#C084FC,#6D28D9)!important;
+  clip-path:polygon(50% 0%,61% 34%,98% 35%,69% 56%,79% 94%,50% 72%,20% 94%,30% 56%,2% 35%,39% 34%)!important;
+  color:#6D28D9!important;
+}
+#upload .process-step span{
+  display:block!important;
+  color:#334155!important;
+  font-size:9px!important;
+  line-height:1.15!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+#upload .process-step.active b{
+  filter:saturate(1.18) brightness(1.06)!important;
+  transform:translateY(-3px) scale(1.10)!important;
+  box-shadow:0 10px 24px rgba(37,99,235,.25),0 0 18px currentColor,inset 2px 2px 5px rgba(255,255,255,.5)!important;
+}
+#upload .process-step.active span{color:#2563EB!important}
+@keyframes uploadArtFloat{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%{transform:translateY(-6px) scale(1.025)}
+}
+@keyframes pipelineProgress{
+  0%,12%{transform:scaleX(.06)}
+  28%,42%{transform:scaleX(.27)}
+  50%,63%{transform:scaleX(.50)}
+  70%,82%{transform:scaleX(.74)}
+  90%,100%{transform:scaleX(1)}
+}
+@keyframes processNode{
+  0%,100%{translate:0 0;filter:saturate(1)}
+  45%{translate:0 -3px;filter:saturate(1.15)}
+  60%{translate:0 0;filter:saturate(1)}
+}
+@keyframes processSpark{
+  0%,100%{transform:scale(.75) rotate(0);opacity:.45}
+  50%{transform:scale(1.2) rotate(25deg);opacity:1}
+}
+@media(max-width:600px){
+  #upload .dropzone-center{padding-bottom:84px!important}
+  #upload .dropzone-icon{width:132px!important;height:96px!important}
+  #upload .upload-cloud-art{width:132px;height:96px}
+  #upload .upload-process-card{left:7px!important;right:7px!important;padding:8px 5px 9px!important}
+  #upload .process-track{min-height:48px!important}
+  #upload .process-line{left:9%!important;right:9%!important;top:15px!important;height:3px!important}
+  #upload .process-step b{width:30px!important;height:30px!important;font-size:8px!important}
+  #upload .process-step span{font-size:7px!important}
+  #upload .process-step b:after{right:-7px!important;top:-7px!important;font-size:6px!important}
+}
+
+/* Automated Workflow — colorful numbered shapes */
+#upload .workflow-item{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+#upload .workflow-item:before{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  top:7px!important;
+  width:70px!important;
+  height:42px!important;
+  z-index:-1!important;
+  opacity:.22!important;
+  filter:blur(.1px)!important;
+}
+#upload .workflow-item:nth-child(1):before{
+  background:linear-gradient(135deg,#A855F7,#EC4899)!important;
+  border-radius:52% 48% 43% 57%!important;
+  transform:rotate(-8deg)!important;
+}
+#upload .workflow-item:nth-child(2):before{
+  background:linear-gradient(135deg,#06B6D4,#2563EB)!important;
+  border-radius:15px 28px 18px 25px!important;
+  transform:rotate(7deg)!important;
+}
+#upload .workflow-item:nth-child(3):before{
+  background:linear-gradient(135deg,#10B981,#22C55E)!important;
+  clip-path:polygon(50% 0%,88% 24%,100% 70%,68% 100%,23% 92%,0% 54%,15% 15%)!important;
+}
+#upload .workflow-item:nth-child(4):before{
+  background:linear-gradient(135deg,#F59E0B,#F97316)!important;
+  border-radius:50%!important;
+  transform:rotate(-8deg)!important;
+}
+#upload .workflow-item:nth-child(5):before{
+  background:linear-gradient(135deg,#8B5CF6,#D946EF)!important;
+  clip-path:polygon(50% 0%,61% 34%,98% 35%,69% 56%,79% 94%,50% 72%,20% 94%,30% 56%,2% 35%,39% 34%)!important;
+}
+#upload .workflow-item b{
+  position:relative!important;
+  overflow:visible!important;
+  border:2px solid rgba(255,255,255,.9)!important;
+  color:#fff!important;
+  box-shadow:0 8px 18px rgba(15,23,42,.12),inset 2px 2px 4px rgba(255,255,255,.4)!important;
+}
+#upload .workflow-item:nth-child(1) b{
+  background:linear-gradient(145deg,#C084FC,#7C3AED)!important;
+  border-radius:50% 44% 56% 48%!important;
+}
+#upload .workflow-item:nth-child(2) b{
+  background:linear-gradient(145deg,#38BDF8,#0284C7)!important;
+  border-radius:11px 17px 12px 16px!important;
+}
+#upload .workflow-item:nth-child(3) b{
+  background:linear-gradient(145deg,#34D399,#059669)!important;
+  clip-path:polygon(50% 0%,88% 24%,100% 70%,68% 100%,23% 92%,0% 54%,15% 15%)!important;
+}
+#upload .workflow-item:nth-child(4) b{
+  background:linear-gradient(145deg,#FBBF24,#F97316)!important;
+  border-radius:50%!important;
+}
+#upload .workflow-item:nth-child(5) b{
+  background:linear-gradient(145deg,#C084FC,#6D28D9)!important;
+  clip-path:polygon(50% 0%,61% 34%,98% 35%,69% 56%,79% 94%,50% 72%,20% 94%,30% 56%,2% 35%,39% 34%)!important;
+}
+#upload .workflow-item b:after{
+  content:"✦"!important;
+  position:absolute!important;
+  right:-8px!important;
+  top:-8px!important;
+  font-size:8px!important;
+  color:#38BDF8!important;
+  animation:processSpark 1.8s ease-in-out infinite!important;
+}
+#upload .workflow-item:nth-child(1) b:after{color:#EC4899!important}
+#upload .workflow-item:nth-child(2) b:after{color:#06B6D4!important}
+#upload .workflow-item:nth-child(3) b:after{color:#22C55E!important}
+#upload .workflow-item:nth-child(4) b:after{color:#F59E0B!important}
+#upload .workflow-item:nth-child(5) b:after{color:#D946EF!important}
+
+/* Upload Invoice — full-width page and report-style invoice activity table */
+/* Keep the global floating sidebar visible on Upload Invoice. */
+body.upload-active .sidebar{display:flex!important}
+body.upload-active .main{margin-left:110px!important;padding-top:28px!important;transition:margin-left .34s cubic-bezier(.2,.8,1),padding .25s ease!important}
+body.upload-active .sidebar:hover~.main{margin-left:286px!important}
+@media(max-width:760px){body.upload-active .main{margin-left:0!important}}
+#upload .upload-table-card{margin-top:18px!important;border:1px solid #E2E8F0!important;border-radius:20px!important;background:#fff!important;box-shadow:11px 14px 28px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.95)!important;overflow:hidden!important}
+#upload .table-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:14px 16px!important;border-bottom:1px solid #E2E8F0!important;background:linear-gradient(90deg,#F8FAFC,#fff)!important}
+#upload .table-head h3{margin:0!important;font-size:15px!important;font-weight:950!important;color:#0F172A!important;letter-spacing:.2px!important}
+#upload .table-summary{display:flex!important;align-items:center!important;gap:9px!important}
+#upload .table-live{display:inline-flex!important;align-items:center!important;gap:5px!important;font-size:9px!important;font-weight:850!important;color:#059669!important;padding:5px 9px!important;border:1px solid #C7F2DA!important;border-radius:9px!important;background:#ECFDF5!important}
+#upload .table-live i{width:6px!important;height:6px!important;border-radius:50%!important;background:#10B981!important;box-shadow:0 0 0 4px rgba(16,185,129,.1)!important;animation:statusPulse 1.7s ease-in-out infinite!important}
+#upload .invoice-total{font-size:9px!important;font-weight:850!important;color:#64748B!important;padding:5px 9px!important;border:1px solid #E2E8F0!important;border-radius:9px!important;background:#F8FAFC!important}
+#upload .invoice-table-wrap{overflow:auto!important}
+#upload .invoice-table{width:100%!important;border-collapse:separate!important;border-spacing:0!important;min-width:900px!important}
+#upload .invoice-table th{height:42px!important;padding:0 12px!important;text-align:left!important;background:#F1F5F9!important;color:#475569!important;font-size:9px!important;font-weight:950!important;letter-spacing:.45px!important;white-space:nowrap!important;border-bottom:1px solid #E2E8F0!important}
+#upload .invoice-table td{height:55px!important;padding:7px 12px!important;color:#334155!important;font-size:10px!important;font-weight:700!important;border-bottom:1px solid #EEF2F7!important;white-space:nowrap!important;background:#fff!important}
+#upload .invoice-table tbody tr{transition:.2s!important}
+#upload .invoice-table tbody tr:hover td{background:linear-gradient(90deg,#F8FBFF,#F8FFFC)!important}
+#upload .invoice-table tbody tr:last-child td{border-bottom:0!important}
+#upload .invoice-table .sl-cell{color:#94A3B8!important;font-weight:900!important;width:55px!important}
+#upload .invoice-table .file-cell strong{display:block!important;color:#0F172A!important;font-size:10px!important;font-weight:900!important}
+#upload .invoice-table .file-cell small{display:block!important;margin-top:3px!important;color:#94A3B8!important;font-size:8px!important;font-weight:700!important}
+#upload .invoice-table .size-cell{font-size:10px!important;font-weight:900!important;color:#475569!important}
+#upload .upload-status-pill{display:inline-flex!important;align-items:center!important;padding:6px 9px!important;border-radius:9px!important;font-size:8px!important;font-weight:950!important;background:#ECFDF5!important;color:#047857!important;box-shadow:inset 1px 1px 2px #fff,3px 4px 8px rgba(15,23,42,.06)!important}
+#upload .row-progress{width:150px!important;height:7px!important;border-radius:99px!important;background:#E2E8F0!important;overflow:hidden!important;box-shadow:inset 2px 2px 4px rgba(15,23,42,.06)!important}
+#upload .row-progress i{display:block!important;width:0!important;height:100%!important;border-radius:99px!important;background:linear-gradient(90deg,#2563EB,#38BDF8,#10B981)!important;transition:width .3s!important}
+#upload .upload-action-group{display:flex!important;align-items:center!important;gap:7px!important}
+#upload .upload-action{width:32px!important;height:32px!important;border:1px solid transparent!important;border-radius:11px!important;display:grid!important;place-items:center!important;font-size:14px!important;cursor:pointer!important;transition:.22s!important;box-shadow:5px 6px 10px rgba(15,23,42,.09),inset 1px 1px 2px rgba(255,255,255,.7)!important}
+#upload .upload-action:hover{transform:translateY(-3px) rotate(-2deg)!important}
+#upload .upload-action.view{background:linear-gradient(145deg,#60A5FA,#2563EB)!important;color:#fff!important}
+#upload .upload-action.delete{background:linear-gradient(145deg,#FB7185,#EF4444)!important;color:#fff!important}
+#upload .empty-row td{height:90px!important;text-align:center!important;color:#94A3B8!important;font-size:11px!important;font-weight:800!important}
+@media(max-width:600px){body.upload-active .main{padding-top:14px!important}#upload .table-head{padding:12px!important}#upload .table-head h3{font-size:13px!important}#upload .table-summary{gap:5px!important}#upload .invoice-total{display:none!important}#upload .upload-table-card{border-radius:16px!important}}
+
+
+/* Upload Invoice — keep the global left menu visible even when the module loader does not add body.upload-active. */
+body.upload-active .sidebar,body:has(#upload) .sidebar{display:flex!important;visibility:visible!important;opacity:1!important;position:fixed!important;inset:50% auto auto 16px!important;transform:translateY(-50%)!important;z-index:50!important}
+body:has(#upload) .main{margin-left:110px!important;padding-top:28px!important;transition:margin-left .34s cubic-bezier(.2,.8,1),padding .25s ease!important}
+body:has(#upload) .sidebar:hover~.main{margin-left:286px!important}
+@media(max-width:760px){body:has(#upload) .main{margin-left:0!important}}
