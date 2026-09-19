@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#07111f">
 <title>GST Invoice Manager — Login</title>
-<link rel="stylesheet" href="/login.css">
+<link rel="stylesheet" href="login.css">
 </head>
 <body>
 <div class="login-bg"><span class="orb orb-one"></span><span class="orb orb-two"></span><span class="orb orb-three"></span></div>
@@ -38,34 +38,20 @@
         <h2>Sign in to your<br><b>GST workspace</b></h2>
         <p>Enter your details to continue to the dashboard.</p>
       </div>
-      <form id="loginForm" method="POST" action="/login" autocomplete="on">
-        <label class="field-label" for="loginUser">Username or Email</label>
-        <div class="input-wrap"><span>◉</span><input id="loginUser" name="username" type="text" placeholder="admin" value="admin" required autocomplete="username"></div>
-        <label class="field-label" for="loginPassword">Password</label>
-        <div class="input-wrap"><span>⌑</span><input id="loginPassword" name="password" type="password" placeholder="admin" required autocomplete="current-password"><button type="button" id="showPassword" aria-label="Show password">◉</button></div>
-        <div class="login-options"><label><input id="rememberMe" type="checkbox" checked><span>Remember me</span></label><span style="color:#64748b;font-size:11px;">Default: admin / admin</span></div>
+      <form id="loginForm" autocomplete="on">
+        <label class="field-label">Email or Mobile</label>
+        <div class="input-wrap"><span>◉</span><input id="loginUser" type="text" placeholder="Enter email or mobile" autocomplete="username"></div>
+        <label class="field-label">Password</label>
+        <div class="input-wrap"><span>⌑</span><input id="loginPassword" type="password" placeholder="Enter password" autocomplete="current-password"><button type="button" id="showPassword" aria-label="Show password">◉</button></div>
+        <div class="login-options"><label><input id="rememberMe" type="checkbox"><span>Remember me</span></label><a href="#" id="forgotLink">Forgot password?</a></div>
         <button class="login-button" type="submit"><span>Enter Dashboard</span><b>→</b></button>
-        <% if(error){ %>
-          <div id="loginMessage" class="login-message" style="color:#ef4444;display:block;margin-top:12px;font-size:12px;font-weight:600;"><%= error %></div>
-        <% } else { %>
-          <div id="loginMessage" class="login-message" aria-live="polite"></div>
-        <% } %>
+        <div id="loginMessage" class="login-message" aria-live="polite"></div>
       </form>
-      <div class="secure-note"><span>✓</span><div><strong>Private workspace</strong><small>Secured with session authentication.</small></div></div>
+      <div class="secure-note"><span>✓</span><div><strong>Private workspace</strong><small>Login interface is ready for your future authentication system.</small></div></div>
     </div>
     <footer>© 2026 GST Invoice Manager <span>•</span> Business Management Workspace</footer>
   </section>
 </main>
-<script>
-  const pass = document.getElementById('loginPassword');
-  const show = document.getElementById('showPassword');
-  if (show && pass) {
-    show.addEventListener('click', () => {
-      const visible = pass.type === 'text';
-      pass.type = visible ? 'password' : 'text';
-      show.textContent = visible ? '◉' : '◌';
-    });
-  }
-</script>
+<script src="login.js"></script>
 </body>
 </html>

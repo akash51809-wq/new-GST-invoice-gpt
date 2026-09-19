@@ -1,0 +1,98 @@
+<div class="hero-3d"><div class="hero-content"><div class="hero-kicker"><span class="live-dot"></span> SYSTEM READY</div><h2>Hello, Easy Recharge Solution</h2><p>Manage your GST invoices, purchases and sales from one intelligent workspace.</p><div class="hero-meta"><span>● Drive Connected</span><span>● AI Ready</span><span>● Email Active</span></div></div><div class="hero-action"><div class="hero-orb">₹</div><button class="primary light" onclick="showSection('upload')">＋ Upload Invoice</button></div><div class="hero-shape shape-a"></div><div class="hero-shape shape-b"></div></div><div class="stats dashboard-stats">
+<div class="stat-card stat-main total-invoice"><div class="stat-top"><span>Total Invoice</span><div class="stat-icon">▣</div></div><strong>1,248</strong><div class="stat-bottom"><span class="trend">↗ 12.8%</span><small>This month</small></div><div class="card-glow"></div></div>
+<div class="stat-card buy-invoice"><div class="stat-top"><span>Buy Invoice</span><div class="stat-icon green">↙</div></div><strong>₹ 8,42,560</strong><div class="stat-bottom"><span class="neutral">FY 2026-27</span><small>Total purchase</small></div></div>
+<div class="stat-card sale-invoice"><div class="stat-top"><span>Sale Invoice</span><div class="stat-icon orange">↗</div></div><strong>₹ 11,26,840</strong><div class="stat-bottom"><span class="neutral">FY 2026-27</span><small>Total sales</small></div></div>
+<div class="stat-card pending-invoice"><div class="stat-top"><span>Pending Invoice</span><div class="stat-icon purple">◷</div></div><strong>24</strong><div class="stat-bottom"><span class="neutral">Need action</span><small>Pending invoices</small></div></div>
+<div class="stat-card total-party"><div class="stat-top"><span>Total Party</span><div class="stat-icon party-icon">♙</div></div><strong>186</strong><div class="stat-bottom"><span class="trend">+8 new</span><small>Customers + suppliers</small></div></div>
+</div><div class="grid-2"><div class="panel chart-panel"><div class="panel-head"><div><span class="panel-kicker">OVERVIEW</span><h3>Invoice Activity</h3><p>Monthly invoice movement</p></div><div class="chart-filters"><select class="fy-filter" aria-label="Financial Year"><option>FY 2026-27</option></select><select class="chart-mode-filter" id="invoiceChartMode" aria-label="Invoice type" onchange="window.setInvoiceChartMode(this.value)"><option value="both">Show Both</option><option value="buy">Buy</option><option value="sale">Sale</option></select></div></div><div class="chart-area"><div class="chart-grid"><span></span><span></span><span></span><span></span></div><div class="chart" id="invoiceChart">
+<div class="candle-group"><i class="purchase-candle" style="height:28%"></i><i class="sale-candle" style="height:35%"></i><span class="candle-month">April</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:39%"></i><i class="sale-candle" style="height:50%"></i><span class="candle-month">May</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:34%"></i><i class="sale-candle" style="height:42%"></i><span class="candle-month">June</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:52%"></i><i class="sale-candle" style="height:68%"></i><span class="candle-month">July</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:46%"></i><i class="sale-candle" style="height:58%"></i><span class="candle-month">August</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:61%"></i><i class="sale-candle" style="height:78%"></i><span class="candle-month">September</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:50%"></i><i class="sale-candle" style="height:64%"></i><span class="candle-month">October</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:69%"></i><i class="sale-candle" style="height:88%"></i><span class="candle-month">November</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:57%"></i><i class="sale-candle" style="height:73%"></i><span class="candle-month">December</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:74%"></i><i class="sale-candle" style="height:94%"></i><span class="candle-month">January</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:64%"></i><i class="sale-candle" style="height:82%"></i><span class="candle-month">February</span></div>
+<div class="candle-group"><i class="purchase-candle" style="height:79%"></i><i class="sale-candle" style="height:100%"></i><span class="candle-month">March</span></div>
+</div><div class="chart-legend"><span><i class="legend-dot purchase-dot"></i> Buy / Purchase</span><span><i class="legend-dot sale-dot"></i> Sale</span></div></div></div><aside class="shortcut-hub-panel donut-shortcut-panel">
+  <div class="shortcut-hub-head">
+    <div>
+      <span class="panel-kicker">QUICK ACCESS</span>
+      <h3>Smart Shortcuts</h3>
+      <p>Open your workspace instantly</p>
+    </div>
+  </div>
+
+  <div class="shortcut-donut" aria-label="Smart Shortcuts">
+    <svg class="shortcut-wheel" viewBox="0 0 360 360" role="group" aria-label="Smart Shortcuts">
+      <defs>
+        <filter id="wheelDepth" x="-30%" y="-30%" width="160%" height="175%">
+          <feDropShadow dx="0" dy="7" stdDeviation="5" flood-color="#0f172a" flood-opacity=".25"/>
+        </filter>
+        <linearGradient id="segBlue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#66d7ff"/><stop offset=".45" stop-color="#28afe9"/><stop offset="1" stop-color="#0874bd"/></linearGradient>
+        <linearGradient id="segPink" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8fb3"/><stop offset=".45" stop-color="#ef5d8d"/><stop offset="1" stop-color="#bb245b"/></linearGradient>
+        <linearGradient id="segPurple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c19cff"/><stop offset=".45" stop-color="#9365ee"/><stop offset="1" stop-color="#5d31bd"/></linearGradient>
+        <linearGradient id="segSlate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8798aa"/><stop offset=".45" stop-color="#607287"/><stop offset="1" stop-color="#293a4d"/></linearGradient>
+        <linearGradient id="segViolet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d39af8"/><stop offset=".45" stop-color="#aa60e0"/><stop offset="1" stop-color="#7029a9"/></linearGradient>
+        <linearGradient id="segOrange" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd083"/><stop offset=".45" stop-color="#ff9d3e"/><stop offset="1" stop-color="#d95c0c"/></linearGradient>
+        <radialGradient id="centerGlow" cx="38%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f8fafc"/><stop offset="1" stop-color="#e7edf4"/></radialGradient>
+      </defs>
+
+      <!-- 6 equal 60° segments, all sharing the exact same center. -->
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="Invoice" onclick="window.launchDashboardShortcut('upload',this)">
+        <path class="wheel-depth" d="M180 26 A154 154 0 0 1 313.4 103 L251.0 139 A82 82 0 0 0 180 98 Z" fill="#07558e"/>
+        <path class="wheel-face" d="M180 22 A154 154 0 0 1 313.4 99 L251.0 135 A82 82 0 0 0 180 94 Z" fill="url(#segBlue)" filter="url(#wheelDepth)"/>
+        <g transform="translate(239 78)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">₹</text><text class="wheel-label" text-anchor="middle" y="14">Invoice</text>
+        </g>
+      </g>
+
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="Total Party" onclick="window.launchDashboardShortcut('parties',this)">
+        <path class="wheel-depth" d="M313.4 103 A154 154 0 0 1 313.4 257 L251 221 A82 82 0 0 0 251 139 Z" fill="#9f1c4d"/>
+        <path class="wheel-face" d="M313.4 99 A154 154 0 0 1 313.4 253 L251 217 A82 82 0 0 0 251 135 Z" fill="url(#segPink)" filter="url(#wheelDepth)"/>
+        <g transform="translate(298 180)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">♙</text><text class="wheel-label" text-anchor="middle" y="14">Total Party</text>
+        </g>
+      </g>
+
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="Report" onclick="window.launchDashboardShortcut('reports',this)">
+        <path class="wheel-depth" d="M313.4 257 A154 154 0 0 1 180 334 L180 262 A82 82 0 0 0 251 221 Z" fill="#4e25a1"/>
+        <path class="wheel-face" d="M313.4 253 A154 154 0 0 1 180 330 L180 258 A82 82 0 0 0 251 217 Z" fill="url(#segPurple)" filter="url(#wheelDepth)"/>
+        <g transform="translate(239 282)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">☷</text><text class="wheel-label" text-anchor="middle" y="14">Report</text>
+        </g>
+      </g>
+
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="Settings" onclick="window.launchDashboardShortcut('settings',this)">
+        <path class="wheel-depth" d="M180 334 A154 154 0 0 1 46.6 257 L109 221 A82 82 0 0 0 180 262 Z" fill="#263547"/>
+        <path class="wheel-face" d="M180 330 A154 154 0 0 1 46.6 253 L109 217 A82 82 0 0 0 180 258 Z" fill="url(#segSlate)" filter="url(#wheelDepth)"/>
+        <g transform="translate(121 282)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">⚙</text><text class="wheel-label" text-anchor="middle" y="14">Settings</text>
+        </g>
+      </g>
+
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="AI Assistant" onclick="window.launchDashboardShortcut('ai-report',this)">
+        <path class="wheel-depth" d="M46.6 257 A154 154 0 0 1 46.6 103 L109 139 A82 82 0 0 0 109 221 Z" fill="#642397"/>
+        <path class="wheel-face" d="M46.6 253 A154 154 0 0 1 46.6 99 L109 135 A82 82 0 0 0 109 217 Z" fill="url(#segViolet)" filter="url(#wheelDepth)"/>
+        <g transform="translate(62 180)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">✦</text><text class="wheel-label" text-anchor="middle" y="14">AI Assistant</text>
+        </g>
+      </g>
+
+      <g class="wheel-segment" tabindex="0" role="button" aria-label="Inventory" onclick="window.launchDashboardShortcut('upload',this)">
+        <path class="wheel-depth" d="M46.6 103 A154 154 0 0 1 180 26 L180 98 A82 82 0 0 0 109 139 Z" fill="#bf5009"/>
+        <path class="wheel-face" d="M46.6 99 A154 154 0 0 1 180 22 L180 94 A82 82 0 0 0 109 135 Z" fill="url(#segOrange)" filter="url(#wheelDepth)"/>
+        <g transform="translate(121 78)">
+          <text class="wheel-icon" text-anchor="middle" y="-4">▣</text><text class="wheel-label" text-anchor="middle" y="14">Inventory</text>
+        </g>
+      </g>
+
+      <circle class="wheel-hole-shadow" cx="180" cy="180" r="83"/>
+      <circle class="wheel-hole" cx="180" cy="180" r="78" fill="url(#centerGlow)"/>
+      <circle class="wheel-hole-highlight" cx="180" cy="180" r="73"/>
+    </svg>
+  </div>
+</aside></div>

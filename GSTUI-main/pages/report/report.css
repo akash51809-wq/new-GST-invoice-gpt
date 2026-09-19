@@ -1,0 +1,5 @@
+/* Report-wide shared styles only.
+ * Pending Invoice, Upload Invoice and AI Report keep their own page CSS.
+ */
+.report-module{width:100%;margin:0;padding:0}
+.report-module[hidden]{display:none!important}

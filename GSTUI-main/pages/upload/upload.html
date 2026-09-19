@@ -1,0 +1,89 @@
+<div class="upload-page">
+  <div class="upload-layout">
+    <section class="upload-main-card">
+      <div class="dropzone" id="invoiceDropzone">
+        <div class="upload-box-title"><h2>Upload Invoice</h2></div>
+        <div class="dropzone-center">
+          <div class="dropzone-icon" aria-hidden="true">
+  <svg class="upload-cloud-art" viewBox="0 0 180 130" role="img">
+    <defs>
+      <linearGradient id="uploadCloudGrad" x1="20" y1="15" x2="150" y2="115" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#38BDF8"/>
+        <stop offset="1" stop-color="#2563EB"/>
+      </linearGradient>
+      <filter id="uploadCloudShadow" x="-30%" y="-30%" width="160%" height="170%">
+        <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#2563EB" flood-opacity=".24"/>
+      </filter>
+    </defs>
+    <path d="M43 102h83c20 0 34-13 34-30 0-16-12-29-28-31-5-18-21-30-40-30-21 0-38 15-42 35C32 47 18 61 18 77c0 15 11 25 25 25Z"
+      fill="url(#uploadCloudGrad)" filter="url(#uploadCloudShadow)"/>
+    <path d="M88 79V43m0 0-14 14m14-14 14 14" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="rotate(9 133 83)">
+      <rect x="112" y="62" width="42" height="51" rx="7" fill="#fff" stroke="#D7E5F4" stroke-width="2"/>
+      <path d="M143 62v12h11" fill="#E8F3FF"/>
+      <rect x="117" y="82" width="32" height="18" rx="5" fill="#FF4D55"/>
+      <text x="133" y="95" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="900" fill="#fff">PDF</text>
+    </g>
+    <circle cx="25" cy="31" r="3" fill="#38BDF8"/>
+    <circle cx="157" cy="28" r="3" fill="#2563EB"/>
+    <path d="M48 18l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z" fill="#38BDF8"/>
+    <path d="M164 55l2.5 6 6 2.5-6 2.5-2.5 6-2.5-6-6-2.5 6-2.5 2.5-6Z" fill="#10B981"/>
+  </svg>
+</div>
+          <h3>Drop invoice PDF here</h3>
+          <p>Drag & drop your invoice files here, or select them from your computer.</p>
+          <input id="invoiceFileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
+          <div class="upload-actions">
+            <button class="primary" id="chooseInvoiceBtn" type="button">＋ Choose PDF Files</button>
+            <button class="primary light" id="processInvoiceBtn" type="button">↑ Upload &amp; Process</button>
+          </div>
+          <small>Maximum 50 files • 25 MB per file • PDF only</small>
+          <div class="upload-progress" id="uploadProgress" hidden>
+            <div class="upload-progress-top"><span id="uploadStatus">Ready</span><strong id="uploadPercent">0%</strong></div>
+            <div class="upload-progress-track"><i id="uploadProgressFill"></i></div>
+          </div>
+        </div>
+
+        <section class="upload-process-card" aria-label="Invoice processing steps">
+          <div class="process-track">
+            <div class="process-line"><i id="processLineFill"></i></div>
+            <div class="process-step active"><b>01</b><span>Upload</span></div>
+            <div class="process-step"><b>02</b><span>AI Extract</span></div>
+            <div class="process-step"><b>03</b><span>Validate</span></div>
+            <div class="process-step"><b>04</b><span>Store</span></div>
+            <div class="process-step"><b>05</b><span>Complete</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="workflow-card">
+      <div class="workflow-glow"></div>
+      <div class="workflow-head">
+        <span class="workflow-icon">✦</span>
+        <div><strong>AUTOMATED WORKFLOW</strong><small>AI invoice processing pipeline</small></div>
+      </div>
+      <div class="workflow-list">
+        <div class="workflow-item"><b>01</b><span>Gemini AI extraction</span><em>READY</em></div>
+        <div class="workflow-item"><b>02</b><span>Buyer / Seller classification</span><em>READY</em></div>
+        <div class="workflow-item"><b>03</b><span>Duplicate invoice detection</span><em>READY</em></div>
+        <div class="workflow-item"><b>04</b><span>Google Drive storage</span><em>READY</em></div>
+        <div class="workflow-item"><b>05</b><span>Automatic email workflow</span><em>READY</em></div>
+      </div>
+      <div class="workflow-foot"><span class="pulse"></span> All workflow services ready</div>
+    </aside>
+  </div>
+
+  <section class="upload-table-card">
+    <div class="table-head">
+      <div><span class="process-kicker">INVOICE ACTIVITY</span><h3>Uploaded Invoices</h3></div>
+      <span class="table-live"><i></i> Live</span>
+    </div>
+    <div class="invoice-table-wrap">
+      <table class="invoice-table">
+        <thead><tr><th>#</th><th>Invoice File</th><th>Size</th><th>Status</th><th>Progress</th></tr></thead>
+        <tbody id="invoiceTableBody"><tr class="empty-row"><td colspan="5">No invoices uploaded yet</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,200 @@
+<div class="settings-module">
+  <div class="settings-shortcuts" role="tablist" aria-label="Settings sections">
+    <button type="button" class="settings-shortcut active" onclick="showSettingsPanel('company',this)" title="Company Setting" aria-selected="true">
+      <span>🏢</span><small class="setting-label">Company Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut" onclick="showSettingsPanel('drive',this)" title="G Drive Setting" aria-selected="false">
+      <span>☁</span><small class="setting-label">G Drive Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut" onclick="showSettingsPanel('gmail',this)" title="Gmail Setting" aria-selected="false">
+      <span>✉</span><small class="setting-label">Gmail Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut" onclick="showSettingsPanel('gemini',this)" title="Gemini Setting" aria-selected="false">
+      <span>✦</span><small class="setting-label">Gemini Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut" onclick="showSettingsPanel('template',this)" title="Email Template" aria-selected="false">
+      <span>📝</span><small class="setting-label">Email Template</small>
+    </button>
+    <button type="button" class="settings-shortcut whatsapp-shortcut" onclick="showSettingsPanel('whatsapp',this)" title="WhatsApp" aria-selected="false">
+      <span class="whatsapp-shortcut-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="23" height="23"><path fill="currentColor" d="M16 3.5A12.5 12.5 0 0 0 5.25 22.4L3.5 28.5l6.3-1.65A12.5 12.5 0 1 0 16 3.5Zm0 22.65c-2.03 0-3.91-.61-5.48-1.66l-.39-.26-3.75.98 1.01-3.64-.28-.4A10.18 10.18 0 1 1 16 26.15Zm5.6-7.42c-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.69.15-.2.3-.79.98-.97 1.18-.18.2-.36.23-.66.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.67-2.06-.18-.3-.02-.46.13-.61.13-.13.3-.36.46-.54.15-.18.2-.3.3-.51.1-.2.05-.38-.03-.54-.08-.15-.69-1.66-.94-2.28-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.54.08-.82.38-.28.3-1.07 1.04-1.07 2.54s1.1 2.95 1.25 3.15c.15.2 2.15 3.28 5.2 4.6.73.32 1.3.51 1.74.65.73.23 1.4.2 1.92.12.59-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.36Z"/></svg>
+      </span><small class="setting-label">WhatsApp</small>
+    </button>
+  </div>
+
+  <div id="company-panel" class="settings-panel active">
+    <div class="settings-panel-title">
+      <div class="panel-icon">🏢</div>
+      <div><h2>Company Setting</h2><p>Configure company information used in invoices and emails.</p></div>
+    </div>
+    <div class="company-settings-card">
+      <div class="setting-row company-name-row">
+        <div class="setting-info"><div class="setting-icon">✎</div><div><h3>Company Name</h3><p>Enter your company or business name.</p></div></div>
+        <div class="setting-control setting-name-control"><input id="company-name-input" class="company-input" type="text" placeholder="Enter Company Name" autocomplete="organization"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-icon">▣</div><div><h3>Company Logo</h3><p>Upload a logo for the invoice header and branding.</p></div></div>
+        <div class="logo-control"><div class="logo-preview" id="company-logo-preview"><span>LOGO</span></div><div class="logo-upload-stack"><label class="logo-upload-btn" for="company-logo-input">↑ Upload Logo</label><span id="company-logo-name" class="logo-file-name">No logo selected</span></div><input id="company-logo-input" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-icon">✉</div><div><h3>Send Auto Email</h3><p>Enable or disable automatic email sending.</p></div></div>
+        <label class="three-toggle" title="Send Auto Email"><input id="auto-email-toggle" type="checkbox"><span class="three-toggle-track"><span class="three-toggle-knob"></span><span class="toggle-text on">ON</span><span class="toggle-text off">OFF</span></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info"><div class="setting-icon whatsapp-setting-row-icon">◉</div><div><h3>Send Auto WhatsApp</h3><p>Enable or disable automatic WhatsApp message sending.</p></div></div>
+        <label class="three-toggle" title="Send Auto WhatsApp"><input id="auto-whatsapp-toggle" type="checkbox"><span class="three-toggle-track"><span class="three-toggle-knob"></span><span class="toggle-text on">ON</span><span class="toggle-text off">OFF</span></span></label>
+      </div>
+    </div>
+    <div class="settings-save-note"><span>✓</span> Your company settings will be saved automatically in this browser.</div>
+  </div>
+
+  <div id="drive-panel" class="settings-panel">
+    <div class="settings-panel-title">
+      <div class="panel-icon">☁</div>
+      <div><h2>G Drive Setting</h2><p>Connect Google Drive to securely store invoice and report files.</p></div>
+    </div>
+    <div class="drive-settings-card">
+      <div class="drive-form-row">
+        <div class="drive-field-info"><div class="drive-field-icon">ID</div><div><h3>Google Client ID</h3><p>Enter the Client ID of your Google Cloud OAuth application.</p></div></div>
+        <div class="drive-field-control"><input id="google-client-id" class="drive-input" type="text" placeholder="Enter Google Client ID" autocomplete="off"></div>
+      </div>
+      <div class="drive-form-row">
+        <div class="drive-field-info"><div class="drive-field-icon">🔑</div><div><h3>Google Client Secret</h3><p>Enter the Client Secret of your OAuth application.</p></div></div>
+        <div class="drive-field-control"><input id="google-client-secret" class="drive-input" type="password" placeholder="Enter Google Client Secret" autocomplete="off"></div>
+      </div>
+      <div class="drive-form-row">
+        <div class="drive-field-info"><div class="drive-field-icon">↗</div><div><h3>Google Redirect URI</h3><p>Enter the registered redirect URI for the Google OAuth callback.</p></div></div>
+        <div class="drive-field-control"><input id="google-redirect-uri" class="drive-input" type="url" placeholder="Enter Google Redirect URI" autocomplete="url"></div>
+      </div>
+      <div class="google-connect-row">
+        <button type="button" class="google-connect-btn" id="google-connect-btn"><span class="google-g">G</span> Connect Google Account</button>
+      </div>
+    </div>
+    <div class="drive-status" id="google-drive-status"><span class="drive-status-dot"></span><span>Google Drive account is not connected.</span></div>
+  </div>
+  <div id="gmail-panel" class="settings-panel">
+  <div class="settings-panel-title">
+    <div class="panel-icon">✉</div>
+    <div><h2>Gmail Setting</h2><p>Configure the Gmail sender for invoice emails.</p></div>
+  </div>
+  <div class="gmail-settings-card">
+    <div class="gmail-form-row">
+      <div class="gmail-field-info"><div class="gmail-field-icon">✉</div><div><h3>Sender Email</h3><p>Enter the Gmail address used to send invoice emails.</p></div></div>
+      <div class="gmail-field-control"><input id="gmail-sender-email" class="gmail-input" type="email" placeholder="yourname@gmail.com" autocomplete="email"></div>
+    </div>
+    <div class="gmail-form-row">
+      <div class="gmail-field-info"><div class="gmail-field-icon">✓</div><div><h3>Connection Status</h3><p>OAuth/Gmail API connection is ready for backend integration.</p></div></div>
+      <div class="gmail-status-pill"><span></span> Not Connected</div>
+    </div>
+    <div class="gmail-action-row">
+      <span class="gmail-note">Gmail API connection will be the next backend step.</span>
+      <button type="button" class="gmail-connect-btn" id="gmail-connect-btn"><span>G</span> Connect Gmail</button>
+    </div>
+  </div>
+
+</div>
+  <div id="whatsapp-panel" class="settings-panel">
+    <div class="settings-panel-title">
+      <div class="panel-icon whatsapp-panel-icon">
+        <svg viewBox="0 0 32 32" width="25" height="25" aria-hidden="true"><path fill="currentColor" d="M16 3.5A12.5 12.5 0 0 0 5.25 22.4L3.5 28.5l6.3-1.65A12.5 12.5 0 1 0 16 3.5Zm0 22.65c-2.03 0-3.91-.61-5.48-1.66l-.39-.26-3.75.98 1.01-3.64-.28-.4A10.18 10.18 0 1 1 16 26.15Zm5.6-7.42c-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.69.15-.2.3-.79.98-.97 1.18-.18.2-.36.23-.66.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.67-2.06-.18-.3-.02-.46.13-.61.13-.13.3-.36.46-.54.15-.18.2-.3.3-.51.1-.2.05-.38-.03-.54-.08-.15-.69-1.66-.94-2.28-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.54.08-.82.38-.28.3-1.07 1.04-1.07 2.54s1.1 2.95 1.25 3.15c.15.2 2.15 3.28 5.2 4.6.73.32 1.3.51 1.74.65.73.23 1.4.2 1.92.12.59-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.36Z"/></svg>
+      </div>
+      <div><h2>WhatsApp</h2><p>Configure the WhatsApp API request used for message delivery.</p></div>
+    </div>
+    <div class="whatsapp-settings-card">
+      <div class="whatsapp-form-grid">
+        <div class="whatsapp-field">
+          <div class="whatsapp-field-heading"><div class="whatsapp-field-icon">↔</div><div><h3>Request Type</h3><p>Select the HTTP method for the WhatsApp API request.</p></div></div>
+          <select id="whatsapp-request-type" class="whatsapp-input">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+          </select>
+        </div>
+        <div class="whatsapp-field">
+          <div class="whatsapp-field-heading"><div class="whatsapp-field-icon">↗</div><div><h3>API URL</h3><p>Enter the WhatsApp API endpoint URL.</p></div></div>
+          <input id="whatsapp-api-url" class="whatsapp-input" type="url" placeholder="https://example.com/whatsapp/api" autocomplete="url">
+        </div>
+      </div>
+      <div class="whatsapp-actions">
+        <span class="whatsapp-status" id="whatsapp-status"><span class="whatsapp-status-dot"></span><span>WhatsApp API settings are not saved.</span></span>
+        <div class="whatsapp-action-buttons">
+          <button type="button" class="whatsapp-reset-btn" id="whatsapp-reset-btn"><span>↺</span> Reset</button>
+          <button type="button" class="whatsapp-submit-btn" id="whatsapp-submit-btn"><span>✓</span> Submit</button>
+        </div>
+      </div>
+    </div>
+    <div class="whatsapp-variables-section">
+      <div class="email-code-heading">
+        <div class="email-template-icon whatsapp-variable-icon">{ }</div>
+        <div><h3>Available Variables</h3><p>Use these variables when your WhatsApp API supports dynamic values.</p></div>
+      </div>
+      <div class="email-variable-list whatsapp-variable-list">
+        <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{mobile_number}}">{{mobile_number}}</button>
+        <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{message}}">{{message}}</button>
+        <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{company_name}}">{{company_name}}</button>
+        <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{invoice_number}}">{{invoice_number}}</button>
+        <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{invoice_link}}">{{invoice_link}}</button>
+      </div>
+    </div>
+  </div>
+  <div id="gemini-panel" class="settings-panel">
+    <div class="settings-panel-title">
+      <div class="panel-icon">✦</div>
+      <div><h2>Gemini Setting</h2><p>Configure AI invoice analysis and reports with a Gemini API key.</p></div>
+    </div>
+    <div class="gemini-settings-card">
+      <div class="gemini-form-row">
+        <div class="gemini-field-info"><div class="gemini-field-icon">✦</div><div><h3>Gemini API Key</h3><p>Enter your Google Gemini API key.</p></div></div>
+        <div class="gemini-field-control"><input id="gemini-api-key" class="gemini-input" type="password" placeholder="Enter Gemini API Key" autocomplete="off"></div>
+      </div>
+      <div class="gemini-save-row">
+        <button type="button" class="gemini-save-btn" id="gemini-save-btn"><span>✓</span> Save Gemini Key</button>
+      </div>
+    </div>
+    <div class="gemini-status" id="gemini-status"><span class="gemini-status-dot"></span><span>Gemini API key is not saved.</span></div>
+  </div>
+  <div id="template-panel" class="settings-panel">
+    <div class="settings-panel-title">
+      <div class="panel-icon">📝</div>
+      <div><h2>Email Template</h2><p>Create the HTML template and subject for invoice emails.</p></div>
+    </div>
+    <div class="email-template-card">
+      <div class="email-subject-row">
+        <div class="email-template-label">
+          <div class="email-template-icon">✉</div>
+          <div><h3>Email Subject</h3><p>Enter the subject shown when sending the email.</p></div>
+        </div>
+        <div class="email-subject-control">
+          <input id="email-template-subject" class="email-subject-input" type="text" placeholder="e.g. Your Invoice from {{company_name}}" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="email-code-section">
+        <div class="email-code-heading">
+          <div class="email-template-icon code-icon">&lt;/&gt;</div>
+          <div><h3>HTML Template Code</h3><p>Enter the complete HTML code here. Use inline CSS and email-safe HTML.</p></div>
+        </div>
+        <textarea id="email-template-code" class="email-template-code" spellcheck="false" placeholder="Paste or write your email HTML code here..."></textarea>
+      </div>
+
+      <div class="email-variables-section">
+        <div class="email-code-heading">
+          <div class="email-template-icon variable-icon">{ }</div>
+          <div><h3>Available Variables</h3><p>Use these variables directly in the HTML code or email subject.</p></div>
+        </div>
+        <div class="email-variable-list">
+          <button type="button" class="email-variable-chip" data-variable="{{company_name}}">{{company_name}}</button>
+          <button type="button" class="email-variable-chip" data-variable="{{party_name}}">{{party_name}}</button>
+          <button type="button" class="email-variable-chip" data-variable="{{invoice_number}}">{{invoice_number}}</button>
+          <button type="button" class="email-variable-chip" data-variable="{{invoice_date}}">{{invoice_date}}</button>
+          <button type="button" class="email-variable-chip" data-variable="{{invoice_total}}">{{invoice_total}}</button>
+          <button type="button" class="email-variable-chip" data-variable="{{invoice_link}}">{{invoice_link}}</button>
+        </div>
+      </div>
+
+      <div class="email-template-actions">
+        <span class="email-template-status" id="email-template-status"><span class="email-status-dot"></span><span>Template is not saved.</span></span>
+        <button type="button" class="email-template-save-btn" id="email-template-save-btn"><span>✓</span> Save Email Template</button>
+      </div>
+    </div>
+  </div>
+</div>

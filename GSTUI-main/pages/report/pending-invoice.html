@@ -1,0 +1,17 @@
+<div id="pending-invoice" class="report-subpage active">
+  <div class="report-upload-shell">
+    <div class="report-filter-bar">
+      <div class="report-filter-field"><label for="pendingFinYear">Fin Year</label><select id="pendingFinYear"><option value="all">All Financial Years</option><option value="2026-27">2026-27</option><option value="2025-26">2025-26</option></select></div>
+      <div class="report-filter-field"><label for="pendingMonth">Month</label><select id="pendingMonth"><option value="all">All Months</option><option value="April">April</option><option value="May">May</option><option value="June">June</option><option value="July">July</option><option value="August">August</option><option value="September">September</option><option value="October">October</option><option value="November">November</option><option value="December">December</option><option value="January">January</option><option value="February">February</option><option value="March">March</option></select></div>
+      <div class="report-filter-field"><label for="pendingType">Buy / Sell</label><select id="pendingType"><option value="all">All</option><option value="Buy">Buy</option><option value="Sell">Sell</option></select></div>
+      <div class="report-filter-field"><label for="pendingParty">Party Name</label><input id="pendingParty" type="search" placeholder="Search party name..." autocomplete="off"></div>
+      <button id="pendingSearchBtn" class="report-search-btn" type="button"><span>⌕</span> Search</button>
+      <button id="pendingResetBtn" class="report-reset-btn" type="button"><span>↺</span> Reset</button>
+      <div id="pendingFilterCount" class="report-filter-count">Showing all pending invoice records</div>
+    </div>
+    <div class="report-table-card">
+      <div class="report-table-head"><h3>Pending Invoice</h3><span id="pendingRowCount">0 records</span></div>
+      <div class="report-table-wrap"><table><thead><tr><th>Sl No</th><th>Fin Year</th><th>Month</th><th>Inv No</th><th>Party Name</th><th>Invoice Type</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody id="pendingTableBody"></tbody></table></div>
+    </div>
+  </div>
+</div>
