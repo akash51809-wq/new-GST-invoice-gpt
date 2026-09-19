@@ -17,6 +17,8 @@ const app = express();
 const PORT = process.env.PORT || 4322;
 const TMP = path.join(__dirname, 'tmp');
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
+const INVOICES_DIR = path.join(__dirname, 'public', 'invoices');
+if (!fs.existsSync(INVOICES_DIR)) fs.mkdirSync(INVOICES_DIR, { recursive: true });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -203,48 +205,124 @@ app.get('/invoices/upload', requireAuth, (req, res) => res.render('upload', {
   message: null
 }));
 
+function detectInvoiceType(buyerName, sellerName, company) {
+  const b = String(buyerName || '').toLowerCase().trim();
+  const s = String(sellerName || '').toLowerCase().trim();
+  const c = String(company || '').toLowerCase().trim();
+  if (c) {
+    if (b.includes(c)) return 'BUY';
+    if (s.includes(c)) return 'SELL';
+    const words = c.split(/\s+/).filter(w => w.length >= 4);
+    const buyerMatch = words.some(w => b.includes(w));
+    const sellerMatch = words.some(w => s.includes(w));
+    if (buyerMatch && !sellerMatch) return 'BUY';
+    if (sellerMatch && !buyerMatch) return 'SELL';
+  }
+  return 'BUY';
+}
+
 app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyncRoute(async (req, res) => {
   const files = req.files || [];
-  if (!files.length) return res.status(400).json({ error: 'PDF चुनें' });
-  const company = process.env.COMPANY_NAME || 'Company';
+  if (!files.length) return res.status(400).json({ error: 'कृपया कम से कम एक PDF चुनें' });
+  const company = process.env.COMPANY_NAME || 'Easy Recharge Solution';
   const results = [];
   const pendingEmails = [];
   
   for (let i = 0; i < files.length; i++) {
-    const f = files[i]; let job = { file: f.originalname, status: 'processing', index: i + 1, total: files.length };
+    const f = files[i];
+    let job = { file: f.originalname, status: 'processing', index: i + 1, total: files.length };
     try {
+      // 1. Extract invoice data via Gemini AI
       const data = await processInvoice(f.path);
       data.financialYear = fyFor(data.invoiceDate || new Date());
       data.month = monthName(data.invoiceDate || new Date());
-      data.invoiceType = (String(data.buyerName || '').toLowerCase().includes(company.toLowerCase())) ? 'BUY' : ((String(data.sellerName || '').toLowerCase().includes(company.toLowerCase())) ? 'SELL' : 'UNKNOWN');
-      if (data.invoiceType === 'UNKNOWN') throw new Error('Company name buyer/seller में नहीं मिला');
+      data.invoiceType = detectInvoiceType(data.buyerName, data.sellerName, company);
+
+      // 2. Check for duplicate invoice
       const dup = await Invoice.findOne({ invoiceNumber: data.invoiceNumber, invoiceAmount: data.invoiceAmount });
-      if (dup) { job.status = 'duplicate'; job.error = 'Duplicate invoice number + amount'; results.push(job); fs.unlinkSync(f.path); continue; }
-      
-      const folderType = data.invoiceType === 'BUY' ? 'buy' : 'buysell';
-      const folder = await ensureFolderPath([process.env.GOOGLE_DRIVE_ROOT || 'GST Invoices', data.financialYear, folderType, data.month]);
-      const drive = await uploadFile(f.path, f.originalname, folder.id);
-      
-      let partyName = data.invoiceType === 'BUY' ? data.sellerName : data.buyerName;
+      if (dup) {
+        job.status = 'duplicate';
+        job.error = 'Duplicate invoice number + amount';
+        job.invoiceNumber = data.invoiceNumber;
+        job.invoiceType = data.invoiceType;
+        job.partyName = data.invoiceType === 'BUY' ? (data.sellerName || 'Unknown') : (data.buyerName || 'Unknown');
+        results.push(job);
+        try { if (fs.existsSync(f.path)) fs.unlinkSync(f.path); } catch (e) {}
+        continue;
+      }
+
+      // 3. Keep persistent local copy in public/invoices
+      const safeFilename = `${Date.now()}_${path.basename(f.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const localDest = path.join(INVOICES_DIR, safeFilename);
+      try {
+        fs.copyFileSync(f.path, localDest);
+      } catch (copyErr) {
+        console.warn('Local invoice file copy warning:', copyErr.message);
+      }
+
+      // 4. Upload to Google Drive (with graceful fallback if offline / expired)
+      let driveId = '';
+      let folderId = '';
+      try {
+        const folderType = data.invoiceType === 'BUY' ? 'buy' : 'buysell';
+        const folder = await ensureFolderPath([process.env.GOOGLE_DRIVE_ROOT || 'GST Invoices', data.financialYear, folderType, data.month]);
+        folderId = folder ? folder.id : '';
+        const drive = await uploadFile(f.path, f.originalname, folderId);
+        driveId = drive ? drive.id : '';
+      } catch (driveErr) {
+        console.warn(`[Google Drive Notice for ${f.originalname}]`, driveErr.message);
+        job.driveNotice = 'Google Drive connect nahi hai ya token expire hai, file local save kar di gayi hai.';
+      }
+
+      // 5. Find or create Party
+      let partyName = data.invoiceType === 'BUY' ? (data.sellerName || 'Unknown Supplier') : (data.buyerName || 'Unknown Customer');
       let party = await Party.findOne({ name: new RegExp('^' + partyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
-      if (!party) party = await Party.create({ name: partyName, gstin: data.invoiceType === 'BUY' ? data.sellerGSTIN : data.buyerGSTIN, email: '', mobile: '' });
-      
-      const newInv = await Invoice.create({ ...data, partyId: party._id, originalFileName: f.originalname, driveFileId: drive.id, driveFolderId: folder.id, status: 'completed' });
-      job.status = 'completed'; job.invoiceNumber = data.invoiceNumber; job.invoiceType = data.invoiceType;
+      if (!party) {
+        party = await Party.create({
+          name: partyName,
+          gstin: (data.invoiceType === 'BUY' ? data.sellerGSTIN : data.buyerGSTIN) || '',
+          email: '',
+          mobile: ''
+        });
+      }
+
+      // 6. Save Invoice in MongoDB
+      const newInv = await Invoice.create({
+        ...data,
+        partyId: party._id,
+        originalFileName: f.originalname,
+        driveFileId: driveId,
+        driveFolderId: folderId,
+        localPath: localDest,
+        status: 'completed'
+      });
+
+      job.status = 'completed';
+      job.invoiceNumber = data.invoiceNumber || ('INV-' + Date.now().toString().slice(-4));
+      job.invoiceType = data.invoiceType;
       job.partyName = partyName;
 
+      // 7. Auto email workflow
       try {
         const invDateRef = newInv.invoiceDate || new Date();
         const isPrevMonth = isPreviousMonth(invDateRef);
-        if (newInv.invoiceType === 'SELL' && isPrevMonth) {
+        if (newInv.invoiceType === 'SELL' && isPrevMonth && process.env.AUTO_EMAIL !== 'false') {
           if (party.email) {
-            const pdfBuffer = await downloadFile(newInv.driveFileId);
-            await sendInvoiceEmail(party.email, newInv, pdfBuffer);
-            newInv.emailSent = true;
-            newInv.emailSentAt = new Date();
-            newInv.emailStatus = 'sent';
-            await newInv.save();
-            job.autoEmailSent = true;
+            let pdfBuffer;
+            if (driveId) {
+              try { pdfBuffer = await downloadFile(driveId); } catch(e) {}
+            }
+            if (!pdfBuffer && fs.existsSync(localDest)) {
+              pdfBuffer = fs.readFileSync(localDest);
+            }
+            if (pdfBuffer) {
+              await sendInvoiceEmail(party.email, newInv, pdfBuffer);
+              newInv.emailSent = true;
+              newInv.emailSentAt = new Date();
+              newInv.emailStatus = 'sent';
+              await newInv.save();
+              job.autoEmailSent = true;
+            }
           } else {
             job.autoEmailSent = false;
             job.emailMissing = true;
@@ -262,8 +340,15 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
         console.error('Auto email error for upload', emailErr.message);
         job.autoEmailError = emailErr.message;
       }
-    } catch (e) { job.status = 'failed'; job.error = e.message; }
-    finally { if (fs.existsSync(f.path)) fs.unlinkSync(f.path); results.push(job); }
+    } catch (e) {
+      job.status = 'failed';
+      job.error = e.message;
+    } finally {
+      if (fs.existsSync(f.path)) {
+        try { fs.unlinkSync(f.path); } catch (e) {}
+      }
+      results.push(job);
+    }
   }
   res.json({ results, pendingEmails });
 }));
@@ -399,9 +484,16 @@ app.get('/invoice/:id/view', requireAuth, asyncRoute(async (req, res) => {
 app.get('/invoice/:id/download', requireAuth, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id);
   if (!inv) return res.sendStatus(404);
-  const data = await downloadFile(inv.driveFileId);
+  let data;
+  if (inv.driveFileId) {
+    try { data = await downloadFile(inv.driveFileId); } catch (e) { console.warn('Drive download failed:', e.message); }
+  }
+  if (!data && inv.localPath && fs.existsSync(inv.localPath)) {
+    data = fs.readFileSync(inv.localPath);
+  }
+  if (!data) return res.status(404).send('Invoice file not found');
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename=${inv.originalFileName}`);
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(inv.originalFileName || 'invoice.pdf')}"`);
   res.end(data);
 }));
 
@@ -409,7 +501,14 @@ app.post('/invoice/:id/email', requireAuth, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id).populate('partyId');
   if (!inv) return res.sendStatus(404);
   if (!inv.partyId || !inv.partyId.email) return res.status(400).send('Party email नहीं है');
-  const pdf = await downloadFile(inv.driveFileId);
+  let pdf;
+  if (inv.driveFileId) {
+    try { pdf = await downloadFile(inv.driveFileId); } catch (e) {}
+  }
+  if (!pdf && inv.localPath && fs.existsSync(inv.localPath)) {
+    pdf = fs.readFileSync(inv.localPath);
+  }
+  if (!pdf) return res.status(400).send('Invoice PDF file उपलब्ध नहीं है');
   await sendInvoiceEmail(inv.partyId.email, inv, pdf);
   inv.emailSent = true;
   inv.emailSentAt = new Date();
@@ -426,6 +525,9 @@ app.post('/invoice/:id/delete', requireAuth, asyncRoute(async (req, res) => {
   if (!inv) return res.status(404).send('इनवॉइस नहीं मिला');
   if (inv.driveFileId) {
     try { await deleteFile(inv.driveFileId); } catch (e) { console.error('Drive delete error', e.message); }
+  }
+  if (inv.localPath && fs.existsSync(inv.localPath)) {
+    try { fs.unlinkSync(inv.localPath); } catch (e) {}
   }
   await Invoice.findByIdAndDelete(req.params.id);
   res.redirect('/reports/invoices');

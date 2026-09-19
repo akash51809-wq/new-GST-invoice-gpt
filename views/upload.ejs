@@ -217,8 +217,17 @@
         body: formData
       });
 
+      if (!res.ok) {
+        let errMsg = 'Upload failed (HTTP ' + res.status + ')';
+        try {
+          const errData = await res.json();
+          if (errData && errData.error) errMsg = errData.error;
+        } catch(e) {}
+        throw new Error(errMsg);
+      }
+
       setPipelineStep(4);
-      statusSpan.textContent = 'Storing in Google Drive & creating records...';
+      statusSpan.textContent = 'Storing files & creating database records...';
       percentStrong.textContent = '80%';
       fill.style.width = '80%';
 
@@ -241,7 +250,10 @@
             statusBadge = `<span style="background:#FEE2E2;color:#EF4444;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;" title="${(r.error||'').replace(/"/g,'&quot;')}">✕ FAILED</span>`;
           }
 
-          const partyInfo = r.partyName ? `<strong>${r.partyName}</strong><br><small style="color:#64748B;">Inv: ${r.invoiceNumber || '-'} (${r.invoiceType || '-'})</small>` : (r.error || '-');
+          let partyInfo = r.partyName ? `<strong>${r.partyName}</strong><br><small style="color:#64748B;">Inv: ${r.invoiceNumber || '-'} (${r.invoiceType || '-'})</small>` : `<span style="color:#EF4444;font-size:11px;">${r.error || '-'}</span>`;
+          if (r.driveNotice) {
+            partyInfo += `<br><small style="color:#D97706;">⚡ Saved locally (Google Drive authorization needed in Settings)</small>`;
+          }
 
           return `
             <tr>
