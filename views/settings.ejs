@@ -1,0 +1,423 @@
+<%- include('partials/header') %>
+<link rel="stylesheet" href="/settings.css">
+
+<div class="settings-module" style="padding-top:10px;">
+  <!-- Settings 3D Icon Shortcuts Bar -->
+  <div class="settings-shortcuts" role="tablist" aria-label="Settings sections">
+    <button type="button" class="settings-shortcut <%= (!activeTab || activeTab === 'company') ? 'active' : '' %>" onclick="showSettingsPanel('company',this)" title="Company Setting" aria-selected="<%= (!activeTab || activeTab === 'company') ? 'true' : 'false' %>">
+      <span>🏢</span><small class="setting-label">Company Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut <%= (activeTab === 'drive' || activeTab === 'google') ? 'active' : '' %>" onclick="showSettingsPanel('drive',this)" title="G Drive Setting" aria-selected="<%= (activeTab === 'drive' || activeTab === 'google') ? 'true' : 'false' %>">
+      <span>☁</span><small class="setting-label">G Drive Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut <%= (activeTab === 'gmail') ? 'active' : '' %>" onclick="showSettingsPanel('gmail',this)" title="Gmail Setting" aria-selected="<%= (activeTab === 'gmail') ? 'true' : 'false' %>">
+      <span>✉</span><small class="setting-label">Gmail Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut <%= (activeTab === 'gemini') ? 'active' : '' %>" onclick="showSettingsPanel('gemini',this)" title="Gemini Setting" aria-selected="<%= (activeTab === 'gemini') ? 'true' : 'false' %>">
+      <span>✦</span><small class="setting-label">Gemini Setting</small>
+    </button>
+    <button type="button" class="settings-shortcut <%= (activeTab === 'template' || activeTab === 'email') ? 'active' : '' %>" onclick="showSettingsPanel('template',this)" title="Email Template" aria-selected="<%= (activeTab === 'template' || activeTab === 'email') ? 'true' : 'false' %>">
+      <span>📝</span><small class="setting-label">Email Template</small>
+    </button>
+    <button type="button" class="settings-shortcut whatsapp-shortcut <%= (activeTab === 'whatsapp') ? 'active' : '' %>" onclick="showSettingsPanel('whatsapp',this)" title="WhatsApp" aria-selected="<%= (activeTab === 'whatsapp') ? 'true' : 'false' %>">
+      <span class="whatsapp-shortcut-icon" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="23" height="23"><path fill="currentColor" d="M16 3.5A12.5 12.5 0 0 0 5.25 22.4L3.5 28.5l6.3-1.65A12.5 12.5 0 1 0 16 3.5Zm0 22.65c-2.03 0-3.91-.61-5.48-1.66l-.39-.26-3.75.98 1.01-3.64-.28-.4A10.18 10.18 0 1 1 16 26.15Zm5.6-7.42c-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.69.15-.2.3-.79.98-.97 1.18-.18.2-.36.23-.66.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.67-2.06-.18-.3-.02-.46.13-.61.13-.13.3-.36.46-.54.15-.18.2-.3.3-.51.1-.2.05-.38-.03-.54-.08-.15-.69-1.66-.94-2.28-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.54.08-.82.38-.28.3-1.07 1.04-1.07 2.54s1.1 2.95 1.25 3.15c.15.2 2.15 3.28 5.2 4.6.73.32 1.3.51 1.74.65.73.23 1.4.2 1.92.12.59-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.36Z"/></svg>
+      </span><small class="setting-label">WhatsApp</small>
+    </button>
+  </div>
+
+  <% if (saved) { %>
+    <div style="background:#DCFCE7;border:1px solid #86EFAC;color:#15803D;padding:12px 18px;border-radius:14px;margin-bottom:18px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;">
+      <span>✓</span> Settings successfully updated and saved!
+    </div>
+  <% } %>
+
+  <!-- Panel 1: Company Setting -->
+  <div id="company-panel" class="settings-panel <%= (!activeTab || activeTab === 'company') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon">🏢</div>
+      <div><h2>Company Setting</h2><p>Configure company information used in invoices, branding, and emails.</p></div>
+    </div>
+    <form method="POST" action="/settings/company" enctype="multipart/form-data">
+      <div class="company-settings-card">
+        <div class="setting-row company-name-row">
+          <div class="setting-info">
+            <div class="setting-icon">✎</div>
+            <div><h3>Company Name</h3><p>Enter your company or business name for BUY/SELL identification.</p></div>
+          </div>
+          <div class="setting-control setting-name-control">
+            <input id="company-name-input" name="companyName" class="company-input" type="text" placeholder="Easy Recharge Solution" value="<%= companyName %>" required autocomplete="organization">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon">▣</div>
+            <div><h3>Company Logo</h3><p>Upload a logo for the invoice header and branding.</p></div>
+          </div>
+          <div class="logo-control">
+            <div class="logo-preview" id="company-logo-preview">
+              <% if (typeof companyLogo !== 'undefined' && companyLogo) { %>
+                <img src="<%= companyLogo %>" alt="Company Logo" style="width:100%;height:100%;object-fit:contain;">
+              <% } else { %>
+                <span>LOGO</span>
+              <% } %>
+            </div>
+            <div class="logo-upload-stack">
+              <label class="logo-upload-btn" for="company-logo-input">↑ Upload Logo</label>
+              <span id="company-logo-name" class="logo-file-name"><%= (typeof companyLogo !== 'undefined' && companyLogo) ? 'Current logo active' : 'No logo selected' %></span>
+            </div>
+            <input id="company-logo-input" name="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon">✉</div>
+            <div><h3>Send Auto Email</h3><p>Enable or disable automatic email sending upon invoice upload.</p></div>
+          </div>
+          <label class="three-toggle" title="Send Auto Email">
+            <input id="auto-email-toggle" name="autoEmail" type="checkbox" <%= autoEmail ? 'checked' : '' %>>
+            <span class="three-toggle-track">
+              <span class="three-toggle-knob"></span>
+              <span class="toggle-text on">ON</span>
+              <span class="toggle-text off">OFF</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon whatsapp-setting-row-icon">◉</div>
+            <div><h3>Send Auto WhatsApp</h3><p>Enable or disable automatic WhatsApp message sending.</p></div>
+          </div>
+          <label class="three-toggle" title="Send Auto WhatsApp">
+            <input id="auto-whatsapp-toggle" name="autoWhatsApp" type="checkbox" <%= autoWhatsApp ? 'checked' : '' %>>
+            <span class="three-toggle-track">
+              <span class="three-toggle-knob"></span>
+              <span class="toggle-text on">ON</span>
+              <span class="toggle-text off">OFF</span>
+            </span>
+          </label>
+        </div>
+
+        <div style="padding:16px 24px;background:#F8FAFC;border-top:1px solid #E2E8F0;display:flex;justify-content:flex-end;">
+          <button type="submit" class="primary" style="height:44px;padding:0 24px;font-size:12px;">Save Company Setting</button>
+        </div>
+      </div>
+    </form>
+    <div class="settings-save-note"><span>✓</span> Your company settings are backed up and saved in the workspace.</div>
+  </div>
+
+  <!-- Panel 2: G Drive Setting -->
+  <div id="drive-panel" class="settings-panel <%= (activeTab === 'drive' || activeTab === 'google') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon">☁</div>
+      <div><h2>G Drive Setting</h2><p>Connect Google Drive to securely store invoice PDFs and generated reports.</p></div>
+    </div>
+    <form method="POST" action="/settings/google">
+      <div class="drive-settings-card">
+        <div class="drive-form-row">
+          <div class="drive-field-info">
+            <div class="drive-field-icon">ID</div>
+            <div><h3>Google Client ID</h3><p>Enter the Client ID of your Google Cloud OAuth application.</p></div>
+          </div>
+          <div class="drive-field-control">
+            <input id="google-client-id" name="googleClientId" class="drive-input" type="text" placeholder="Enter Google Client ID" value="<%= googleClientId %>" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="drive-form-row">
+          <div class="drive-field-info">
+            <div class="drive-field-icon">🔑</div>
+            <div><h3>Google Client Secret</h3><p>Enter the Client Secret of your OAuth application.</p></div>
+          </div>
+          <div class="drive-field-control">
+            <input id="google-client-secret" name="googleClientSecret" class="drive-input" type="password" placeholder="Enter Google Client Secret" value="<%= googleClientSecret %>" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="drive-form-row">
+          <div class="drive-field-info">
+            <div class="drive-field-icon">↗</div>
+            <div><h3>Google Redirect URI</h3><p>Enter the registered redirect URI for the Google OAuth callback.</p></div>
+          </div>
+          <div class="drive-field-control">
+            <input id="google-redirect-uri" name="googleRedirectUri" class="drive-input" type="url" placeholder="http://localhost:4322/auth/google/callback" value="<%= googleRedirectUri %>" autocomplete="url">
+          </div>
+        </div>
+
+        <div class="google-connect-row" style="display:flex;justify-content:space-between;align-items:center;">
+          <button type="submit" class="primary" style="height:44px;padding:0 20px;font-size:12px;">Save Credentials</button>
+          <a href="/auth/google" class="google-connect-btn" style="text-decoration:none;">
+            <span class="google-g">G</span> Connect Google Account
+          </a>
+        </div>
+      </div>
+    </form>
+    <div class="drive-status <%= isDriveConnected ? 'connected' : '' %>" id="google-drive-status">
+      <span class="drive-status-dot"></span>
+      <span><%= isDriveConnected ? 'Google Drive account is connected and active.' : 'Google Drive account is not connected. Click Connect Google Account above.' %></span>
+    </div>
+  </div>
+
+  <!-- Panel 3: Gmail Setting -->
+  <div id="gmail-panel" class="settings-panel <%= (activeTab === 'gmail') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon">✉</div>
+      <div><h2>Gmail Setting</h2><p>Configure Gmail sender details and OAuth email transmission for invoice dispatch.</p></div>
+    </div>
+    <form method="POST" action="/settings/gmail">
+      <div class="gmail-settings-card">
+        <div class="gmail-form-row">
+          <div class="gmail-field-info">
+            <div class="gmail-field-icon">✉</div>
+            <div><h3>Sender From Name</h3><p>Display name shown to recipients when receiving invoice emails.</p></div>
+          </div>
+          <div class="gmail-field-control">
+            <input id="gmail-from-name" name="gmailFromName" class="gmail-input" type="text" placeholder="Easy Recharge Solution" value="<%= gmailFromName %>">
+          </div>
+        </div>
+
+        <div class="gmail-form-row">
+          <div class="gmail-field-info">
+            <div class="gmail-field-icon">✓</div>
+            <div><h3>Connection Status</h3><p>OAuth / Gmail API integration status with Google Workspace.</p></div>
+          </div>
+          <div class="gmail-status-pill" style="<%= isDriveConnected ? 'background:#ECFDF5;border-color:#A7F3D0;color:#047857;' : '' %>">
+            <span style="<%= isDriveConnected ? 'background:#10B981;' : '' %>"></span>
+            <%= isDriveConnected ? 'Connected via Google OAuth' : 'Not Connected' %>
+          </div>
+        </div>
+
+        <div class="gmail-action-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <button type="submit" class="primary" style="height:44px;padding:0 22px;font-size:12px;font-weight:700;border-radius:12px;background:linear-gradient(145deg,#fb7185,#e11d48 58%,#be123c);color:#fff;border:none;cursor:pointer;box-shadow:0 5px 0 #9f1239,0 9px 16px rgba(225,29,72,.23);">
+            <span>✓</span> Save Sender Name
+          </button>
+          <a href="/auth/google" class="gmail-connect-btn" style="text-decoration:none;">
+            <span>G</span> Authorize Gmail
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Panel 4: Gemini Setting -->
+  <div id="gemini-panel" class="settings-panel <%= (activeTab === 'gemini') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon">✦</div>
+      <div><h2>Gemini Setting</h2><p>Configure AI invoice analysis, automated PDF extraction, and live reports with Gemini API keys.</p></div>
+    </div>
+    <form method="POST" action="/settings/gemini">
+      <div class="gemini-settings-card">
+        <div class="gemini-form-row">
+          <div class="gemini-field-info">
+            <div class="gemini-field-icon">✦</div>
+            <div><h3>Gemini API Keys</h3><p>Enter your Google Gemini API keys (one per line or comma-separated). Keys rotate automatically on rate limits.</p></div>
+          </div>
+          <div class="gemini-field-control" style="width:460px;">
+            <textarea id="gemini-api-key" name="keys" class="gemini-input" style="height:90px;padding:10px 14px;resize:vertical;" placeholder="AIzaSy...&#10;AIzaSy..."><%= geminiApiKey %></textarea>
+          </div>
+        </div>
+        <div class="gemini-save-row">
+          <button type="submit" class="gemini-save-btn" id="gemini-save-btn">
+            <span>✓</span> Save Gemini Keys
+          </button>
+        </div>
+      </div>
+    </form>
+    <div class="gemini-status <%= geminiApiKey ? 'saved' : '' %>" id="gemini-status">
+      <span class="gemini-status-dot"></span>
+      <span><%= geminiApiKey ? 'Gemini API keys are configured and ready.' : 'Gemini API key is not configured.' %></span>
+    </div>
+  </div>
+
+  <!-- Panel 5: Email Template Setting -->
+  <div id="template-panel" class="settings-panel <%= (activeTab === 'template' || activeTab === 'email') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon">📝</div>
+      <div><h2>Email Template</h2><p>Customize the automated HTML email template and subject sent to parties with their invoice.</p></div>
+    </div>
+    <form method="POST" action="/settings/email">
+      <div class="email-template-card">
+        <div class="email-subject-row">
+          <div class="email-template-label">
+            <div class="email-template-icon">✉</div>
+            <div><h3>Email Subject</h3><p>Subject line of the email. You can use dynamic variables.</p></div>
+          </div>
+          <div class="email-subject-control">
+            <input id="email-template-subject" name="subject" class="email-subject-input" type="text" placeholder="e.g. Tax Invoice from {{company_name}} - {{invoice_number}}" value="<%= emailSubject %>" required autocomplete="off">
+          </div>
+        </div>
+
+        <div class="email-code-section">
+          <div class="email-code-heading">
+            <div class="email-template-icon code-icon">&lt;/&gt;</div>
+            <div><h3>HTML Template Code</h3><p>Complete email body. Use variables like {{party_name}}, {{invoice_number}}, etc.</p></div>
+          </div>
+          <textarea id="email-template-code" name="body" class="email-template-code" spellcheck="false" placeholder="Paste or write your email body or HTML code here..."><%= emailBody %></textarea>
+        </div>
+
+        <div class="email-variables-section">
+          <div class="email-code-heading">
+            <div class="email-template-icon variable-icon">{ }</div>
+            <div><h3>Available Variables (Click to Insert)</h3><p>Click any variable below to insert it directly into your template:</p></div>
+          </div>
+          <div class="email-variable-list">
+            <button type="button" class="email-variable-chip" data-variable="{{company_name}}">{{company_name}}</button>
+            <button type="button" class="email-variable-chip" data-variable="{{party_name}}">{{party_name}}</button>
+            <button type="button" class="email-variable-chip" data-variable="{{invoice_number}}">{{invoice_number}}</button>
+            <button type="button" class="email-variable-chip" data-variable="{{invoice_date}}">{{invoice_date}}</button>
+            <button type="button" class="email-variable-chip" data-variable="{{invoice_total}}">{{invoice_total}}</button>
+            <button type="button" class="email-variable-chip" data-variable="{{invoice_link}}">{{invoice_link}}</button>
+          </div>
+        </div>
+
+        <div class="email-template-actions">
+          <span class="email-template-status saved" id="email-template-status">
+            <span class="email-status-dot"></span><span>Template ready for dispatch.</span>
+          </span>
+          <button type="submit" class="email-template-save-btn" id="email-template-save-btn">
+            <span>✓</span> Save Email Template
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Panel 6: WhatsApp Setting -->
+  <div id="whatsapp-panel" class="settings-panel <%= (activeTab === 'whatsapp') ? 'active' : '' %>">
+    <div class="settings-panel-title">
+      <div class="panel-icon whatsapp-panel-icon">
+        <svg viewBox="0 0 32 32" width="25" height="25" aria-hidden="true"><path fill="currentColor" d="M16 3.5A12.5 12.5 0 0 0 5.25 22.4L3.5 28.5l6.3-1.65A12.5 12.5 0 1 0 16 3.5Zm0 22.65c-2.03 0-3.91-.61-5.48-1.66l-.39-.26-3.75.98 1.01-3.64-.28-.4A10.18 10.18 0 1 1 16 26.15Zm5.6-7.42c-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.69.15-.2.3-.79.98-.97 1.18-.18.2-.36.23-.66.08-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.67-2.06-.18-.3-.02-.46.13-.61.13-.13.3-.36.46-.54.15-.18.2-.3.3-.51.1-.2.05-.38-.03-.54-.08-.15-.69-1.66-.94-2.28-.25-.6-.5-.52-.69-.53h-.59c-.2 0-.54.08-.82.38-.28.3-1.07 1.04-1.07 2.54s1.1 2.95 1.25 3.15c.15.2 2.15 3.28 5.2 4.6.73.32 1.3.51 1.74.65.73.23 1.4.2 1.92.12.59-.09 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.08-.13-.28-.2-.58-.36Z"/></svg>
+      </div>
+      <div><h2>WhatsApp</h2><p>Configure the WhatsApp API request endpoint and dynamic variables for automatic message delivery.</p></div>
+    </div>
+    <form method="POST" action="/settings/whatsapp">
+      <div class="whatsapp-settings-card">
+        <div class="whatsapp-form-grid">
+          <div class="whatsapp-field">
+            <div class="whatsapp-field-heading">
+              <div class="whatsapp-field-icon">↔</div>
+              <div><h3>Request Type</h3><p>HTTP method for the WhatsApp API request.</p></div>
+            </div>
+            <select id="whatsapp-request-type" name="whatsappRequestType" class="whatsapp-input">
+              <option value="POST" <%= whatsappRequestType === 'POST' ? 'selected' : '' %>>POST</option>
+              <option value="GET" <%= whatsappRequestType === 'GET' ? 'selected' : '' %>>GET</option>
+            </select>
+          </div>
+
+          <div class="whatsapp-field">
+            <div class="whatsapp-field-heading">
+              <div class="whatsapp-field-icon">↗</div>
+              <div><h3>API URL</h3><p>Enter your WhatsApp Business API / Webhook endpoint URL.</p></div>
+            </div>
+            <input id="whatsapp-api-url" name="whatsappApiUrl" class="whatsapp-input" type="url" placeholder="https://api.example.com/whatsapp/send?phone={{mobile_number}}&text={{message}}" value="<%= whatsappApiUrl %>" autocomplete="url">
+          </div>
+        </div>
+
+        <div class="whatsapp-actions">
+          <span class="whatsapp-status <%= whatsappApiUrl ? 'saved' : '' %>" id="whatsapp-status">
+            <span class="whatsapp-status-dot"></span>
+            <span><%= whatsappApiUrl ? 'WhatsApp API endpoint configured.' : 'WhatsApp API settings are not saved.' %></span>
+          </span>
+          <div class="whatsapp-action-buttons">
+            <button type="button" class="whatsapp-reset-btn" id="whatsapp-reset-btn" onclick="document.getElementById('whatsapp-api-url').value=''"><span>↺</span> Reset</button>
+            <button type="submit" class="whatsapp-submit-btn" id="whatsapp-submit-btn"><span>✓</span> Submit</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="whatsapp-variables-section">
+        <div class="email-code-heading">
+          <div class="email-template-icon whatsapp-variable-icon">{ }</div>
+          <div><h3>Available WhatsApp Variables (Click to Insert)</h3><p>Use these variables directly in your WhatsApp API endpoint URL:</p></div>
+        </div>
+        <div class="email-variable-list whatsapp-variable-list">
+          <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{mobile_number}}">{{mobile_number}}</button>
+          <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{message}}">{{message}}</button>
+          <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{company_name}}">{{company_name}}</button>
+          <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{invoice_number}}">{{invoice_number}}</button>
+          <button type="button" class="email-variable-chip whatsapp-variable-chip" data-variable="{{invoice_link}}">{{invoice_link}}</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function showSettingsPanel(name, button) {
+  document.querySelectorAll('.settings-panel').forEach(function(panel) {
+    panel.classList.toggle('active', panel.id === name + '-panel');
+  });
+  document.querySelectorAll('.settings-shortcut').forEach(function(btn) {
+    const active = btn === button;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  if (window.history.pushState) {
+    window.history.pushState(null, '', '/settings/' + name);
+  }
+}
+
+// Logo preview
+const logoInput = document.getElementById('company-logo-input');
+const logoPreview = document.getElementById('company-logo-preview');
+const logoName = document.getElementById('company-logo-name');
+if (logoPreview && !logoPreview.querySelector('img')) {
+  try {
+    const cachedLogo = localStorage.getItem('gstui_company_logo');
+    const cachedName = localStorage.getItem('gstui_company_logo_name');
+    if (cachedLogo) {
+      logoPreview.innerHTML = '<img src="' + cachedLogo + '" alt="Logo" style="width:100%;height:100%;object-fit:contain;">';
+      if (logoName) logoName.textContent = cachedName || 'Saved logo';
+    }
+  } catch (e) {}
+}
+if (logoInput) {
+  logoInput.addEventListener('change', function() {
+    const file = this.files && this.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      if (logoPreview) logoPreview.innerHTML = '<img src="' + e.target.result + '" alt="Logo" style="width:100%;height:100%;object-fit:contain;">';
+      if (logoName) logoName.textContent = file.name;
+      try {
+        localStorage.setItem('gstui_company_logo', e.target.result);
+        localStorage.setItem('gstui_company_logo_name', file.name);
+      } catch (err) {}
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Variable chips for email template
+document.querySelectorAll('#template-panel .email-variable-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    const variable = chip.dataset.variable || '';
+    const field = document.getElementById('email-template-code');
+    if (!field) return;
+    const start = field.selectionStart || 0;
+    const end = field.selectionEnd || 0;
+    field.value = field.value.slice(0, start) + variable + field.value.slice(end);
+    field.focus();
+    field.selectionStart = field.selectionEnd = start + variable.length;
+  });
+});
+
+// Variable chips for WhatsApp
+document.querySelectorAll('#whatsapp-panel .whatsapp-variable-chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    const variable = chip.dataset.variable || '';
+    const urlField = document.getElementById('whatsapp-api-url');
+    if (!urlField) return;
+    const start = urlField.selectionStart || urlField.value.length;
+    const end = urlField.selectionEnd || start;
+    urlField.value = urlField.value.slice(0, start) + variable + urlField.value.slice(end);
+    urlField.focus();
+    urlField.selectionStart = urlField.selectionEnd = start + variable.length;
+  });
+});
+</script>
+
+<%- include('partials/footer') %>

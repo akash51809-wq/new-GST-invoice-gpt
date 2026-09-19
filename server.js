@@ -463,58 +463,92 @@ app.post('/api/parties/save-email-and-send', requireAuth, asyncRoute(async (req,
   res.json({ message: `ईमेल भेज दिया गया ${email}` });
 }));
 
-app.get('/settings/company', requireAuth, (req, res) => res.render('settings-company', {
-  page: 'settings',
-  pageTitle: 'Company Settings',
-  pageHeading: 'Settings',
-  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
-  saved: req.query.saved
-}));
-app.post('/settings/company', requireAuth, asyncRoute(async (req, res) => { await saveEnv({ COMPANY_NAME: req.body.companyName }); res.redirect('/settings/company?saved=1'); }));
-
-app.get('/settings/google', requireAuth, (req, res) => res.render('settings-google', {
-  page: 'settings',
-  pageTitle: 'Google Settings',
-  pageHeading: 'Settings',
-  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
-  saved: req.query.saved
-}));
-app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
-  await saveEnv({
-    GOOGLE_CLIENT_ID: req.body.googleClientId,
-    GOOGLE_CLIENT_SECRET: req.body.googleClientSecret,
-    GOOGLE_REDIRECT_URI: req.body.googleRedirectUri,
-    GMAIL_FROM_NAME: req.body.gmailFromName
+async function renderSettings(req, res, activeTab = 'company') {
+  const googleTokens = await Setting.findOne({ key: 'google_tokens' });
+  const isDriveConnected = !!(googleTokens && googleTokens.value);
+  res.render('settings', {
+    page: 'settings',
+    activeTab,
+    pageTitle: 'Settings',
+    pageHeading: 'Settings',
+    companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
+    companyLogo: process.env.COMPANY_LOGO || '',
+    autoEmail: process.env.AUTO_EMAIL !== 'false',
+    autoWhatsApp: process.env.AUTO_WHATSAPP === 'true',
+    googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:4322/auth/google/callback',
+    gmailFromName: process.env.GMAIL_FROM_NAME || 'Easy Recharge Solution',
+    isDriveConnected,
+    geminiApiKey: (process.env.GEMINI_API_KEYS || '').split(',').map(s => s.trim()).join('\n'),
+    emailSubject: process.env.EMAIL_SUBJECT_TEMPLATE || 'Tax Invoice from {{company_name}} - {{invoice_number}}',
+    emailBody: process.env.EMAIL_BODY_TEMPLATE || 'Dear {{party_name}},\n\nPlease find attached your tax invoice {{invoice_number}} dated {{invoice_date}} for the amount of {{invoice_total}}.\n\nThank you for your business!\n{{company_name}}',
+    whatsappRequestType: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
+    whatsappApiUrl: process.env.WHATSAPP_API_URL || '',
+    saved: req.query.saved
   });
-  res.redirect('/settings/google?saved=1');
+}
+
+app.get('/settings', requireAuth, asyncRoute((req, res) => renderSettings(req, res, req.query.tab || 'company')));
+app.get('/settings/company', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'company')));
+app.get('/settings/drive', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
+app.get('/settings/google', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
+app.get('/settings/gmail', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'gmail')));
+app.get('/settings/gemini', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'gemini')));
+app.get('/settings/email', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'template')));
+app.get('/settings/template', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'template')));
+app.get('/settings/whatsapp', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'whatsapp')));
+
+app.post('/settings/company', requireAuth, upload.single('logo'), asyncRoute(async (req, res) => {
+  const updates = {
+    COMPANY_NAME: req.body.companyName || 'Easy Recharge Solution',
+    AUTO_EMAIL: req.body.autoEmail ? 'true' : 'false',
+    AUTO_WHATSAPP: req.body.autoWhatsApp ? 'true' : 'false'
+  };
+  if (req.file) {
+    const dest = path.join(__dirname, 'public', 'logo.png');
+    fs.copyFileSync(req.file.path, dest);
+    try { fs.unlinkSync(req.file.path); } catch (e) {}
+    updates.COMPANY_LOGO = '/logo.png';
+  }
+  await saveEnv(updates);
+  res.redirect('/settings/company?saved=1');
 }));
 
-app.get('/settings/gemini', requireAuth, (req, res) => res.render('settings-gemini', {
-  page: 'settings',
-  pageTitle: 'Gemini AI Settings',
-  pageHeading: 'Settings',
-  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
-  saved: req.query.saved,
-  keys: (process.env.GEMINI_API_KEYS || '').split(',').map(s => s.trim()).filter(Boolean)
+app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
+  const updates = {};
+  if (req.body.googleClientId !== undefined) updates.GOOGLE_CLIENT_ID = req.body.googleClientId;
+  if (req.body.googleClientSecret !== undefined) updates.GOOGLE_CLIENT_SECRET = req.body.googleClientSecret;
+  if (req.body.googleRedirectUri !== undefined) updates.GOOGLE_REDIRECT_URI = req.body.googleRedirectUri;
+  if (req.body.gmailFromName !== undefined) updates.GMAIL_FROM_NAME = req.body.gmailFromName;
+  await saveEnv(updates);
+  res.redirect('/settings/drive?saved=1');
 }));
+
+app.post('/settings/gmail', requireAuth, asyncRoute(async (req, res) => {
+  if (req.body.gmailFromName !== undefined) {
+    await saveEnv({ GMAIL_FROM_NAME: req.body.gmailFromName });
+  }
+  res.redirect('/settings/gmail?saved=1');
+}));
+
 app.post('/settings/gemini', requireAuth, asyncRoute(async (req, res) => {
-  const keys = String(req.body.keys || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  const keys = String(req.body.keys || '').split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
   await saveEnv({ GEMINI_API_KEYS: keys.join(',') });
   res.redirect('/settings/gemini?saved=1');
 }));
 
-app.get('/settings/email', requireAuth, (req, res) => res.render('settings-email', {
-  page: 'settings',
-  pageTitle: 'Email Template',
-  pageHeading: 'Settings',
-  companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
-  saved: req.query.saved,
-  subject: process.env.EMAIL_SUBJECT_TEMPLATE || '',
-  body: process.env.EMAIL_BODY_TEMPLATE || ''
-}));
 app.post('/settings/email', requireAuth, asyncRoute(async (req, res) => {
   await saveEnv({ EMAIL_SUBJECT_TEMPLATE: req.body.subject, EMAIL_BODY_TEMPLATE: req.body.body });
   res.redirect('/settings/email?saved=1');
+}));
+
+app.post('/settings/whatsapp', requireAuth, asyncRoute(async (req, res) => {
+  await saveEnv({
+    WHATSAPP_REQUEST_TYPE: req.body.whatsappRequestType || 'POST',
+    WHATSAPP_API_URL: req.body.whatsappApiUrl || ''
+  });
+  res.redirect('/settings/whatsapp?saved=1');
 }));
 
 app.get('/auth/google', requireAuth, (req, res) => {
@@ -559,12 +593,15 @@ app.use((err, req, res, next) => {
 async function saveEnv(values) {
   let text = fs.existsSync(path.join(__dirname, '.env')) ? fs.readFileSync(path.join(__dirname, '.env'), 'utf8') : '';
   for (const [k, v] of Object.entries(values)) {
+    if (v === undefined) continue;
     const line = `${k}=${String(v || '').replace(/\r?\n/g, '\\n')}`;
     const re = new RegExp(`^${k}=.*$`, 'm');
     text = re.test(text) ? text.replace(re, line) : text + '\n' + line;
   }
   fs.writeFileSync(path.join(__dirname, '.env'), text);
-  for (const [k, v] of Object.entries(values)) process.env[k] = v;
+  for (const [k, v] of Object.entries(values)) {
+    if (v !== undefined) process.env[k] = v;
+  }
 }
 
 boot().then(() => app.listen(PORT, () => console.log(`GST Invoice Manager running on ${PORT}`))).catch(e => { console.error(e); process.exit(1); });

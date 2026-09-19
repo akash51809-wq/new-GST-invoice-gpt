@@ -1,6 +1,35 @@
 const {google}=require('googleapis');const {Setting}=require('../models');
-function vars(inv){return {COMPANY_NAME:process.env.COMPANY_NAME||'',PARTY_NAME:inv.invoiceType==='BUY'?inv.sellerName:inv.buyerName,BILL_NUMBER:inv.invoiceNumber||'',AMOUNT:inv.invoiceAmount||'',DATE:inv.invoiceDate?new Date(inv.invoiceDate).toLocaleDateString('en-IN'):''};}
-function apply(t,v){return String(t||'').replace(/\{([A-Z_]+)\}/g,(_,k)=>v[k]??'');}
+function vars(inv) {
+  const cn = process.env.COMPANY_NAME || 'Easy Recharge Solution';
+  const pn = (inv.invoiceType === 'BUY' ? inv.sellerName : inv.buyerName) || '';
+  const inum = inv.invoiceNumber || '';
+  const amt = inv.invoiceAmount != null ? `₹${Number(inv.invoiceAmount).toLocaleString('en-IN')}` : '';
+  const dt = inv.invoiceDate ? new Date(inv.invoiceDate).toLocaleDateString('en-IN') : '';
+  const link = inv.driveFileId ? `https://drive.google.com/file/d/${inv.driveFileId}/view` : '';
+  return {
+    COMPANY_NAME: cn,
+    company_name: cn,
+    PARTY_NAME: pn,
+    party_name: pn,
+    BILL_NUMBER: inum,
+    invoice_number: inum,
+    AMOUNT: amt,
+    invoice_total: amt,
+    DATE: dt,
+    invoice_date: dt,
+    invoice_link: link
+  };
+}
+function apply(t, v) {
+  return String(t || '').replace(/\{\{?\s*([a-zA-Z0-9_]+)\s*\}?\}/g, (_, k) => {
+    if (v[k] !== undefined) return v[k];
+    const up = k.toUpperCase();
+    if (v[up] !== undefined) return v[up];
+    const low = k.toLowerCase();
+    if (v[low] !== undefined) return v[low];
+    return _;
+  });
+}
 async function client(){const row=await Setting.findOne({key:'google_tokens'});if(!row)throw new Error('Google account connect करें');const o=new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET,process.env.GOOGLE_REDIRECT_URI);o.setCredentials(JSON.parse(row.value));return google.gmail({version:'v1',auth:o});}
 async function sendInvoiceEmail(to,inv,pdf){const g=await client();const v=vars(inv);const subject=apply(process.env.EMAIL_SUBJECT_TEMPLATE||'Invoice {BILL_NUMBER}',v);const body=apply(process.env.EMAIL_BODY_TEMPLATE||'Please find attached invoice {BILL_NUMBER}.',v);const boundary='gst_invoice_boundary';const raw=[`From: ${process.env.GMAIL_FROM_NAME||v.COMPANY_NAME} <me>`,`To: ${to}`,`Subject: ${subject}`,'MIME-Version: 1.0',`Content-Type: multipart/mixed; boundary="${boundary}"`,'',`--${boundary}`,'Content-Type: text/plain; charset=UTF-8','',body,`--${boundary}`,'Content-Type: application/pdf; name="invoice.pdf"','Content-Transfer-Encoding: base64','Content-Disposition: attachment; filename="invoice.pdf"','',pdf.toString('base64'),`--${boundary}--`].join('\r\n');await g.users.messages.send({userId:'me',requestBody:{raw:Buffer.from(raw).toString('base64url')}});}
 module.exports={sendInvoiceEmail};
