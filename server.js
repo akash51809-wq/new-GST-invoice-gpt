@@ -111,7 +111,7 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     Invoice.countDocuments({ invoiceType: 'BUY', status: 'completed' }),
     Invoice.countDocuments({ invoiceType: 'SELL', status: 'completed' }),
     Party.countDocuments(),
-    Invoice.countDocuments({ invoiceType: 'SELL', emailSent: false, status: 'completed' }),
+    Invoice.countDocuments({ status: 'pending_verification' }),
     Invoice.aggregate([
       { $match: { invoiceType: 'BUY', status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
@@ -286,7 +286,7 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
         });
       }
 
-      // 6. Save Invoice in MongoDB
+      // 6. Save Invoice in MongoDB — status: pending_verification (admin verify karega baad mein)
       const newInv = await Invoice.create({
         ...data,
         partyId: party._id,
@@ -294,7 +294,7 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
         driveFileId: driveId,
         driveFolderId: folderId,
         localPath: localDest,
-        status: 'completed'
+        status: 'pending_verification'
       });
 
       job.status = 'completed';
@@ -356,7 +356,8 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
 app.get('/reports', requireAuth, (req, res) => res.redirect('/reports/invoices'));
 
 app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
-  const q = {};
+  // Sirf admin-verified (completed) invoices dikhao
+  const q = { status: 'completed' };
   if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
   if (req.query.party) q.partyId = req.query.party;
   if (req.query.financialYear) q.financialYear = req.query.financialYear;
@@ -383,9 +384,8 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
-  const q = {
-    $or: [{ emailSent: false }, { status: 'pending' }]
-  };
+  // Sirf naye upload hue invoices jo abhi admin ne verify nahi kiye
+  const q = { status: 'pending_verification' };
   if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
   if (req.query.party) q.partyId = req.query.party;
   if (req.query.financialYear) q.financialYear = req.query.financialYear;
@@ -400,7 +400,7 @@ app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
       ]
     }];
   }
-  const invoices = await Invoice.find(q).populate('partyId').sort({ invoiceDate: -1 }).limit(1000);
+  const invoices = await Invoice.find(q).populate('partyId').sort({ createdAt: -1 }).limit(1000);
   const parties = await Party.find().sort({ name: 1 });
   res.render('report-pending', {
     page: 'reports',
@@ -413,6 +413,47 @@ app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
     query: req.query
   });
 }));
+
+// Admin: Invoice verify karo (pending_verification → completed)
+app.post('/invoice/:id/verify', requireAuth, asyncRoute(async (req, res) => {
+  const inv = await Invoice.findById(req.params.id).populate('partyId');
+  if (!inv) return res.status(404).send('Invoice nahi mila');
+  if (inv.status !== 'pending_verification') return res.redirect('/reports/pending');
+
+  // Status completed kar do
+  inv.status = 'completed';
+  await inv.save();
+
+  // Auto-email workflow trigger (jo pehle upload pe hota tha, ab verify pe hoga)
+  try {
+    const invDateRef = inv.invoiceDate || new Date();
+    const isPrevMonth = isPreviousMonth(invDateRef);
+    const party = inv.partyId;
+    if (inv.invoiceType === 'SELL' && isPrevMonth && process.env.AUTO_EMAIL !== 'false') {
+      if (party && party.email) {
+        let pdfBuffer;
+        if (inv.driveFileId) {
+          try { pdfBuffer = await downloadFile(inv.driveFileId); } catch(e) {}
+        }
+        if (!pdfBuffer && inv.localPath && fs.existsSync(inv.localPath)) {
+          pdfBuffer = fs.readFileSync(inv.localPath);
+        }
+        if (pdfBuffer) {
+          await sendInvoiceEmail(party.email, inv, pdfBuffer);
+          inv.emailSent = true;
+          inv.emailSentAt = new Date();
+          inv.emailStatus = 'sent';
+          await inv.save();
+        }
+      }
+    }
+  } catch (emailErr) {
+    console.error('Verify auto-email error:', emailErr.message);
+  }
+
+  res.redirect('/reports/pending');
+}));
+
 
 app.get('/reports/ai', requireAuth, asyncRoute(async (req, res) => {
   const totalInvoices = await Invoice.countDocuments();

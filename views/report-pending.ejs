@@ -89,7 +89,7 @@
               <tr>
                 <td colspan="9">
                   <div class="report-empty">
-                    No pending invoices found matching your filters. All invoice workflows are up to date!
+                    Koi bhi pending invoice nahi hai. Sab invoices verify ho chuki hain! 🎉
                   </div>
                 </td>
               </tr>
@@ -111,16 +111,19 @@
                   </td>
                   <td class="amount-cell">₹ <%= (r.invoiceAmount || 0).toLocaleString('en-IN') %></td>
                   <td>
-                    <span class="pending-status-pill">
-                      <%= r.emailSent ? 'Pending Verification' : 'Email Pending' %>
+                    <span class="pending-status-pill" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;">
+                      ⏳ Pending Verification
                     </span>
                   </td>
                   <td style="text-align:center;">
                     <div class="action-group" style="justify-content:center;">
                       <a class="report-action action-view" href="/invoice/<%= r._id %>/view" title="View Details" style="text-decoration:none;">◉</a>
                       <a class="report-action action-download" href="/invoice/<%= r._id %>/download" title="Download PDF" style="text-decoration:none;">↓</a>
-                      <form method="POST" action="/invoice/<%= r._id %>/email" style="display:inline;margin:0;">
-                        <button class="report-action" type="submit" title="Send Email Now" style="background:linear-gradient(145deg,#8B5CF6,#6D28D9);color:#fff;">✉</button>
+                      <!-- Verify Button: Admin approve karega toh completed ho jayegi -->
+                      <form method="POST" action="/invoice/<%= r._id %>/verify" style="display:inline;margin:0;" onsubmit="return confirm('Invoice verify karein aur Report mein move karein?')">
+                        <button class="report-action" type="submit" title="Verify & Approve" style="background:linear-gradient(145deg,#10B981,#059669);color:#fff;font-weight:700;padding:0 10px;min-width:64px;font-size:10px;letter-spacing:.3px;">
+                          ✓ Verify
+                        </button>
                       </form>
                       <button class="report-action action-delete" type="button" title="Delete Invoice" onclick="openDeletePinModal('<%= r._id %>', '<%= (r.invoiceNumber || '').replace(/'/g, '\\\'') %>')">⌫</button>
                     </div>
