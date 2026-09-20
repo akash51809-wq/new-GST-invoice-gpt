@@ -39,11 +39,12 @@
         <p>Enter your details to continue to the dashboard.</p>
       </div>
       <form id="loginForm" method="POST" action="/login" autocomplete="on">
+        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
         <label class="field-label" for="loginUser">Username or Email</label>
-        <div class="input-wrap"><span>◉</span><input id="loginUser" name="username" type="text" placeholder="admin" value="admin" required autocomplete="username"></div>
+        <div class="input-wrap"><span>◉</span><input id="loginUser" name="username" type="text" placeholder="Enter username" required autocomplete="username"></div>
         <label class="field-label" for="loginPassword">Password</label>
-        <div class="input-wrap"><span>⌑</span><input id="loginPassword" name="password" type="password" placeholder="admin" required autocomplete="current-password"><button type="button" id="showPassword" aria-label="Show password">◉</button></div>
-        <div class="login-options"><label><input id="rememberMe" type="checkbox" checked><span>Remember me</span></label><span style="color:#64748b;font-size:11px;">Default: admin / admin</span></div>
+        <div class="input-wrap"><span>⌑</span><input id="loginPassword" name="password" type="password" placeholder="Enter password" required autocomplete="current-password"><button type="button" id="showPassword" aria-label="Show password">◉</button></div>
+        <div class="login-options"><label><input id="rememberMe" type="checkbox" checked><span>Remember me</span></label></div>
         <button class="login-button" type="submit"><span>Enter Dashboard</span><b>→</b></button>
         <% if(error){ %>
           <div id="loginMessage" class="login-message" style="color:#ef4444;display:block;margin-top:12px;font-size:12px;font-weight:600;"><%= error %></div>

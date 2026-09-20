@@ -3,5 +3,5 @@ const InvoiceSchema=new mongoose.Schema({invoiceNumber:String,invoiceDate:Date,i
 InvoiceSchema.index({invoiceNumber:1,invoiceAmount:1});
 const PartySchema=new mongoose.Schema({name:{type:String,required:true},gstin:String,email:String,mobile:String},{timestamps:true});
 const SettingSchema=new mongoose.Schema({key:{type:String,unique:true},value:String});
-const UserSchema=new mongoose.Schema({username:String,passwordHash:String,name:String});
+const UserSchema=new mongoose.Schema({username:String,passwordHash:String,name:String,mustChangePassword:{type:Boolean,default:false}});
 module.exports={Invoice:mongoose.model('Invoice',InvoiceSchema),Party:mongoose.model('Party',PartySchema),Setting:mongoose.model('Setting',SettingSchema),User:mongoose.model('User',UserSchema)};

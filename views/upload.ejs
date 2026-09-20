@@ -32,14 +32,14 @@
               <circle cx="157" cy="28" r="3" fill="#2563EB"/>
             </svg>
           </div>
-          <h3>Drop invoice PDFs here</h3>
-          <p>Drag & drop your GST invoice files here, or select them from your computer.</p>
-          <input id="invoiceFileInput" type="file" accept=".pdf,application/pdf" multiple hidden>
+          <h3>Drop invoices (PDF or Excel) here</h3>
+          <p>Drag & drop your GST invoice files (PDF or Excel/CSV) here, or select them from your computer.</p>
+          <input id="invoiceFileInput" type="file" accept=".pdf,.xlsx,.xls,.csv,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" multiple hidden>
           <div class="upload-actions">
-            <button class="primary" id="chooseInvoiceBtn" type="button">＋ Choose PDF Files</button>
+            <button class="primary" id="chooseInvoiceBtn" type="button">＋ Choose PDF / Excel Files</button>
             <button class="primary light" id="processInvoiceBtn" type="button">↑ Upload &amp; Process</button>
           </div>
-          <small>Maximum 50 files • 25 MB per file • PDF format</small>
+          <small>Maximum 50 files • 25 MB per file • PDF &amp; Excel (.xlsx, .xls, .csv) formats only</small>
           <div class="upload-progress" id="uploadProgress" hidden>
             <div class="upload-progress-top"><span id="uploadStatus">Ready</span><strong id="uploadPercent">0%</strong></div>
             <div class="upload-progress-track"><i id="uploadProgressFill"></i></div>
@@ -163,8 +163,18 @@
   }
 
   function addFiles(files) {
-    const pdfs = Array.from(files || []).filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name));
-    selectedFiles = [...selectedFiles, ...pdfs].slice(0, 50);
+    const validFiles = Array.from(files || []).filter(f => {
+      const isPdf = f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+      const isExcel = /\.xlsx$|\.xls$|\.csv$/i.test(f.name) ||
+        f.type.includes('spreadsheet') ||
+        f.type.includes('excel') ||
+        f.type === 'text/csv';
+      return isPdf || isExcel;
+    });
+    if (files.length > 0 && validFiles.length === 0) {
+      alert('गलत फ़ाइल टाइप! केवल PDF (.pdf) या Excel (.xlsx, .xls, .csv) फ़ाइलें ही मान्य हैं।');
+    }
+    selectedFiles = [...selectedFiles, ...validFiles].slice(0, 50);
     renderQueue();
   }
 

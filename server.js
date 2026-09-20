@@ -7,13 +7,19 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const rateLimit = require('express-rate-limit');
+const BCRYPT_ROUNDS = 12;
 const { google } = require('googleapis');
 const { processInvoice, askGeminiReport } = require('./services/gemini-service');
 const { ensureFolderPath, uploadFile, downloadFile, deleteFile } = require('./services/drive-service');
-const { sendInvoiceEmail } = require('./services/gmail-service');
+const { sendInvoiceEmail, sendSecurityAlertEmail, validateAndSanitizeEmail } = require('./services/gmail-service');
 const { Invoice, Party, Setting, User } = require('./models');
 
 const app = express();
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 4322;
 const TMP = path.join(__dirname, 'tmp');
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
@@ -26,35 +32,202 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+// MongoDB NoSQL Injection Sanitizer: Recursively strip $ and . operators
+function sanitizeNoSql(target) {
+  if (!target || typeof target !== 'object') return target;
+  if (Array.isArray(target)) {
+    target.forEach(sanitizeNoSql);
+    return target;
+  }
+  for (const key of Object.keys(target)) {
+    if (key.startsWith('$') || key.includes('.')) {
+      delete target[key];
+    } else if (typeof target[key] === 'object') {
+      sanitizeNoSql(target[key]);
+    }
+  }
+  return target;
+}
+
+app.use((req, res, next) => {
+  if (req.body) sanitizeNoSql(req.body);
+  if (req.query) sanitizeNoSql(req.query);
+  if (req.params) sanitizeNoSql(req.params);
+  next();
+});
+
+// ReDoS (Regular Expression Denial of Service) Prevention Utility
+function escapeRegex(str) {
+  if (typeof str !== 'string') return '';
+  return str.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Cookie Secure Flag & Production Hardening
+const isProduction = process.env.NODE_ENV === 'production';
+const isCookieSecure = process.env.COOKIE_SECURE === 'true' || (process.env.COOKIE_SECURE === 'auto' && isProduction);
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'change-me',
+  secret: process.env.SESSION_SECRET || 'gst-invoice-manager-secure-session-2026',
   resave: false,
   saveUninitialized: false,
   store: process.env.MONGODB_URI ? MongoStore.create({ mongoUrl: process.env.MONGODB_URI }) : undefined,
-  cookie: { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 }
+  cookie: {
+    httpOnly: true,
+    secure: isCookieSecure,
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000
+  }
 }));
 
-const upload = multer({ dest: TMP, limits: { fileSize: 25 * 1024 * 1024 } });
-const requireAuth = (req, res, next) => {
-  if (!req.session || !req.session.userId) return res.redirect('/login');
+// CSRF Token Generation for every session
+app.use((req, res, next) => {
+  if (req.session) {
+    if (!req.session.csrfToken) {
+      req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    }
+    res.locals.csrfToken = req.session.csrfToken;
+  } else {
+    res.locals.csrfToken = '';
+  }
+  next();
+});
+
+// CSRF Verification Middleware for state-changing requests
+const csrfProtect = (req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  const sessionToken = req.session && req.session.csrfToken;
+  const submittedToken = (req.body && req.body._csrf) ||
+                         req.headers['x-csrf-token'] ||
+                         req.headers['csrf-token'] ||
+                         req.query._csrf;
+
+  if (!sessionToken || !submittedToken || sessionToken !== submittedToken) {
+    console.warn(`[CSRF Blocked] ${req.method} ${req.path} from IP ${req.ip}`);
+    if (req.xhr || req.headers['content-type'] === 'application/json' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+      return res.status(403).json({ error: 'CSRF verification failed. Please refresh the page.' });
+    }
+    return res.status(403).send('CSRF validation failed! Unauthorized request. Please refresh the page.');
+  }
   next();
 };
+
+// Strict File Filter: ONLY PDF and Excel (.xlsx, .xls, .csv) Allowed
+const ALLOWED_INVOICE_EXTS = ['.pdf', '.xlsx', '.xls', '.csv'];
+const ALLOWED_INVOICE_MIMES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+  'text/csv',
+  'application/csv',
+  'application/octet-stream'
+];
+
+const invoiceFileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  if (!ALLOWED_INVOICE_EXTS.includes(ext)) {
+    return cb(new Error('Invalid file type! Sirf PDF aur Excel files (.pdf, .xlsx, .xls, .csv) allow hain.'));
+  }
+  if (!ALLOWED_INVOICE_MIMES.includes(file.mimetype) && !ALLOWED_INVOICE_EXTS.includes(ext)) {
+    return cb(new Error('Invalid MIME type! Sirf PDF aur Excel files allow hain.'));
+  }
+  cb(null, true);
+};
+
+const upload = multer({
+  dest: TMP,
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: invoiceFileFilter
+});
+
+// Logo file filter (only safe images)
+const logoFileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname || '').toLowerCase();
+  const allowedLogoExts = ['.png', '.jpg', '.jpeg', '.webp', '.svg'];
+  if (!allowedLogoExts.includes(ext) || !file.mimetype.startsWith('image/')) {
+    return cb(new Error('Sirf safe image formats (PNG, JPG, WEBP, SVG) allow hain.'));
+  }
+  cb(null, true);
+};
+
+const uploadLogo = multer({
+  dest: TMP,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: logoFileFilter
+});
+
+// WhatsApp Security Alert Function
+async function sendSecurityAlertWhatsApp(alertInfo) {
+  const apiUrl = process.env.WHATSAPP_API_URL;
+  if (!apiUrl) return;
+  try {
+    const text = `⚠️ Security Alert: Failed login attempt on GST Invoice Manager\nUser: ${alertInfo.username || 'unknown'}\nIP: ${alertInfo.ip || 'unknown'}\nTime: ${new Date().toLocaleString('en-IN')}`;
+    const targetUrl = apiUrl.replace(/\{\{message\}\}/g, encodeURIComponent(text)).replace(/\{\{mobile_number\}\}/g, encodeURIComponent(process.env.ADMIN_MOBILE || ''));
+    if (typeof fetch === 'function') {
+      await fetch(targetUrl, {
+        method: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, alert: alertInfo })
+      });
+      console.log('[Security Alert] WhatsApp alert dispatched');
+    }
+  } catch (err) {
+    console.warn('[Security Alert] Could not send WhatsApp alert:', err.message);
+  }
+}
+
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const requireAuth = asyncRoute(async (req, res, next) => {
+  if (!req.session || !req.session.userId) return res.redirect('/login');
+  // Enforce password change for first-login users (allow /settings/security and /logout through)
+  const ALLOWED_WHEN_MUST_CHANGE = ['/settings/security', '/logout'];
+  if (!ALLOWED_WHEN_MUST_CHANGE.some(p => req.path.startsWith(p))) {
+    const u = await User.findById(req.session.userId).select('mustChangePassword').lean();
+    if (u && u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
+  }
+  next();
+});
 
 async function boot() {
   if (process.env.MONGODB_URI) await mongoose.connect(process.env.MONGODB_URI);
-  await User.findOneAndUpdate(
-    { username: 'admin' },
-    {
-      $setOnInsert: {
-        username: 'admin',
-        passwordHash: crypto.createHash('sha256').update('admin').digest('hex'),
-        name: 'Administrator'
-      }
-    },
-    { upsert: true }
-  );
+
+  // Auto-upgrade weak or default SESSION_SECRET
+  if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'CHANGE_ME' || process.env.SESSION_SECRET === 'change-me' || process.env.SESSION_SECRET.length < 32) {
+    const strongSecret = crypto.randomBytes(64).toString('hex');
+    await saveEnv({ SESSION_SECRET: strongSecret });
+    process.env.SESSION_SECRET = strongSecret;
+    console.log('🔒 Weak SESSION_SECRET auto-upgraded to 128-char cryptographic secret.');
+  }
+
+  const SHA256_ADMIN_HASH = crypto.createHash('sha256').update('admin').digest('hex');
+  let existing = await User.findOne({ username: 'admin' });
+
+  if (!existing) {
+    // Fresh install — generate a strong random password
+    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
+    const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
+    await User.create({ username: 'admin', passwordHash: hash, name: 'Administrator', mustChangePassword: true });
+    if (!process.env.ADMIN_DEFAULT_PASSWORD) {
+      console.log('\n========================================');
+      console.log('  ✅  Admin account created!');
+      console.log(`  👤  Username : admin`);
+      console.log(`  🔑  Password : ${rawPass}`);
+      console.log('  ⚠️   Please change this password after first login!');
+      console.log('========================================\n');
+    }
+  } else if (existing.passwordHash === SHA256_ADMIN_HASH) {
+    // Existing admin still using unsafe SHA-256 hash of "admin" — migrate to bcrypt
+    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
+    const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
+    await User.updateOne({ username: 'admin' }, { $set: { passwordHash: hash, mustChangePassword: true } });
+    console.log('\n========================================');
+    console.log('  🔒  Security upgrade: admin password migrated to bcrypt!');
+    console.log(`  🔑  New Password : ${rawPass}`);
+    console.log('  ⚠️   Please change this password immediately after login!');
+    console.log('========================================\n');
+  }
+  // If admin exists with bcrypt hash already — no action needed
 }
+
 
 function fyFor(date) {
   const d = new Date(date), y = d.getFullYear(), m = d.getMonth() + 1;
@@ -71,17 +244,66 @@ function isPreviousMonth(invDate, refDate = new Date()) {
   return d.getFullYear() === targetYear && d.getMonth() === targetMonth;
 }
 
-app.get('/login', (req, res) => res.render('login', { error: null }));
-app.post('/login', asyncRoute(async (req, res) => {
-  const { username, password } = req.body;
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minute window
+  max: 5, // max 5 failed attempts per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  handler: (req, res) => {
+    const alertInfo = {
+      username: (typeof req.body?.username === 'string' ? req.body.username : 'RateLimited'),
+      ip: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    };
+    sendSecurityAlertEmail(alertInfo).catch(() => {});
+    sendSecurityAlertWhatsApp(alertInfo).catch(() => {});
+    res.status(429).render('login', {
+      error: 'अत्यधिक असफल प्रयास! सुरक्षा कारणों से लॉगिन 15 मिनट के लिए ब्लॉक कर दिया गया है।',
+      csrfToken: req.session?.csrfToken || ''
+    });
+  }
+});
+
+app.get('/login', (req, res) => res.render('login', { error: null, csrfToken: req.session?.csrfToken || '' }));
+
+app.post('/login', loginLimiter, csrfProtect, asyncRoute(async (req, res) => {
+  // Prevent NoSQL Injection: strictly enforce string primitives
+  const username = (typeof req.body?.username === 'string') ? req.body.username.trim() : '';
+  const password = (typeof req.body?.password === 'string') ? req.body.password : '';
+  if (!username || !password) {
+    return res.render('login', { error: 'गलत यूज़रनेम या पासवर्ड', csrfToken: req.session?.csrfToken || '' });
+  }
+
   const u = await User.findOne({ username });
-  const hash = crypto.createHash('sha256').update(password || '').digest('hex');
-  if (!u || u.passwordHash !== hash) return res.render('login', { error: 'गलत यूज़रनेम या पासवर्ड' });
-  req.session.userId = u._id;
-  res.redirect('/dashboard');
+  // Constant-time: always run bcrypt even if user not found (prevent timing attacks)
+  const dummyHash = '$2b$12$invalidhashfortimingprotection000000000000000000000000';
+  const isValid = u ? await bcrypt.compare(password, u.passwordHash) : await bcrypt.compare('', dummyHash).catch(() => false);
+  
+  if (!isValid) {
+    const alertInfo = {
+      username: username || 'Unknown',
+      ip: req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    };
+    // Send instant Email and WhatsApp alert on every wrong password attempt
+    sendSecurityAlertEmail(alertInfo).catch(e => console.warn('[Email Alert Error]:', e.message));
+    sendSecurityAlertWhatsApp(alertInfo).catch(e => console.warn('[WhatsApp Alert Error]:', e.message));
+
+    return res.render('login', { error: 'गलत यूज़रनेम या पासवर्ड', csrfToken: req.session?.csrfToken || '' });
+  }
+
+  // Regenerate session ID upon successful login to prevent session fixation
+  req.session.regenerate(async (err) => {
+    if (err) console.error('Session regenerate error:', err);
+    req.session.userId = u._id;
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+    if (u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
+    res.redirect('/dashboard');
+  });
 }));
 
-app.post('/logout', (req, res) => {
+app.post('/logout', csrfProtect, (req, res) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) console.error('Session destroy error:', err);
@@ -221,9 +443,16 @@ function detectInvoiceType(buyerName, sellerName, company) {
   return 'BUY';
 }
 
-app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyncRoute(async (req, res) => {
+app.post('/api/invoices/upload', requireAuth, (req, res, next) => {
+  upload.array('invoices', 50)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message });
+    }
+    next();
+  });
+}, csrfProtect, asyncRoute(async (req, res) => {
   const files = req.files || [];
-  if (!files.length) return res.status(400).json({ error: 'कृपया कम से कम एक PDF चुनें' });
+  if (!files.length) return res.status(400).json({ error: 'कृपया कम से कम एक PDF या Excel फ़ाइल चुनें' });
   const company = process.env.COMPANY_NAME || 'Easy Recharge Solution';
   const results = [];
   const pendingEmails = [];
@@ -323,14 +552,17 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
   const q = { status: 'completed' };
   if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
   if (req.query.party) q.partyId = req.query.party;
-  if (req.query.financialYear) q.financialYear = req.query.financialYear;
-  if (req.query.month) q.month = req.query.month;
-  if (req.query.search) {
-    q.$or = [
-      { invoiceNumber: new RegExp(req.query.search, 'i') }, 
-      { buyerName: new RegExp(req.query.search, 'i') }, 
-      { sellerName: new RegExp(req.query.search, 'i') }
-    ];
+  if (req.query.financialYear) q.financialYear = String(req.query.financialYear);
+  if (req.query.month) q.month = String(req.query.month);
+  if (req.query.search && typeof req.query.search === 'string') {
+    const s = escapeRegex(req.query.search);
+    if (s) {
+      q.$or = [
+        { invoiceNumber: new RegExp(s, 'i') }, 
+        { buyerName: new RegExp(s, 'i') }, 
+        { sellerName: new RegExp(s, 'i') }
+      ];
+    }
   }
   const invoices = await Invoice.find(q).populate('partyId').sort({ invoiceDate: -1 }).limit(1000);
   const parties = await Party.find().sort({ name: 1 });
@@ -349,19 +581,21 @@ app.get('/reports/invoices', requireAuth, asyncRoute(async (req, res) => {
 app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
   // Sirf naye upload hue invoices jo abhi admin ne verify nahi kiye
   const q = { status: 'pending_verification' };
-  if (req.query.type && req.query.type !== 'ALL') q.invoiceType = req.query.type;
-  if (req.query.party) q.partyId = req.query.party;
-  if (req.query.financialYear) q.financialYear = req.query.financialYear;
-  if (req.query.month) q.month = req.query.month;
-  if (req.query.search) {
-    const s = req.query.search;
-    q.$and = [{
-      $or: [
-        { invoiceNumber: new RegExp(s, 'i') },
-        { buyerName: new RegExp(s, 'i') },
-        { sellerName: new RegExp(s, 'i') }
-      ]
-    }];
+  if (req.query.type && req.query.type !== 'ALL') q.invoiceType = String(req.query.type);
+  if (req.query.party) q.partyId = String(req.query.party);
+  if (req.query.financialYear) q.financialYear = String(req.query.financialYear);
+  if (req.query.month) q.month = String(req.query.month);
+  if (req.query.search && typeof req.query.search === 'string') {
+    const s = escapeRegex(req.query.search);
+    if (s) {
+      q.$and = [{
+        $or: [
+          { invoiceNumber: new RegExp(s, 'i') },
+          { buyerName: new RegExp(s, 'i') },
+          { sellerName: new RegExp(s, 'i') }
+        ]
+      }];
+    }
   }
   const invoices = await Invoice.find(q).populate('partyId').sort({ createdAt: -1 }).limit(1000);
   const parties = await Party.find().sort({ name: 1 });
@@ -378,7 +612,7 @@ app.get('/reports/pending', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 // Admin: Invoice verify karo (pending_verification → completed)
-app.post('/invoice/:id/verify', requireAuth, asyncRoute(async (req, res) => {
+app.post('/invoice/:id/verify', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id).populate('partyId');
   if (!inv) return res.status(404).send('Invoice nahi mila');
   if (inv.status !== 'pending_verification') return res.redirect('/reports/pending');
@@ -430,7 +664,7 @@ app.get('/reports/ai', requireAuth, asyncRoute(async (req, res) => {
   });
 }));
 
-app.post('/api/reports/ai-chat', requireAuth, asyncRoute(async (req, res) => {
+app.post('/api/reports/ai-chat', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const { question } = req.body;
   if (!question || !question.trim()) return res.status(400).json({ error: 'Question required' });
 
@@ -501,10 +735,11 @@ app.get('/invoice/:id/download', requireAuth, asyncRoute(async (req, res) => {
   res.end(data);
 }));
 
-app.post('/invoice/:id/email', requireAuth, asyncRoute(async (req, res) => {
+app.post('/invoice/:id/email', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id).populate('partyId');
   if (!inv) return res.sendStatus(404);
   if (!inv.partyId || !inv.partyId.email) return res.status(400).send('Party email नहीं है');
+  const safeEmail = validateAndSanitizeEmail(inv.partyId.email);
   let pdf;
   if (inv.driveFileId) {
     try { pdf = await downloadFile(inv.driveFileId); } catch (e) {}
@@ -513,7 +748,7 @@ app.post('/invoice/:id/email', requireAuth, asyncRoute(async (req, res) => {
     pdf = fs.readFileSync(inv.localPath);
   }
   if (!pdf) return res.status(400).send('Invoice PDF file उपलब्ध नहीं है');
-  await sendInvoiceEmail(inv.partyId.email, inv, pdf);
+  await sendInvoiceEmail(safeEmail, inv, pdf);
   inv.emailSent = true;
   inv.emailSentAt = new Date();
   inv.emailStatus = 'sent';
@@ -521,7 +756,7 @@ app.post('/invoice/:id/email', requireAuth, asyncRoute(async (req, res) => {
   res.redirect('/reports/invoices');
 }));
 
-app.post('/invoice/:id/delete', requireAuth, asyncRoute(async (req, res) => {
+app.post('/invoice/:id/delete', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const { pin } = req.body;
   const ADMIN_PIN = process.env.DELETE_PIN || '1234';
   if (pin !== ADMIN_PIN) return res.status(400).send('गलत PIN दर्ज किया गया है!');
@@ -548,20 +783,22 @@ app.get('/parties', requireAuth, asyncRoute(async (req, res) => {
   });
 }));
 
-app.post('/parties/update/:id', requireAuth, asyncRoute(async (req, res) => {
+app.post('/parties/update/:id', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const { email, mobile } = req.body;
-  await Party.findByIdAndUpdate(req.params.id, { email, mobile });
+  const safeEmail = email ? validateAndSanitizeEmail(email) : '';
+  await Party.findByIdAndUpdate(req.params.id, { email: safeEmail, mobile: String(mobile || '').replace(/[\r\n]/g, '').trim() });
   res.redirect('/parties');
 }));
 
-app.post('/api/parties/save-email-and-send', requireAuth, asyncRoute(async (req, res) => {
+app.post('/api/parties/save-email-and-send', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const { partyId, email, invoiceId } = req.body;
   if (!partyId || !email || !invoiceId) return res.status(400).json({ error: 'partyId, email और invoiceId ज़रूरी हैं' });
-  await Party.findByIdAndUpdate(partyId, { email });
+  const safeEmail = validateAndSanitizeEmail(email);
+  await Party.findByIdAndUpdate(partyId, { email: safeEmail });
   const inv = await Invoice.findById(invoiceId);
   if (!inv) return res.status(404).json({ error: 'Invoice नहीं मिला' });
   const pdfBuffer = await downloadFile(inv.driveFileId);
-  await sendInvoiceEmail(email, inv, pdfBuffer);
+  await sendInvoiceEmail(safeEmail, inv, pdfBuffer);
   inv.emailSent = true;
   inv.emailSentAt = new Date();
   inv.emailStatus = 'sent';
@@ -572,6 +809,7 @@ app.post('/api/parties/save-email-and-send', requireAuth, asyncRoute(async (req,
 async function renderSettings(req, res, activeTab = 'company') {
   const googleTokens = await Setting.findOne({ key: 'google_tokens' });
   const isDriveConnected = !!(googleTokens && googleTokens.value);
+  const currentUser = await User.findById(req.session.userId).select('mustChangePassword').lean();
   res.render('settings', {
     page: 'settings',
     activeTab,
@@ -591,21 +829,109 @@ async function renderSettings(req, res, activeTab = 'company') {
     emailBody: process.env.EMAIL_BODY_TEMPLATE || 'Dear {{party_name}},\n\nPlease find attached your tax invoice {{invoice_number}} dated {{invoice_date}} for the amount of {{invoice_total}}.\n\nThank you for your business!\n{{company_name}}',
     whatsappRequestType: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
     whatsappApiUrl: process.env.WHATSAPP_API_URL || '',
-    saved: req.query.saved
+    mustChangePassword: !!(currentUser && currentUser.mustChangePassword),
+    saved: req.query.saved,
+    securityError: req.query.securityError || null,
+    securitySuccess: req.query.securitySuccess || null,
+    mustChange: req.query.mustChange || null
   });
 }
 
-app.get('/settings', requireAuth, asyncRoute((req, res) => renderSettings(req, res, req.query.tab || 'company')));
-app.get('/settings/company', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'company')));
-app.get('/settings/drive', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
-app.get('/settings/google', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
-app.get('/settings/gmail', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'gmail')));
-app.get('/settings/gemini', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'gemini')));
-app.get('/settings/email', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'template')));
-app.get('/settings/template', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'template')));
-app.get('/settings/whatsapp', requireAuth, asyncRoute((req, res) => renderSettings(req, res, 'whatsapp')));
+const SETTINGS_PIN = process.env.SETTINGS_PIN || process.env.DELETE_PIN || '1234';
 
-app.post('/settings/company', requireAuth, upload.single('logo'), asyncRoute(async (req, res) => {
+const requireSettingsPin = asyncRoute(async (req, res, next) => {
+  // If user is forced to change initial password, allow access to /settings/security
+  if (req.path === '/settings/security') {
+    const u = await User.findById(req.session.userId).select('mustChangePassword').lean();
+    if (u && u.mustChangePassword) {
+      return next();
+    }
+  }
+
+  if (req.session && req.session.settingsUnlocked) {
+    return next();
+  }
+
+  return res.render('settings-pin', {
+    page: 'settings',
+    pageTitle: 'Unlock Settings',
+    pageHeading: 'Settings PIN',
+    returnUrl: req.originalUrl || '/settings',
+    error: req.query.pinError || null,
+    csrfToken: req.session?.csrfToken || ''
+  });
+});
+
+app.post('/settings/unlock-pin', requireAuth, csrfProtect, (req, res) => {
+  const pin = String(req.body?.pin || '').trim();
+  const returnUrl = (typeof req.body?.returnUrl === 'string' && req.body.returnUrl.startsWith('/settings'))
+    ? req.body.returnUrl
+    : '/settings';
+
+  if (pin === SETTINGS_PIN) {
+    req.session.settingsUnlocked = true;
+    return res.redirect(returnUrl);
+  }
+  res.redirect('/settings?pinError=' + encodeURIComponent('गलत PIN दर्ज किया गया है!'));
+});
+
+app.post('/settings/lock', requireAuth, csrfProtect, (req, res) => {
+  if (req.session) {
+    req.session.settingsUnlocked = false;
+  }
+  res.redirect('/settings');
+});
+
+app.get('/settings', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, req.query.tab || 'company')));
+app.get('/settings/company', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'company')));
+app.get('/settings/drive', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
+app.get('/settings/google', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'drive')));
+app.get('/settings/gmail', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'gmail')));
+app.get('/settings/gemini', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'gemini')));
+app.get('/settings/email', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'template')));
+app.get('/settings/template', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'template')));
+app.get('/settings/whatsapp', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'whatsapp')));
+
+// Security tab
+app.get('/settings/security', requireAuth, requireSettingsPin, asyncRoute((req, res) => renderSettings(req, res, 'security')));
+
+// Password change handler
+app.post('/settings/security', csrfProtect, asyncRoute(async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/login');
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  const u = await User.findById(req.session.userId);
+  if (!u) return res.redirect('/login');
+
+  // Validate new password
+  if (!newPassword || newPassword.length < 8) {
+    return res.redirect('/settings/security?securityError=New+password+must+be+at+least+8+characters');
+  }
+  if (newPassword !== confirmPassword) {
+    return res.redirect('/settings/security?securityError=New+passwords+do+not+match');
+  }
+
+  // Verify current password (skip check if mustChangePassword — first login)
+  if (!u.mustChangePassword) {
+    const isValid = await bcrypt.compare(currentPassword || '', u.passwordHash);
+    if (!isValid) {
+      return res.redirect('/settings/security?securityError=Current+password+is+incorrect');
+    }
+  }
+
+  // Hash and save new password
+  const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+  await User.updateOne({ _id: u._id }, { $set: { passwordHash: newHash, mustChangePassword: false } });
+  res.redirect('/settings/security?securitySuccess=1');
+}));
+
+
+app.post('/settings/company', requireAuth, (req, res, next) => {
+  uploadLogo.single('logo')(req, res, (err) => {
+    if (err) return res.redirect('/settings/company?error=' + encodeURIComponent(err.message));
+    next();
+  });
+}, csrfProtect, asyncRoute(async (req, res) => {
   const updates = {
     COMPANY_NAME: req.body.companyName || 'Easy Recharge Solution',
     AUTO_EMAIL: req.body.autoEmail ? 'true' : 'false',
@@ -621,7 +947,7 @@ app.post('/settings/company', requireAuth, upload.single('logo'), asyncRoute(asy
   res.redirect('/settings/company?saved=1');
 }));
 
-app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
+app.post('/settings/google', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const updates = {};
   if (req.body.googleClientId !== undefined) updates.GOOGLE_CLIENT_ID = req.body.googleClientId;
   if (req.body.googleClientSecret !== undefined) updates.GOOGLE_CLIENT_SECRET = req.body.googleClientSecret;
@@ -631,25 +957,25 @@ app.post('/settings/google', requireAuth, asyncRoute(async (req, res) => {
   res.redirect('/settings/drive?saved=1');
 }));
 
-app.post('/settings/gmail', requireAuth, asyncRoute(async (req, res) => {
+app.post('/settings/gmail', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   if (req.body.gmailFromName !== undefined) {
     await saveEnv({ GMAIL_FROM_NAME: req.body.gmailFromName });
   }
   res.redirect('/settings/gmail?saved=1');
 }));
 
-app.post('/settings/gemini', requireAuth, asyncRoute(async (req, res) => {
+app.post('/settings/gemini', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const keys = String(req.body.keys || '').split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
   await saveEnv({ GEMINI_API_KEYS: keys.join(',') });
   res.redirect('/settings/gemini?saved=1');
 }));
 
-app.post('/settings/email', requireAuth, asyncRoute(async (req, res) => {
+app.post('/settings/email', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   await saveEnv({ EMAIL_SUBJECT_TEMPLATE: req.body.subject, EMAIL_BODY_TEMPLATE: req.body.body });
   res.redirect('/settings/email?saved=1');
 }));
 
-app.post('/settings/whatsapp', requireAuth, asyncRoute(async (req, res) => {
+app.post('/settings/whatsapp', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   await saveEnv({
     WHATSAPP_REQUEST_TYPE: req.body.whatsappRequestType || 'POST',
     WHATSAPP_API_URL: req.body.whatsappApiUrl || ''
@@ -692,8 +1018,14 @@ app.get('/ping', (req, res) => {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.use((err, req, res, next) => {
-  console.error(err);
-  res.status(500).send('Server error: ' + err.message);
+  console.error('[Application Error]:', err.stack || err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  if (req.xhr || req.headers['content-type'] === 'application/json' || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+    return res.status(500).json({ error: 'Internal server error. Please try again or contact support.' });
+  }
+  res.status(500).send('Internal Server Error. Please contact administrator.');
 });
 
 async function saveEnv(values) {

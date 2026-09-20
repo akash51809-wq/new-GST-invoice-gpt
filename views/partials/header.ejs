@@ -4,7 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1E293B">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= typeof title !== 'undefined' ? title : 'GST Invoice Manager' %></title>
+  <script>
+    (function() {
+      const csrfToken = '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>';
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('form').forEach(function(form) {
+          const method = (form.getAttribute('method') || 'GET').toUpperCase();
+          if (method !== 'GET' && !form.querySelector('input[name="_csrf"]')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = '_csrf';
+            input.value = csrfToken;
+            form.appendChild(input);
+          }
+        });
+      });
+      const originalFetch = window.fetch;
+      window.fetch = function(url, options) {
+        options = options || {};
+        const method = (options.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD') {
+          options.headers = options.headers || {};
+          if (options.headers instanceof Headers) {
+            if (!options.headers.has('X-CSRF-Token')) options.headers.set('X-CSRF-Token', csrfToken);
+          } else if (Array.isArray(options.headers)) {
+            options.headers.push(['X-CSRF-Token', csrfToken]);
+          } else {
+            options.headers['X-CSRF-Token'] = csrfToken;
+          }
+        }
+        return originalFetch(url, options);
+      };
+    })();
+  </script>
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/dashboard.css">
   <% if (typeof page !== 'undefined' && page === 'upload') { %>
