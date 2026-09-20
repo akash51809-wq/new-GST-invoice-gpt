@@ -50,14 +50,7 @@
       <span>⚠</span> <%= securityError %>
     </div>
   <% } %>
-  <% if (typeof mustChange !== 'undefined' && mustChange) { %>
-    <div style="background:#FEF3C7;border:1px solid #FCD34D;color:#B45309;padding:14px 18px;border-radius:14px;margin-bottom:18px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">⚠️</span>
-      <div>
-        <strong>Security Required:</strong> Initial/temporary password in use. Please change your password to continue using the GST workspace.
-      </div>
-    </div>
-  <% } %>
+
 
   <!-- Panel 1: Company Setting -->
   <div id="company-panel" class="settings-panel <%= (!activeTab || activeTab === 'company') ? 'active' : '' %>">
@@ -383,7 +376,6 @@
     </div>
     <form method="POST" action="/settings/security">
       <div class="company-settings-card">
-        <% if (typeof mustChangePassword === 'undefined' || !mustChangePassword) { %>
         <div class="setting-row">
           <div class="setting-info">
             <div class="setting-icon">🔑</div>
@@ -396,7 +388,6 @@
             <input name="currentPassword" class="company-input" type="password" placeholder="Current password" autocomplete="current-password" required>
           </div>
         </div>
-        <% } %>
 
         <div class="setting-row">
           <div class="setting-info">

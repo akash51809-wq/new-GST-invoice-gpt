@@ -176,16 +176,10 @@ async function sendSecurityAlertWhatsApp(alertInfo) {
 }
 
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
-const requireAuth = asyncRoute(async (req, res, next) => {
+const requireAuth = (req, res, next) => {
   if (!req.session || !req.session.userId) return res.redirect('/login');
-  // Enforce password change for first-login users (allow /settings/security and /logout through)
-  const ALLOWED_WHEN_MUST_CHANGE = ['/settings/security', '/logout'];
-  if (!ALLOWED_WHEN_MUST_CHANGE.some(p => req.path.startsWith(p))) {
-    const u = await User.findById(req.session.userId).select('mustChangePassword').lean();
-    if (u && u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
-  }
   next();
-});
+};
 
 async function boot() {
   if (process.env.MONGODB_URI) await mongoose.connect(process.env.MONGODB_URI);
@@ -202,29 +196,23 @@ async function boot() {
   let existing = await User.findOne({ username: 'admin' });
 
   if (!existing) {
-    // Fresh install — generate a strong random password
-    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
+    // Fresh install — generate password from ADMIN_DEFAULT_PASSWORD or fallback
+    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@GST2026!';
     const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
-    const mustChange = !process.env.ADMIN_DEFAULT_PASSWORD;
-    await User.create({ username: 'admin', passwordHash: hash, name: 'Administrator', mustChangePassword: mustChange });
-    if (!process.env.ADMIN_DEFAULT_PASSWORD) {
-      console.log('\n========================================');
-      console.log('  ✅  Admin account created!');
-      console.log(`  👤  Username : admin`);
-      console.log(`  🔑  Password : ${rawPass}`);
-      console.log('  ⚠️   Please change this password after first login!');
-      console.log('========================================\n');
-    }
+    await User.create({ username: 'admin', passwordHash: hash, name: 'Administrator', mustChangePassword: false });
+    console.log('\n========================================');
+    console.log('  ✅  Admin account created!');
+    console.log(`  👤  Username : admin`);
+    console.log(`  🔑  Password : ${rawPass}`);
+    console.log('========================================\n');
   } else if (existing.passwordHash === SHA256_ADMIN_HASH) {
     // Existing admin still using unsafe SHA-256 hash of "admin" — migrate to bcrypt
-    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
+    const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || 'Admin@GST2026!';
     const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
-    const mustChange = !process.env.ADMIN_DEFAULT_PASSWORD;
-    await User.updateOne({ username: 'admin' }, { $set: { passwordHash: hash, mustChangePassword: mustChange } });
+    await User.updateOne({ username: 'admin' }, { $set: { passwordHash: hash, mustChangePassword: false } });
     console.log('\n========================================');
     console.log('  🔒  Security upgrade: admin password migrated to bcrypt!');
     console.log(`  🔑  New Password : ${rawPass}`);
-    if (mustChange) console.log('  ⚠️   Please change this password immediately after login!');
     console.log('========================================\n');
   }
   // If admin exists with bcrypt hash already — no action needed
@@ -303,7 +291,6 @@ app.post('/login', loginLimiter, csrfProtect, asyncRoute(async (req, res) => {
     // Explicitly persist session to store before sending redirect response to prevent race condition
     req.session.save((saveErr) => {
       if (saveErr) console.error('Session save error:', saveErr);
-      if (u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
       res.redirect('/dashboard');
     });
   });
@@ -815,7 +802,6 @@ app.post('/api/parties/save-email-and-send', requireAuth, csrfProtect, asyncRout
 async function renderSettings(req, res, activeTab = 'company') {
   const googleTokens = await Setting.findOne({ key: 'google_tokens' });
   const isDriveConnected = !!(googleTokens && googleTokens.value);
-  const currentUser = await User.findById(req.session.userId).select('mustChangePassword').lean();
   res.render('settings', {
     page: 'settings',
     activeTab,
@@ -835,25 +821,15 @@ async function renderSettings(req, res, activeTab = 'company') {
     emailBody: process.env.EMAIL_BODY_TEMPLATE || 'Dear {{party_name}},\n\nPlease find attached your tax invoice {{invoice_number}} dated {{invoice_date}} for the amount of {{invoice_total}}.\n\nThank you for your business!\n{{company_name}}',
     whatsappRequestType: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
     whatsappApiUrl: process.env.WHATSAPP_API_URL || '',
-    mustChangePassword: !!(currentUser && currentUser.mustChangePassword),
     saved: req.query.saved,
     securityError: req.query.securityError || null,
-    securitySuccess: req.query.securitySuccess || null,
-    mustChange: req.query.mustChange || null
+    securitySuccess: req.query.securitySuccess || null
   });
 }
 
 const SETTINGS_PIN = process.env.SETTINGS_PIN || process.env.DELETE_PIN || '1234';
 
 const requireSettingsPin = asyncRoute(async (req, res, next) => {
-  // If user is forced to change initial password, allow access to /settings/security
-  if (req.path === '/settings/security') {
-    const u = await User.findById(req.session.userId).select('mustChangePassword').lean();
-    if (u && u.mustChangePassword) {
-      return next();
-    }
-  }
-
   if (req.session && req.session.settingsUnlocked) {
     return next();
   }
@@ -924,12 +900,10 @@ app.post('/settings/security', csrfProtect, asyncRoute(async (req, res) => {
     return res.redirect('/settings/security?securityError=New+passwords+do+not+match');
   }
 
-  // Verify current password (skip check if mustChangePassword — first login)
-  if (!u.mustChangePassword) {
-    const isValid = await bcrypt.compare(currentPassword || '', u.passwordHash);
-    if (!isValid) {
-      return res.redirect('/settings/security?securityError=Current+password+is+incorrect');
-    }
+  // Verify current password
+  const isValid = await bcrypt.compare(currentPassword || '', u.passwordHash);
+  if (!isValid) {
+    return res.redirect('/settings/security?securityError=Current+password+is+incorrect');
   }
 
   // Hash and save new password
