@@ -301,45 +301,8 @@ app.post('/api/invoices/upload', requireAuth, upload.array('invoices', 50), asyn
       job.invoiceNumber = data.invoiceNumber || ('INV-' + Date.now().toString().slice(-4));
       job.invoiceType = data.invoiceType;
       job.partyName = partyName;
-
-      // 7. Auto email workflow
-      try {
-        const invDateRef = newInv.invoiceDate || new Date();
-        const isPrevMonth = isPreviousMonth(invDateRef);
-        if (newInv.invoiceType === 'SELL' && isPrevMonth && process.env.AUTO_EMAIL !== 'false') {
-          if (party.email) {
-            let pdfBuffer;
-            if (driveId) {
-              try { pdfBuffer = await downloadFile(driveId); } catch(e) {}
-            }
-            if (!pdfBuffer && fs.existsSync(localDest)) {
-              pdfBuffer = fs.readFileSync(localDest);
-            }
-            if (pdfBuffer) {
-              await sendInvoiceEmail(party.email, newInv, pdfBuffer);
-              newInv.emailSent = true;
-              newInv.emailSentAt = new Date();
-              newInv.emailStatus = 'sent';
-              await newInv.save();
-              job.autoEmailSent = true;
-            }
-          } else {
-            job.autoEmailSent = false;
-            job.emailMissing = true;
-            pendingEmails.push({
-              partyId: party._id,
-              partyName: partyName,
-              invoiceId: newInv._id,
-              invoiceNumber: newInv.invoiceNumber
-            });
-          }
-        } else {
-          job.autoEmailSent = false;
-        }
-      } catch (emailErr) {
-        console.error('Auto email error for upload', emailErr.message);
-        job.autoEmailError = emailErr.message;
-      }
+      job.pendingVerification = true; // Admin ko Pending page pe verify karna hoga
+      // NOTE: Auto-email ab verify karne ke baad trigger hoga (/invoice/:id/verify route mein)
     } catch (e) {
       job.status = 'failed';
       job.error = e.message;
