@@ -205,7 +205,8 @@ async function boot() {
     // Fresh install — generate a strong random password
     const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
     const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
-    await User.create({ username: 'admin', passwordHash: hash, name: 'Administrator', mustChangePassword: true });
+    const mustChange = !process.env.ADMIN_DEFAULT_PASSWORD;
+    await User.create({ username: 'admin', passwordHash: hash, name: 'Administrator', mustChangePassword: mustChange });
     if (!process.env.ADMIN_DEFAULT_PASSWORD) {
       console.log('\n========================================');
       console.log('  ✅  Admin account created!');
@@ -218,11 +219,12 @@ async function boot() {
     // Existing admin still using unsafe SHA-256 hash of "admin" — migrate to bcrypt
     const rawPass = process.env.ADMIN_DEFAULT_PASSWORD || crypto.randomBytes(10).toString('base64url').slice(0, 14);
     const hash = await bcrypt.hash(rawPass, BCRYPT_ROUNDS);
-    await User.updateOne({ username: 'admin' }, { $set: { passwordHash: hash, mustChangePassword: true } });
+    const mustChange = !process.env.ADMIN_DEFAULT_PASSWORD;
+    await User.updateOne({ username: 'admin' }, { $set: { passwordHash: hash, mustChangePassword: mustChange } });
     console.log('\n========================================');
     console.log('  🔒  Security upgrade: admin password migrated to bcrypt!');
     console.log(`  🔑  New Password : ${rawPass}`);
-    console.log('  ⚠️   Please change this password immediately after login!');
+    if (mustChange) console.log('  ⚠️   Please change this password immediately after login!');
     console.log('========================================\n');
   }
   // If admin exists with bcrypt hash already — no action needed
@@ -246,7 +248,7 @@ function isPreviousMonth(invDate, refDate = new Date()) {
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minute window
-  max: 5, // max 5 failed attempts per IP
+  max: 10, // 10 attempts allowed
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true,
@@ -294,12 +296,16 @@ app.post('/login', loginLimiter, csrfProtect, asyncRoute(async (req, res) => {
   }
 
   // Regenerate session ID upon successful login to prevent session fixation
-  req.session.regenerate(async (err) => {
+  req.session.regenerate((err) => {
     if (err) console.error('Session regenerate error:', err);
     req.session.userId = u._id;
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
-    if (u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
-    res.redirect('/dashboard');
+    // Explicitly persist session to store before sending redirect response to prevent race condition
+    req.session.save((saveErr) => {
+      if (saveErr) console.error('Session save error:', saveErr);
+      if (u.mustChangePassword) return res.redirect('/settings/security?mustChange=1');
+      res.redirect('/dashboard');
+    });
   });
 }));
 
@@ -870,7 +876,10 @@ app.post('/settings/unlock-pin', requireAuth, csrfProtect, (req, res) => {
 
   if (pin === SETTINGS_PIN) {
     req.session.settingsUnlocked = true;
-    return res.redirect(returnUrl);
+    return req.session.save((err) => {
+      if (err) console.error('Session save error on unlock pin:', err);
+      res.redirect(returnUrl);
+    });
   }
   res.redirect('/settings?pinError=' + encodeURIComponent('गलत PIN दर्ज किया गया है!'));
 });
@@ -878,6 +887,10 @@ app.post('/settings/unlock-pin', requireAuth, csrfProtect, (req, res) => {
 app.post('/settings/lock', requireAuth, csrfProtect, (req, res) => {
   if (req.session) {
     req.session.settingsUnlocked = false;
+    return req.session.save((err) => {
+      if (err) console.error('Session save error on lock:', err);
+      res.redirect('/settings');
+    });
   }
   res.redirect('/settings');
 });
@@ -922,7 +935,13 @@ app.post('/settings/security', csrfProtect, asyncRoute(async (req, res) => {
   // Hash and save new password
   const newHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   await User.updateOne({ _id: u._id }, { $set: { passwordHash: newHash, mustChangePassword: false } });
-  res.redirect('/settings/security?securitySuccess=1');
+  
+  // Keep settings unlocked in current session and save session explicitly
+  req.session.settingsUnlocked = true;
+  req.session.save((err) => {
+    if (err) console.error('Session save error on password update:', err);
+    res.redirect('/settings/security?securitySuccess=1');
+  });
 }));
 
 
