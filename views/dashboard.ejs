@@ -142,6 +142,16 @@
         <p>Monthly invoice movement</p>
       </div>
       <div class="chart-filters">
+        <select class="chart-mode-filter fy-filter" id="invoiceChartFY" aria-label="Financial Year" onchange="changeInvoiceActivityFY(this.value)">
+          <% if (typeof availableFinancialYears !== 'undefined' && availableFinancialYears.length > 0) { %>
+            <option value="all" <%= (typeof selectedFinancialYear !== 'undefined' && selectedFinancialYear === 'all') ? 'selected' : '' %>>All FY</option>
+            <% availableFinancialYears.forEach(function(fy) { %>
+              <option value="<%= fy %>" <%= (typeof selectedFinancialYear !== 'undefined' && selectedFinancialYear === fy) ? 'selected' : '' %>><%= fy.startsWith('FY') ? fy : ('FY ' + fy) %></option>
+            <% }); %>
+          <% } else { %>
+            <option value="<%= typeof currentFY !== 'undefined' ? currentFY : '2024-25' %>">FY <%= typeof currentFY !== 'undefined' ? currentFY : '2024-25' %></option>
+          <% } %>
+        </select>
         <select class="chart-mode-filter" id="invoiceChartMode" aria-label="Invoice type" onchange="setInvoiceChartMode(this.value)">
           <option value="both">Show Both</option>
           <option value="buy">Buy Only</option>
@@ -268,6 +278,16 @@
 </div>
 
 <script>
+  function changeInvoiceActivityFY(value) {
+    const url = new URL(window.location.href);
+    if (!value || value === 'all') {
+      url.searchParams.set('financialYear', 'all');
+    } else {
+      url.searchParams.set('financialYear', value);
+    }
+    window.location.href = url.toString();
+  }
+
   function setInvoiceChartMode(value) {
     const chart = document.getElementById('invoiceChart');
     if (!chart) return;

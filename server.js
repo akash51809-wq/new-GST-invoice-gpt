@@ -366,6 +366,23 @@ app.post('/logout', csrfProtect, (req, res) => {
 
 app.get('/', requireAuth, (req, res) => res.redirect('/dashboard'));
 app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
+  const currentFY = fyFor(new Date());
+  const distinctFY = await Invoice.distinct('financialYear');
+  const availableFinancialYears = (distinctFY || [])
+    .filter(fy => fy && typeof fy === 'string' && fy.trim().length > 0)
+    .sort()
+    .reverse();
+
+  let selectedFinancialYear = req.query.financialYear;
+  if (!selectedFinancialYear) {
+    selectedFinancialYear = availableFinancialYears.length > 0 ? availableFinancialYears[0] : currentFY;
+  }
+
+  const chartMatch = { status: 'completed' };
+  if (selectedFinancialYear && selectedFinancialYear !== 'all') {
+    chartMatch.financialYear = selectedFinancialYear;
+  }
+
   const [
     total,
     buy,
@@ -397,7 +414,7 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
       { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
     ]),
     Invoice.aggregate([
-      { $match: { status: 'completed' } },
+      { $match: chartMatch },
       {
         $group: {
           _id: { month: '$month', type: '$invoiceType' },
@@ -473,7 +490,10 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     isDriveConnected,
     isAiReady,
     isEmailActive,
-    chartMonths
+    chartMonths,
+    availableFinancialYears,
+    selectedFinancialYear,
+    currentFY
   });
 }));
 
