@@ -573,6 +573,13 @@ if (logoInput) {
         localStorage.setItem('gstui_company_logo', e.target.result);
         localStorage.setItem('gstui_company_logo_name', file.name);
       } catch (err) {}
+      var topImg = document.getElementById('topFixedCompanyLogoImg');
+      var topFb = document.getElementById('topFixedCompanyLogoFallback');
+      if (topImg) {
+        topImg.src = e.target.result;
+        topImg.style.display = 'block';
+      }
+      if (topFb) topFb.style.display = 'none';
     };
     reader.readAsDataURL(file);
   });
