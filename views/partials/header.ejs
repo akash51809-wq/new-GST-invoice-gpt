@@ -81,51 +81,30 @@
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
   <div class="app-shell">
-    <!-- Auto-adjusting Permanent Company Logo (in the white space above the menu bar) -->
+    <!-- Permanent Company Logo strictly within the left space of the small menu bar -->
     <a href="/dashboard" id="topFixedCompanyLogo" class="top-fixed-company-logo" title="<%= typeof companyName !== 'undefined' && companyName ? companyName : 'GST Workspace' %>" style="display:none;">
       <img id="topFixedCompanyLogoImg" src="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? companyLogo : '' %>" alt="Company Logo">
     </a>
     <script>
       (function() {
-        function syncAndAdjustLogo() {
-          var logo = document.getElementById('topFixedCompanyLogo');
-          var img = document.getElementById('topFixedCompanyLogoImg');
-          var topbar = document.querySelector('.topbar');
-          if (!logo || !img) return;
+        var logo = document.getElementById('topFixedCompanyLogo');
+        var img = document.getElementById('topFixedCompanyLogoImg');
+        if (!logo || !img) return;
 
-          var src = img.getAttribute('src');
-          if (!src || src.trim() === '') {
-            var local = localStorage.getItem('gstui_company_logo');
-            if (local) {
-              img.src = local;
-              src = local;
-            }
+        var src = img.getAttribute('src');
+        if (!src || src.trim() === '') {
+          var local = localStorage.getItem('gstui_company_logo');
+          if (local) {
+            img.src = local;
+            src = local;
           }
-
-          if (src && src.trim() !== '') {
-            logo.style.display = 'inline-flex';
-            if (img.complete && img.naturalWidth > 0) {
-              applySpacing();
-            } else {
-              img.onload = applySpacing;
-            }
-          } else {
-            logo.style.display = 'none';
-            if (topbar && window.innerWidth > 760) topbar.style.paddingLeft = '0px';
-          }
-
-          function applySpacing() {
-            if (!topbar || window.innerWidth <= 760) return;
-            var logoRect = logo.getBoundingClientRect();
-            var mainEl = document.querySelector('.main');
-            var mainLeft = mainEl ? mainEl.getBoundingClientRect().left : 110;
-            var needed = (logoRect.right + 20) - mainLeft;
-            topbar.style.paddingLeft = needed > 0 ? needed + 'px' : '0px';
-          }
-          window.addEventListener('resize', applySpacing);
         }
-        syncAndAdjustLogo();
-        document.addEventListener('DOMContentLoaded', syncAndAdjustLogo);
+
+        if (src && src.trim() !== '') {
+          logo.style.display = 'flex';
+        } else {
+          logo.style.display = 'none';
+        }
       })();
     </script>
     <aside class="sidebar">

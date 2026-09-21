@@ -579,17 +579,7 @@ if (logoInput) {
         topImg.src = e.target.result;
       }
       if (topLogo) {
-        topLogo.style.display = 'inline-flex';
-        setTimeout(function() {
-          var topbar = document.querySelector('.topbar');
-          if (topbar && window.innerWidth > 760) {
-            var logoRect = topLogo.getBoundingClientRect();
-            var mainEl = document.querySelector('.main');
-            var mainLeft = mainEl ? mainEl.getBoundingClientRect().left : 110;
-            var needed = (logoRect.right + 20) - mainLeft;
-            topbar.style.paddingLeft = needed > 0 ? needed + 'px' : '0px';
-          }
-        }, 60);
+        topLogo.style.display = 'flex';
       }
     };
     reader.readAsDataURL(file);
