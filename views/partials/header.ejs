@@ -81,31 +81,51 @@
   <div class="ambient ambient-one"></div>
   <div class="ambient ambient-two"></div>
   <div class="app-shell">
-    <!-- Permanent Fixed Company Logo (in the white space above the menu bar) -->
-    <a href="/dashboard" id="topFixedCompanyLogo" class="top-fixed-company-logo" title="<%= typeof companyName !== 'undefined' && companyName ? companyName : 'GST Workspace' %>">
-      <img id="topFixedCompanyLogoImg" src="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? companyLogo : '' %>" alt="Company Logo" style="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? 'display:block;' : 'display:none;' %>">
-      <div id="topFixedCompanyLogoFallback" class="top-fixed-logo-fallback" style="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? 'display:none;' : 'display:flex;' %>">
-        <span class="fallback-text">LOGO</span>
-      </div>
+    <!-- Auto-adjusting Permanent Company Logo (in the white space above the menu bar) -->
+    <a href="/dashboard" id="topFixedCompanyLogo" class="top-fixed-company-logo" title="<%= typeof companyName !== 'undefined' && companyName ? companyName : 'GST Workspace' %>" style="display:none;">
+      <img id="topFixedCompanyLogoImg" src="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? companyLogo : '' %>" alt="Company Logo">
     </a>
     <script>
       (function() {
-        var img = document.getElementById('topFixedCompanyLogoImg');
-        var fb = document.getElementById('topFixedCompanyLogoFallback');
-        if (img && fb) {
+        function syncAndAdjustLogo() {
+          var logo = document.getElementById('topFixedCompanyLogo');
+          var img = document.getElementById('topFixedCompanyLogoImg');
+          var topbar = document.querySelector('.topbar');
+          if (!logo || !img) return;
+
           var src = img.getAttribute('src');
           if (!src || src.trim() === '') {
             var local = localStorage.getItem('gstui_company_logo');
             if (local) {
               img.src = local;
-              img.style.display = 'block';
-              fb.style.display = 'none';
+              src = local;
+            }
+          }
+
+          if (src && src.trim() !== '') {
+            logo.style.display = 'inline-flex';
+            if (img.complete && img.naturalWidth > 0) {
+              applySpacing();
+            } else {
+              img.onload = applySpacing;
             }
           } else {
-            img.style.display = 'block';
-            fb.style.display = 'none';
+            logo.style.display = 'none';
+            if (topbar && window.innerWidth > 760) topbar.style.paddingLeft = '0px';
           }
+
+          function applySpacing() {
+            if (!topbar || window.innerWidth <= 760) return;
+            var logoRect = logo.getBoundingClientRect();
+            var mainEl = document.querySelector('.main');
+            var mainLeft = mainEl ? mainEl.getBoundingClientRect().left : 110;
+            var needed = (logoRect.right + 20) - mainLeft;
+            topbar.style.paddingLeft = needed > 0 ? needed + 'px' : '0px';
+          }
+          window.addEventListener('resize', applySpacing);
         }
+        syncAndAdjustLogo();
+        document.addEventListener('DOMContentLoaded', syncAndAdjustLogo);
       })();
     </script>
     <aside class="sidebar">
