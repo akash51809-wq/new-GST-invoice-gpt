@@ -184,7 +184,11 @@ async function boot() {
   if (process.env.MONGODB_URI) await mongoose.connect(process.env.MONGODB_URI);
 
   // Auto-migrate legacy plaintext Google tokens to AES-256-GCM encrypted format
-  await migrateLegacyTokens();
+  try {
+    await migrateLegacyTokens();
+  } catch (migErr) {
+    console.warn('[Startup Migration Warning]:', migErr.message);
+  }
 
   // Auto-upgrade weak or default SESSION_SECRET
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'CHANGE_ME' || process.env.SESSION_SECRET === 'change-me' || process.env.SESSION_SECRET.length < 32) {
