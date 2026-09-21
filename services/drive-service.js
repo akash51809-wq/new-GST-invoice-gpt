@@ -1,12 +1,14 @@
 const {google}=require('googleapis');
-const {Setting}=require('../models');
+const {getGoogleTokens, saveGoogleTokens}=require('../utils/token-crypto');
 
 async function auth(){
-    const row=await Setting.findOne({key:'google_tokens'});
-    if(!row)throw new Error('Google account connect करें');
-    const tokens=JSON.parse(row.value);
+    const tokens=await getGoogleTokens();
+    if(!tokens)throw new Error('Google account connect करें');
     const o=new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_CLIENT_SECRET,process.env.GOOGLE_REDIRECT_URI);
     o.setCredentials(tokens);
+    o.on('tokens', (newTokens) => {
+        saveGoogleTokens({ ...tokens, ...newTokens }).catch(err => console.warn('[Drive Token Refresh Error]:', err.message));
+    });
     return o;
 }
 

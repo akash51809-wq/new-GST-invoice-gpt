@@ -15,6 +15,7 @@ const { processInvoice, askGeminiReport } = require('./services/gemini-service')
 const { ensureFolderPath, uploadFile, downloadFile, deleteFile } = require('./services/drive-service');
 const { sendInvoiceEmail, sendSecurityAlertEmail, validateAndSanitizeEmail } = require('./services/gmail-service');
 const { Invoice, Party, Setting, User } = require('./models');
+const { getGoogleTokens, saveGoogleTokens, migrateLegacyTokens } = require('./utils/token-crypto');
 
 const app = express();
 app.disable('x-powered-by');
@@ -23,8 +24,6 @@ app.set('trust proxy', 1);
 const PORT = process.env.PORT || 4322;
 const TMP = path.join(__dirname, 'tmp');
 if (!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
-const INVOICES_DIR = path.join(__dirname, 'public', 'invoices');
-if (!fs.existsSync(INVOICES_DIR)) fs.mkdirSync(INVOICES_DIR, { recursive: true });
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -183,6 +182,9 @@ const requireAuth = (req, res, next) => {
 
 async function boot() {
   if (process.env.MONGODB_URI) await mongoose.connect(process.env.MONGODB_URI);
+
+  // Auto-migrate legacy plaintext Google tokens to AES-256-GCM encrypted format
+  await migrateLegacyTokens();
 
   // Auto-upgrade weak or default SESSION_SECRET
   if (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === 'CHANGE_ME' || process.env.SESSION_SECRET === 'change-me' || process.env.SESSION_SECRET.length < 32) {
@@ -345,13 +347,13 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
         }
       }
     ]),
-    Setting.findOne({ key: 'google_tokens' }),
+    getGoogleTokens(),
     User.findById(req.session.userId)
   ]);
 
   const buyTotalAmount = buyAgg[0]?.total || 0;
   const sellTotalAmount = sellAgg[0]?.total || 0;
-  const isDriveConnected = !!(googleTokens && googleTokens.value);
+  const isDriveConnected = !!googleTokens;
   const isAiReady = !!(process.env.GEMINI_API_KEYS && process.env.GEMINI_API_KEYS.trim());
   const isEmailActive = !!(process.env.EMAIL_SUBJECT_TEMPLATE || googleTokens);
   const companyName = process.env.COMPANY_NAME || 'Easy Recharge Solution';
@@ -446,6 +448,16 @@ app.post('/api/invoices/upload', requireAuth, (req, res, next) => {
 }, csrfProtect, asyncRoute(async (req, res) => {
   const files = req.files || [];
   if (!files.length) return res.status(400).json({ error: 'कृपया कम से कम एक PDF या Excel फ़ाइल चुनें' });
+
+  // 101% Google Drive Storage Check: Ensure Google Drive is connected before accepting uploads
+  const googleTokens = await getGoogleTokens();
+  if (!googleTokens) {
+    for (const f of files) {
+      if (f.path && fs.existsSync(f.path)) try { fs.unlinkSync(f.path); } catch (e) {}
+    }
+    return res.status(400).json({ error: 'Google Drive कनेक्ट नहीं है! सुरक्षित स्टोरेज के लिए कृपया पहले Settings में Google Drive कनेक्ट करें ताकि इनवॉइस सिर्फ Google Drive में स्टोर हो।' });
+  }
+
   const company = process.env.COMPANY_NAME || 'Easy Recharge Solution';
   const results = [];
   const pendingEmails = [];
@@ -469,34 +481,20 @@ app.post('/api/invoices/upload', requireAuth, (req, res, next) => {
         job.invoiceType = data.invoiceType;
         job.partyName = data.invoiceType === 'BUY' ? (data.sellerName || 'Unknown') : (data.buyerName || 'Unknown');
         results.push(job);
-        try { if (fs.existsSync(f.path)) fs.unlinkSync(f.path); } catch (e) {}
         continue;
       }
 
-      // 3. Keep persistent local copy in public/invoices
-      const safeFilename = `${Date.now()}_${path.basename(f.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const localDest = path.join(INVOICES_DIR, safeFilename);
-      try {
-        fs.copyFileSync(f.path, localDest);
-      } catch (copyErr) {
-        console.warn('Local invoice file copy warning:', copyErr.message);
+      // 3. Upload directly to Google Drive (Zero local storage on Render / disk)
+      const folderType = data.invoiceType === 'BUY' ? 'buy' : 'buysell';
+      const folder = await ensureFolderPath([process.env.GOOGLE_DRIVE_ROOT || 'GST Invoices', data.financialYear, folderType, data.month]);
+      const folderId = folder ? folder.id : '';
+      const drive = await uploadFile(f.path, f.originalname, folderId);
+      if (!drive || !drive.id) {
+        throw new Error('Google Drive पर फाइल अपलोड नहीं हो सकी।');
       }
+      const driveId = drive.id;
 
-      // 4. Upload to Google Drive (with graceful fallback if offline / expired)
-      let driveId = '';
-      let folderId = '';
-      try {
-        const folderType = data.invoiceType === 'BUY' ? 'buy' : 'buysell';
-        const folder = await ensureFolderPath([process.env.GOOGLE_DRIVE_ROOT || 'GST Invoices', data.financialYear, folderType, data.month]);
-        folderId = folder ? folder.id : '';
-        const drive = await uploadFile(f.path, f.originalname, folderId);
-        driveId = drive ? drive.id : '';
-      } catch (driveErr) {
-        console.warn(`[Google Drive Notice for ${f.originalname}]`, driveErr.message);
-        job.driveNotice = 'Google Drive connect nahi hai ya token expire hai, file local save kar di gayi hai.';
-      }
-
-      // 5. Find or create Party
+      // 4. Find or create Party
       let partyName = data.invoiceType === 'BUY' ? (data.sellerName || 'Unknown Supplier') : (data.buyerName || 'Unknown Customer');
       let party = await Party.findOne({ name: new RegExp('^' + partyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') });
       if (!party) {
@@ -508,14 +506,14 @@ app.post('/api/invoices/upload', requireAuth, (req, res, next) => {
         });
       }
 
-      // 6. Save Invoice in MongoDB — status: pending_verification (admin verify karega baad mein)
+      // 5. Save Invoice in MongoDB — purely Google Drive backed (status: pending_verification)
       const newInv = await Invoice.create({
         ...data,
         partyId: party._id,
         originalFileName: f.originalname,
         driveFileId: driveId,
         driveFolderId: folderId,
-        localPath: localDest,
+        localPath: '',
         status: 'pending_verification'
       });
 
@@ -524,11 +522,11 @@ app.post('/api/invoices/upload', requireAuth, (req, res, next) => {
       job.invoiceType = data.invoiceType;
       job.partyName = partyName;
       job.pendingVerification = true; // Admin ko Pending page pe verify karna hoga
-      // NOTE: Auto-email ab verify karne ke baad trigger hoga (/invoice/:id/verify route mein)
     } catch (e) {
       job.status = 'failed';
       job.error = e.message;
     } finally {
+      // Always immediately unlink temporary upload file from disk
       if (fs.existsSync(f.path)) {
         try { fs.unlinkSync(f.path); } catch (e) {}
       }
@@ -625,9 +623,6 @@ app.post('/invoice/:id/verify', requireAuth, csrfProtect, asyncRoute(async (req,
         if (inv.driveFileId) {
           try { pdfBuffer = await downloadFile(inv.driveFileId); } catch(e) {}
         }
-        if (!pdfBuffer && inv.localPath && fs.existsSync(inv.localPath)) {
-          pdfBuffer = fs.readFileSync(inv.localPath);
-        }
         if (pdfBuffer) {
           await sendInvoiceEmail(party.email, inv, pdfBuffer);
           inv.emailSent = true;
@@ -715,14 +710,14 @@ app.get('/invoice/:id/view', requireAuth, asyncRoute(async (req, res) => {
 app.get('/invoice/:id/download', requireAuth, asyncRoute(async (req, res) => {
   const inv = await Invoice.findById(req.params.id);
   if (!inv) return res.sendStatus(404);
+  if (!inv.driveFileId) return res.status(404).send('Google Drive फ़ाइल ID उपलब्ध नहीं है');
   let data;
-  if (inv.driveFileId) {
-    try { data = await downloadFile(inv.driveFileId); } catch (e) { console.warn('Drive download failed:', e.message); }
+  try {
+    data = await downloadFile(inv.driveFileId);
+  } catch (e) {
+    console.warn('Drive download failed:', e.message);
   }
-  if (!data && inv.localPath && fs.existsSync(inv.localPath)) {
-    data = fs.readFileSync(inv.localPath);
-  }
-  if (!data) return res.status(404).send('Invoice file not found');
+  if (!data) return res.status(404).send('Invoice file not found in Google Drive');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(inv.originalFileName || 'invoice.pdf')}"`);
   res.end(data);
@@ -733,14 +728,14 @@ app.post('/invoice/:id/email', requireAuth, csrfProtect, asyncRoute(async (req, 
   if (!inv) return res.sendStatus(404);
   if (!inv.partyId || !inv.partyId.email) return res.status(400).send('Party email नहीं है');
   const safeEmail = validateAndSanitizeEmail(inv.partyId.email);
+  if (!inv.driveFileId) return res.status(400).send('Google Drive file ID उपलब्ध नहीं है');
   let pdf;
-  if (inv.driveFileId) {
-    try { pdf = await downloadFile(inv.driveFileId); } catch (e) {}
+  try {
+    pdf = await downloadFile(inv.driveFileId);
+  } catch (e) {
+    console.error('Drive download error for email:', e.message);
   }
-  if (!pdf && inv.localPath && fs.existsSync(inv.localPath)) {
-    pdf = fs.readFileSync(inv.localPath);
-  }
-  if (!pdf) return res.status(400).send('Invoice PDF file उपलब्ध नहीं है');
+  if (!pdf) return res.status(400).send('Invoice PDF Google Drive में उपलब्ध नहीं है');
   await sendInvoiceEmail(safeEmail, inv, pdf);
   inv.emailSent = true;
   inv.emailSentAt = new Date();
@@ -758,11 +753,9 @@ app.post('/invoice/:id/delete', requireAuth, csrfProtect, asyncRoute(async (req,
   if (inv.driveFileId) {
     try { await deleteFile(inv.driveFileId); } catch (e) { console.error('Drive delete error', e.message); }
   }
-  if (inv.localPath && fs.existsSync(inv.localPath)) {
-    try { fs.unlinkSync(inv.localPath); } catch (e) {}
-  }
   await Invoice.findByIdAndDelete(req.params.id);
-  res.redirect('/reports/invoices');
+  const redirectUrl = req.query.redirect || '/reports/invoices';
+  res.redirect(redirectUrl);
 }));
 
 app.get('/parties', requireAuth, asyncRoute(async (req, res) => {
@@ -799,9 +792,23 @@ app.post('/api/parties/save-email-and-send', requireAuth, csrfProtect, asyncRout
   res.json({ message: `ईमेल भेज दिया गया ${email}` });
 }));
 
+function maskSecret(str, showStart = 4, showEnd = 4) {
+  if (!str || typeof str !== 'string') return '';
+  const trimmed = str.trim();
+  if (trimmed.length <= (showStart + showEnd)) return '••••••••••••••••';
+  return trimmed.slice(0, showStart) + '••••••••' + trimmed.slice(-showEnd);
+}
+
 async function renderSettings(req, res, activeTab = 'company') {
-  const googleTokens = await Setting.findOne({ key: 'google_tokens' });
-  const isDriveConnected = !!(googleTokens && googleTokens.value);
+  const googleTokens = await getGoogleTokens();
+  const isDriveConnected = !!googleTokens;
+
+  // OWASP Write-Only Masking: Never send raw secrets to browser
+  const hasGoogleSecret = !!(process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CLIENT_SECRET.trim());
+  const geminiKeysRaw = (process.env.GEMINI_API_KEYS || '').split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+  const hasGeminiKeys = geminiKeysRaw.length > 0;
+  const geminiKeysMasked = geminiKeysRaw.map(k => maskSecret(k, 6, 4)).join('\n');
+
   res.render('settings', {
     page: 'settings',
     activeTab,
@@ -812,11 +819,13 @@ async function renderSettings(req, res, activeTab = 'company') {
     autoEmail: process.env.AUTO_EMAIL !== 'false',
     autoWhatsApp: process.env.AUTO_WHATSAPP === 'true',
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-    googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+    hasGoogleSecret,
     googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:4322/auth/google/callback',
     gmailFromName: process.env.GMAIL_FROM_NAME || 'Easy Recharge Solution',
     isDriveConnected,
-    geminiApiKey: (process.env.GEMINI_API_KEYS || '').split(',').map(s => s.trim()).join('\n'),
+    hasGeminiKeys,
+    geminiKeysCount: geminiKeysRaw.length,
+    geminiKeysMasked,
     emailSubject: process.env.EMAIL_SUBJECT_TEMPLATE || 'Tax Invoice from {{company_name}} - {{invoice_number}}',
     emailBody: process.env.EMAIL_BODY_TEMPLATE || 'Dear {{party_name}},\n\nPlease find attached your tax invoice {{invoice_number}} dated {{invoice_date}} for the amount of {{invoice_total}}.\n\nThank you for your business!\n{{company_name}}',
     whatsappRequestType: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
@@ -942,24 +951,34 @@ app.post('/settings/company', requireAuth, (req, res, next) => {
 
 app.post('/settings/google', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   const updates = {};
-  if (req.body.googleClientId !== undefined) updates.GOOGLE_CLIENT_ID = req.body.googleClientId;
-  if (req.body.googleClientSecret !== undefined) updates.GOOGLE_CLIENT_SECRET = req.body.googleClientSecret;
-  if (req.body.googleRedirectUri !== undefined) updates.GOOGLE_REDIRECT_URI = req.body.googleRedirectUri;
-  if (req.body.gmailFromName !== undefined) updates.GMAIL_FROM_NAME = req.body.gmailFromName;
+  if (req.body.googleClientId !== undefined) updates.GOOGLE_CLIENT_ID = String(req.body.googleClientId || '').trim();
+  // Write-Only Pattern: Only update secret if user typed a real new secret (not blank and not bullet mask)
+  const secretInput = String(req.body.googleClientSecret || '').trim();
+  if (secretInput && !secretInput.includes('••')) {
+    updates.GOOGLE_CLIENT_SECRET = secretInput;
+  }
+  if (req.body.googleRedirectUri !== undefined) updates.GOOGLE_REDIRECT_URI = String(req.body.googleRedirectUri || '').trim();
+  if (req.body.gmailFromName !== undefined) updates.GMAIL_FROM_NAME = String(req.body.gmailFromName || '').trim();
   await saveEnv(updates);
   res.redirect('/settings/drive?saved=1');
 }));
 
 app.post('/settings/gmail', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
   if (req.body.gmailFromName !== undefined) {
-    await saveEnv({ GMAIL_FROM_NAME: req.body.gmailFromName });
+    await saveEnv({ GMAIL_FROM_NAME: String(req.body.gmailFromName || '').trim() });
   }
   res.redirect('/settings/gmail?saved=1');
 }));
 
 app.post('/settings/gemini', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
-  const keys = String(req.body.keys || '').split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
-  await saveEnv({ GEMINI_API_KEYS: keys.join(',') });
+  const rawInput = String(req.body.keys || '').trim();
+  // Write-Only Pattern: Only update if new keys are entered (not blank, not masked bullets)
+  if (rawInput && !rawInput.includes('••')) {
+    const keys = rawInput.split(/\r?\n|,/).map(s => s.trim()).filter(Boolean);
+    if (keys.length > 0) {
+      await saveEnv({ GEMINI_API_KEYS: keys.join(',') });
+    }
+  }
   res.redirect('/settings/gemini?saved=1');
 }));
 
@@ -984,7 +1003,7 @@ app.get('/auth/google', requireAuth, (req, res) => {
 app.get('/auth/google/callback', requireAuth, asyncRoute(async (req, res) => {
   const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
   const { tokens } = await o.getToken(req.query.code);
-  await Setting.findOneAndUpdate({ key: 'google_tokens' }, { $set: { value: JSON.stringify(tokens) } }, { upsert: true });
+  await saveGoogleTokens(tokens);
   res.redirect('/settings/google?saved=1');
 }));
 

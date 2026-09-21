@@ -1,5 +1,5 @@
 const { google } = require('googleapis');
-const { Setting } = require('../models');
+const { getGoogleTokens, saveGoogleTokens } = require('../utils/token-crypto');
 
 // Strict RFC-compliant email regex & CRLF sanitization to prevent Email Injection
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -53,10 +53,13 @@ function apply(t, v) {
 }
 
 async function client() {
-  const row = await Setting.findOne({ key: 'google_tokens' });
-  if (!row) throw new Error('Google account connect करें');
+  const tokens = await getGoogleTokens();
+  if (!tokens) throw new Error('Google account connect करें');
   const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
-  o.setCredentials(JSON.parse(row.value));
+  o.setCredentials(tokens);
+  o.on('tokens', (newTokens) => {
+    saveGoogleTokens({ ...tokens, ...newTokens }).catch(err => console.warn('[Gmail Token Refresh Error]:', err.message));
+  });
   return google.gmail({ version: 'v1', auth: o });
 }
 

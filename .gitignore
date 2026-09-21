@@ -4,3 +4,12 @@ node_modules/
 tmp/
 uploads/
 .DS_Store
+
+# Do not track any uploaded invoices or documents
+public/invoices/
+invoices/
+storage/
+*.pdf
+*.xlsx
+*.xls
+*.csv
