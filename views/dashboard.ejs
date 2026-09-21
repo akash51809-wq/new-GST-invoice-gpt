@@ -27,36 +27,107 @@
 </div>
 
 <!-- 5 Stat Cards with Real Database Data -->
+<!-- 5 Stat Cards with Real Database Data: Dual Metric (Count + Value) in Fixed Compact Boxes -->
 <div class="stats dashboard-stats">
+  <!-- Card 1: Total Invoices -->
   <div class="stat-card stat-main total-invoice">
-    <div class="stat-top"><span>Total Invoice</span><div class="stat-icon">▣</div></div>
-    <strong><%= total.toLocaleString('en-IN') %></strong>
-    <div class="stat-bottom"><span class="trend">All-time</span><small>Processed invoices</small></div>
+    <div class="stat-top">
+      <span>Total Invoices</span>
+      <div class="stat-icon">▣</div>
+    </div>
+    <div class="stat-value-row">
+      <span class="stat-currency">₹</span>
+      <strong class="stat-amount-val <%= ((typeof totalAmount !== 'undefined' ? totalAmount : 0) > 99999999) ? 'font-compact' : '' %>" title="₹ <%= (typeof totalAmount !== 'undefined' ? totalAmount : (buyTotalAmount + sellTotalAmount)).toLocaleString('en-IN') %>">
+        <%= (typeof totalAmount !== 'undefined' ? totalAmount : (buyTotalAmount + sellTotalAmount)).toLocaleString('en-IN') %>
+      </strong>
+    </div>
+    <div class="stat-bottom-dual">
+      <span class="stat-count-pill" title="<%= total.toLocaleString('en-IN') %> Total Invoices">
+        <span class="count-num"><%= total.toLocaleString('en-IN') %></span> Invoices
+      </span>
+      <small class="stat-context-label">All-time</small>
+    </div>
     <div class="card-glow"></div>
   </div>
 
+  <!-- Card 2: Buy Invoices -->
   <div class="stat-card buy-invoice">
-    <div class="stat-top"><span>Buy Invoice</span><div class="stat-icon green">↙</div></div>
-    <strong>₹ <%= buyTotalAmount.toLocaleString('en-IN') %></strong>
-    <div class="stat-bottom"><span class="neutral"><%= buy.toLocaleString('en-IN') %> Invoices</span><small>Total purchase</small></div>
+    <div class="stat-top">
+      <span>Buy Invoices</span>
+      <div class="stat-icon green">↙</div>
+    </div>
+    <div class="stat-value-row">
+      <span class="stat-currency">₹</span>
+      <strong class="stat-amount-val <%= (buyTotalAmount > 99999999) ? 'font-compact' : '' %>" title="₹ <%= buyTotalAmount.toLocaleString('en-IN') %>">
+        <%= buyTotalAmount.toLocaleString('en-IN') %>
+      </strong>
+    </div>
+    <div class="stat-bottom-dual">
+      <span class="stat-count-pill green" title="<%= buy.toLocaleString('en-IN') %> Buy Invoices">
+        <span class="count-num"><%= buy.toLocaleString('en-IN') %></span> Invoices
+      </span>
+      <small class="stat-context-label">Purchases</small>
+    </div>
   </div>
 
+  <!-- Card 3: Sale Invoices -->
   <div class="stat-card sale-invoice">
-    <div class="stat-top"><span>Sale Invoice</span><div class="stat-icon orange">↗</div></div>
-    <strong>₹ <%= sellTotalAmount.toLocaleString('en-IN') %></strong>
-    <div class="stat-bottom"><span class="neutral"><%= sell.toLocaleString('en-IN') %> Invoices</span><small>Total sales</small></div>
+    <div class="stat-top">
+      <span>Sale Invoices</span>
+      <div class="stat-icon orange">↗</div>
+    </div>
+    <div class="stat-value-row">
+      <span class="stat-currency">₹</span>
+      <strong class="stat-amount-val <%= (sellTotalAmount > 99999999) ? 'font-compact' : '' %>" title="₹ <%= sellTotalAmount.toLocaleString('en-IN') %>">
+        <%= sellTotalAmount.toLocaleString('en-IN') %>
+      </strong>
+    </div>
+    <div class="stat-bottom-dual">
+      <span class="stat-count-pill orange" title="<%= sell.toLocaleString('en-IN') %> Sale Invoices">
+        <span class="count-num"><%= sell.toLocaleString('en-IN') %></span> Invoices
+      </span>
+      <small class="stat-context-label">Sales</small>
+    </div>
   </div>
 
+  <!-- Card 4: Pending Invoices -->
   <div class="stat-card pending-invoice">
-    <div class="stat-top"><span>Pending Action</span><div class="stat-icon purple">◷</div></div>
-    <strong><%= pending.toLocaleString('en-IN') %></strong>
-    <div class="stat-bottom"><span class="neutral">Needs action</span><small>Unsent sell invoices</small></div>
+    <div class="stat-top">
+      <span>Pending Invoices</span>
+      <div class="stat-icon purple">◷</div>
+    </div>
+    <div class="stat-value-row">
+      <span class="stat-currency">₹</span>
+      <strong class="stat-amount-val <%= ((typeof pendingTotalAmount !== 'undefined' ? pendingTotalAmount : 0) > 99999999) ? 'font-compact' : '' %>" title="₹ <%= (typeof pendingTotalAmount !== 'undefined' ? pendingTotalAmount : 0).toLocaleString('en-IN') %>">
+        <%= (typeof pendingTotalAmount !== 'undefined' ? pendingTotalAmount : 0).toLocaleString('en-IN') %>
+      </strong>
+    </div>
+    <div class="stat-bottom-dual">
+      <span class="stat-count-pill purple" title="<%= pending.toLocaleString('en-IN') %> Pending Invoices">
+        <span class="count-num"><%= pending.toLocaleString('en-IN') %></span> Invoices
+      </span>
+      <small class="stat-context-label">Pending</small>
+    </div>
   </div>
 
+  <!-- Card 5: Total Parties -->
   <div class="stat-card total-party">
-    <div class="stat-top"><span>Total Parties</span><div class="stat-icon party-icon">♙</div></div>
-    <strong><%= parties.toLocaleString('en-IN') %></strong>
-    <div class="stat-bottom"><span class="trend">Active</span><small>Customers & suppliers</small></div>
+    <div class="stat-top">
+      <span>Total Parties</span>
+      <div class="stat-icon party-icon">♙</div>
+    </div>
+    <div class="stat-value-row">
+      <span class="stat-currency">₹</span>
+      <strong class="stat-amount-val <%= ((typeof totalAmount !== 'undefined' ? totalAmount : 0) > 99999999) ? 'font-compact' : '' %>" title="₹ <%= (typeof totalAmount !== 'undefined' ? totalAmount : (buyTotalAmount + sellTotalAmount)).toLocaleString('en-IN') %> (Total Volume)">
+        <%= (typeof totalAmount !== 'undefined' ? totalAmount : (buyTotalAmount + sellTotalAmount)).toLocaleString('en-IN') %>
+      </strong>
+    </div>
+    <div class="stat-bottom-dual">
+      <span class="stat-count-pill pink" title="<%= parties.toLocaleString('en-IN') %> Parties & <%= total.toLocaleString('en-IN') %> Total Invoices">
+        <span class="count-num"><%= parties.toLocaleString('en-IN') %></span> Parties (<%= total %> Invs)
+      </span>
+      <small class="stat-context-label">Accounts</small>
+    </div>
   </div>
 </div>
 

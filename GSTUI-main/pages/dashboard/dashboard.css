@@ -1,16 +1,47 @@
 /* Dashboard page-only styles. */
 .dashboard-module{width:100%;margin:0;padding:0}.dashboard-mount{width:100%}
 /* Compact 5-card dashboard stats: same card language, with subtle 3D motion. */
-.dashboard-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin:17px 0}.dashboard-stats .stat-card{min-height:124px;padding:15px 16px;position:relative;transform:translateZ(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
+/* Compact 5-card dashboard stats: dual metric (count + value), fixed size, overflow-proof. */
+.dashboard-stats{grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:16px 0}
+.dashboard-stats .stat-card{min-height:126px;max-height:130px;padding:12px 14px;position:relative;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;border-radius:18px;transform:translateZ(0);transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease}
 .dashboard-stats .stat-card:hover{transform:translateY(-5px) scale(1.015);box-shadow:13px 17px 28px rgba(15,23,42,.13),-5px -5px 12px rgba(255,255,255,.95),inset 1px 1px 2px rgba(255,255,255,.95)}
 .dashboard-stats .stat-card:active{transform:translateY(-1px) scale(.995)}
-.dashboard-stats .stat-icon{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}.dashboard-stats .stat-card:hover .stat-icon{transform:translateY(-2px) rotate(-4deg);box-shadow:7px 9px 14px rgba(15,23,42,.18),inset 1px 1px 3px rgba(255,255,255,.3)}
-.dashboard-stats .total-invoice{background:linear-gradient(145deg,#fff,#eef5ff)}.dashboard-stats .buy-invoice{background:linear-gradient(145deg,#fff,#ecfdf5)}.dashboard-stats .sale-invoice{background:linear-gradient(145deg,#fff,#fff7ed)}.dashboard-stats .pending-invoice{background:linear-gradient(145deg,#fff,#f5f3ff)}.dashboard-stats .total-party{background:linear-gradient(145deg,#fff,#fdf2f8)}
-.dashboard-stats .total-invoice:after,.dashboard-stats .buy-invoice:after,.dashboard-stats .sale-invoice:after,.dashboard-stats .pending-invoice:after,.dashboard-stats .total-party:after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .22s ease;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.55) 45%,transparent 65%)}
+.dashboard-stats .stat-top{display:flex;justify-content:space-between;align-items:center;min-height:28px;margin-bottom:2px}
+.dashboard-stats .stat-top>span{font-size:11px;font-weight:800;color:#475569;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 36px)}
+.dashboard-stats .stat-icon{width:28px;height:28px;min-width:28px;border-radius:8px;font-size:12px;display:grid;place-items:center;box-shadow:0 3px 6px rgba(15,23,42,.12),inset 0 1px 1px rgba(255,255,255,.6);transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease}
+.dashboard-stats .stat-card:hover .stat-icon{transform:translateY(-2px) rotate(-4deg);box-shadow:5px 7px 12px rgba(15,23,42,.18),inset 1px 1px 2px rgba(255,255,255,.3)}
+.dashboard-stats .total-invoice{background:linear-gradient(145deg,#fff,#eef5ff)}
+.dashboard-stats .buy-invoice{background:linear-gradient(145deg,#fff,#ecfdf5)}
+.dashboard-stats .sale-invoice{background:linear-gradient(145deg,#fff,#fff7ed)}
+.dashboard-stats .pending-invoice{background:linear-gradient(145deg,#fff,#f5f3ff)}
+.dashboard-stats .total-party{background:linear-gradient(145deg,#fff,#fdf2f8)}
+.dashboard-stats .total-invoice:after,.dashboard-stats .buy-invoice:after,.dashboard-stats .sale-invoice:after,.dashboard-stats .pending-invoice:after,.dashboard-stats .total-party:after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;opacity:0;transition:opacity .22s ease;background:linear-gradient(115deg,transparent 20%,rgba(255,255,255,.55) 45%,transparent 65%)}
 .dashboard-stats .stat-card:hover:after{opacity:1}
-.dashboard-stats .pending-invoice .stat-icon{background:linear-gradient(145deg,#a78bfa,#7c3aed);color:#fff}.dashboard-stats .total-party .stat-icon{background:linear-gradient(145deg,#f472b6,#db2777);color:#fff}
+.dashboard-stats .pending-invoice .stat-icon{background:linear-gradient(145deg,#a78bfa,#7c3aed);color:#fff}
+.dashboard-stats .total-party .stat-icon{background:linear-gradient(145deg,#f472b6,#db2777);color:#fff}
+
+/* Value row: Currency symbol + dynamic auto-fitting amount */
+.dashboard-stats .stat-value-row{display:flex;align-items:baseline;gap:3px;width:100%;min-width:0;overflow:hidden;margin:1px 0 2px}
+.dashboard-stats .stat-currency{font-size:13px;font-weight:800;color:#64748b;flex-shrink:0;line-height:1}
+.dashboard-stats .stat-amount-val{display:block;font-size:clamp(14px,1.22vw,18px);font-weight:900;letter-spacing:-.5px;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;font-variant-numeric:tabular-nums;max-width:100%;margin:0}
+.dashboard-stats .stat-amount-val.font-compact{font-size:clamp(12px,1.05vw,15px)!important;letter-spacing:-.6px!important}
+
+/* Bottom row: count badge + context */
+.dashboard-stats .stat-bottom-dual{display:flex;align-items:center;justify-content:space-between;gap:5px;width:100%;min-width:0;overflow:hidden;margin-top:auto}
+.dashboard-stats .stat-count-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:750;padding:2.5px 7px;border-radius:7px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2}
+.dashboard-stats .stat-count-pill .count-num{font-weight:900;color:#1e40af}
+.dashboard-stats .stat-count-pill.green{background:#ecfdf5;color:#047857;border-color:#a7f3d0}
+.dashboard-stats .stat-count-pill.green .count-num{color:#065f46}
+.dashboard-stats .stat-count-pill.orange{background:#fff7ed;color:#c2410c;border-color:#fed7aa}
+.dashboard-stats .stat-count-pill.orange .count-num{color:#9a3412}
+.dashboard-stats .stat-count-pill.purple{background:#f5f3ff;color:#6d28d9;border-color:#ddd6fe}
+.dashboard-stats .stat-count-pill.purple .count-num{color:#5b21b6}
+.dashboard-stats .stat-count-pill.pink{background:#fdf2f8;color:#be185d;border-color:#fbcfe8}
+.dashboard-stats .stat-count-pill.pink .count-num{color:#9d174d}
+.dashboard-stats .stat-context-label{font-size:8.5px;font-weight:600;color:#94a3b8;white-space:nowrap;flex-shrink:0}
+
 @media(max-width:1100px){.dashboard-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){.dashboard-stats{grid-template-columns:1fr 1fr;gap:10px}.dashboard-stats .stat-card{min-height:118px;padding:13px}.dashboard-stats .stat-card strong{font-size:19px}}
+@media(max-width:760px){.dashboard-stats{grid-template-columns:1fr 1fr;gap:9px}.dashboard-stats .stat-card{min-height:120px;max-height:none;padding:11px 12px}.dashboard-stats .stat-amount-val{font-size:17px}}
 
 /* Invoice activity chart: dual purchase/sale candles + compact 3D filter. */
 .chart-panel .panel-head{align-items:center}

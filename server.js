@@ -324,6 +324,7 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     pending,
     buyAgg,
     sellAgg,
+    pendingAgg,
     monthlyAgg,
     googleTokens,
     currentUser
@@ -342,6 +343,10 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
       { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
     ]),
     Invoice.aggregate([
+      { $match: { status: 'pending_verification' } },
+      { $group: { _id: null, total: { $sum: '$invoiceAmount' } } }
+    ]),
+    Invoice.aggregate([
       { $match: { status: 'completed' } },
       {
         $group: {
@@ -355,8 +360,10 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     User.findById(req.session.userId)
   ]);
 
-  const buyTotalAmount = buyAgg[0]?.total || 0;
-  const sellTotalAmount = sellAgg[0]?.total || 0;
+  const buyTotalAmount = Math.round(buyAgg[0]?.total || 0);
+  const sellTotalAmount = Math.round(sellAgg[0]?.total || 0);
+  const totalAmount = buyTotalAmount + sellTotalAmount;
+  const pendingTotalAmount = Math.round(pendingAgg[0]?.total || 0);
   const isDriveConnected = !!googleTokens;
   const isAiReady = !!(process.env.GEMINI_API_KEYS && process.env.GEMINI_API_KEYS.trim());
   const isEmailActive = !!(process.env.EMAIL_SUBJECT_TEMPLATE || googleTokens);
@@ -407,8 +414,10 @@ app.get('/dashboard', requireAuth, asyncRoute(async (req, res) => {
     sell,
     parties,
     pending,
+    totalAmount,
     buyTotalAmount,
     sellTotalAmount,
+    pendingTotalAmount,
     companyName,
     userName,
     isDriveConnected,
