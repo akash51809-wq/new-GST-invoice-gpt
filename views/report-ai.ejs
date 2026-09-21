@@ -76,6 +76,26 @@
         </div>
       </div>
       <div class="ai-report-actions">
+        <!-- Indian Regional & English Language Selector -->
+        <div class="ai-lang-select-wrap" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.95);padding:6px 12px;border-radius:12px;border:1px solid #CBD5E1;box-shadow:2px 3px 6px rgba(15,23,42,0.06);">
+          <span style="font-size:14px;">🌐</span>
+          <label for="ai-language-select" style="font-size:11px;font-weight:700;color:#475569;">Language:</label>
+          <select id="ai-language-select" style="border:none;background:transparent;font-size:12px;font-weight:800;color:#1E293B;outline:none;cursor:pointer;">
+            <option value="English" selected>English (Default)</option>
+            <option value="Hindi">हिन्दी (Hindi)</option>
+            <option value="Hinglish">Hinglish (Hindi in Latin script)</option>
+            <option value="Gujarati">ગુજરાતી (Gujarati)</option>
+            <option value="Marathi">मराठी (Marathi)</option>
+            <option value="Bengali">বাংলা (Bengali)</option>
+            <option value="Tamil">தமிழ் (Tamil)</option>
+            <option value="Telugu">తెలుగు (Telugu)</option>
+            <option value="Kannada">ಕನ್ನಡ (Kannada)</option>
+            <option value="Malayalam">മലയാളം (Malayalam)</option>
+            <option value="Punjabi">ਪੰਜਾਬੀ (Punjabi)</option>
+            <option value="Odia">ଓଡ଼ିଆ (Odia)</option>
+          </select>
+        </div>
+
         <div class="ai-data-status">
           <span></span>
           <div>
@@ -243,10 +263,18 @@
     sendBtn.disabled = true;
 
     try {
+      const lang = document.getElementById('ai-language-select')?.value || 'English';
       const res = await fetch('/api/reports/ai-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: q })
+        headers: {
+          'Content-Type': 'application/json',
+          'CSRF-Token': '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>'
+        },
+        body: JSON.stringify({
+          question: q,
+          language: lang,
+          _csrf: '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>'
+        })
       });
 
       const data = await res.json();
@@ -314,6 +342,14 @@
     messagesContainer.style.display = 'none';
     welcome.style.display = 'block';
   });
+
+  // Remember language preference
+  const langSel = document.getElementById('ai-language-select');
+  if (langSel) {
+    const savedLang = localStorage.getItem('gstui_ai_language');
+    if (savedLang) langSel.value = savedLang;
+    langSel.addEventListener('change', () => localStorage.setItem('gstui_ai_language', langSel.value));
+  }
 })();
 </script>
 

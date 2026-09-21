@@ -729,7 +729,7 @@ app.get('/reports/ai', requireAuth, asyncRoute(async (req, res) => {
 }));
 
 app.post('/api/reports/ai-chat', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
-  const { question } = req.body;
+  const { question, language = 'English' } = req.body;
   if (!question || !question.trim()) return res.status(400).json({ error: 'Question required' });
 
   const totalInvoices = await Invoice.countDocuments();
@@ -767,7 +767,7 @@ app.post('/api/reports/ai-chat', requireAuth, csrfProtect, asyncRoute(async (req
     }))
   };
 
-  const answer = await askGeminiReport(question.trim(), dataSummary);
+  const answer = await askGeminiReport(question.trim(), dataSummary, language);
   res.json({ answer });
 }));
 
@@ -894,6 +894,7 @@ async function renderSettings(req, res, activeTab = 'company') {
     companyLogo: cachedCompanyLogo || process.env.COMPANY_LOGO || (fs.existsSync(path.join(__dirname, 'public', 'logo.png')) ? '/logo.png' : ''),
     autoEmail: process.env.AUTO_EMAIL !== 'false',
     autoWhatsApp: process.env.AUTO_WHATSAPP === 'true',
+    adminMobile: process.env.ADMIN_MOBILE || '',
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
     hasGoogleSecret,
     googleRedirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:4322/auth/google/callback',
@@ -1015,6 +1016,9 @@ app.post('/settings/company', requireAuth, (req, res, next) => {
     AUTO_EMAIL: req.body.autoEmail ? 'true' : 'false',
     AUTO_WHATSAPP: req.body.autoWhatsApp ? 'true' : 'false'
   };
+  if (req.body.adminMobile !== undefined) {
+    updates.ADMIN_MOBILE = String(req.body.adminMobile || '').trim();
+  }
   if (req.file) {
     const mime = req.file.mimetype || 'image/png';
     const fileBuf = fs.readFileSync(req.file.path);
@@ -1069,10 +1073,14 @@ app.post('/settings/email', requireAuth, csrfProtect, asyncRoute(async (req, res
 }));
 
 app.post('/settings/whatsapp', requireAuth, csrfProtect, asyncRoute(async (req, res) => {
-  await saveEnv({
+  const updates = {
     WHATSAPP_REQUEST_TYPE: req.body.whatsappRequestType || 'POST',
     WHATSAPP_API_URL: req.body.whatsappApiUrl || ''
-  });
+  };
+  if (req.body.adminMobile !== undefined) {
+    updates.ADMIN_MOBILE = String(req.body.adminMobile || '').trim();
+  }
+  await saveEnv(updates);
   res.redirect('/settings/whatsapp?saved=1');
 }));
 

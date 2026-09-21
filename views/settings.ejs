@@ -113,6 +113,7 @@
       <div><h2>Company Setting</h2><p>Configure company information used in invoices, branding, and emails.</p></div>
     </div>
     <form method="POST" action="/settings/company" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="company-settings-card">
         <div class="setting-row company-name-row">
           <div class="setting-info">
@@ -121,6 +122,16 @@
           </div>
           <div class="setting-control setting-name-control">
             <input id="company-name-input" name="companyName" class="company-input" type="text" placeholder="Easy Recharge Solution" value="<%= companyName %>" required autocomplete="organization">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-icon">📱</div>
+            <div><h3>Admin Mobile Number</h3><p>Mobile number with country code (e.g. 919876543210) for WhatsApp security alerts.</p></div>
+          </div>
+          <div class="setting-control">
+            <input id="admin-mobile-input" name="adminMobile" class="company-input" type="tel" placeholder="e.g. 919876543210" value="<%= typeof adminMobile !== 'undefined' ? adminMobile : '' %>" autocomplete="tel">
           </div>
         </div>
 
@@ -195,6 +206,7 @@
       <div><h2>G Drive Setting</h2><p>Connect Google Drive to securely store invoice PDFs and generated reports.</p></div>
     </div>
     <form method="POST" action="/settings/google">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="drive-settings-card">
         <div class="drive-form-row">
           <div class="drive-field-info">
@@ -251,6 +263,7 @@
       <div><h2>Gmail Setting</h2><p>Configure Gmail sender details and OAuth email transmission for invoice dispatch.</p></div>
     </div>
     <form method="POST" action="/settings/gmail">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="gmail-settings-card">
         <div class="gmail-form-row">
           <div class="gmail-field-info">
@@ -292,6 +305,7 @@
       <div><h2>Gemini Setting</h2><p>Configure AI invoice analysis, automated PDF extraction, and live reports with Gemini API keys.</p></div>
     </div>
     <form method="POST" action="/settings/gemini">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="gemini-settings-card">
         <div class="gemini-form-row">
           <div class="gemini-field-info">
@@ -331,6 +345,7 @@
       <div><h2>Email Template</h2><p>Customize the automated HTML email template and subject sent to parties with their invoice.</p></div>
     </div>
     <form method="POST" action="/settings/email">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="email-template-card">
         <div class="email-subject-row">
           <div class="email-template-label">
@@ -386,12 +401,13 @@
       <div><h2>WhatsApp</h2><p>Configure the WhatsApp API request endpoint and dynamic variables for automatic message delivery.</p></div>
     </div>
     <form method="POST" action="/settings/whatsapp">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="whatsapp-settings-card">
         <div class="whatsapp-form-grid">
-          <div class="whatsapp-field">
+          <div class="whatsapp-field whatsapp-method-field">
             <div class="whatsapp-field-heading">
               <div class="whatsapp-field-icon">↔</div>
-              <div><h3>Request Type</h3><p>HTTP method for the WhatsApp API request.</p></div>
+              <div><h3>Request Type</h3><p>HTTP Method</p></div>
             </div>
             <select id="whatsapp-request-type" name="whatsappRequestType" class="whatsapp-input">
               <option value="POST" <%= whatsappRequestType === 'POST' ? 'selected' : '' %>>POST</option>
@@ -399,12 +415,25 @@
             </select>
           </div>
 
-          <div class="whatsapp-field">
+          <div class="whatsapp-field whatsapp-url-field">
             <div class="whatsapp-field-heading">
               <div class="whatsapp-field-icon">↗</div>
-              <div><h3>API URL</h3><p>Enter your WhatsApp Business API / Webhook endpoint URL.</p></div>
+              <div><h3>API URL</h3><p>Webhook / Endpoint URL</p></div>
             </div>
             <input id="whatsapp-api-url" name="whatsappApiUrl" class="whatsapp-input" type="url" placeholder="https://api.example.com/whatsapp/send?phone={{mobile_number}}&text={{message}}" value="<%= whatsappApiUrl %>" autocomplete="url">
+          </div>
+        </div>
+
+        <div class="whatsapp-admin-phone-row" style="padding:16px 24px;border-bottom:1px solid #e3e9f1;background:#fafcfb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="whatsapp-field-icon" style="flex:0 0 38px;width:38px;height:38px;font-size:16px;">📱</div>
+            <div>
+              <h4 style="margin:0;font-size:14px;font-weight:800;color:#0F172A;">Admin Mobile Number</h4>
+              <p style="margin:2px 0 0;font-size:12px;color:#64748B;">For instant WhatsApp alerts on failed logins or critical activity.</p>
+            </div>
+          </div>
+          <div style="min-width:260px;">
+            <input id="whatsapp-admin-mobile" name="adminMobile" class="whatsapp-input" type="tel" placeholder="e.g. 919876543210" value="<%= typeof adminMobile !== 'undefined' ? adminMobile : '' %>" style="height:42px;">
           </div>
         </div>
 
@@ -446,6 +475,7 @@
       </div>
     </div>
     <form method="POST" action="/settings/security">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
       <div class="company-settings-card">
         <div class="setting-row">
           <div class="setting-info">

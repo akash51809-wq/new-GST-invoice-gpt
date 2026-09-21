@@ -110,7 +110,7 @@ Rules:
   throw last || new Error('Gemini invoice processing failed');
 }
 
-async function askGeminiReport(question, dataSummary) {
+async function askGeminiReport(question, dataSummary, language = 'English') {
   const ks = keys();
   if (!ks.length) throw new Error('GEMINI_API_KEYS सेट नहीं है। कृपया Settings > Gemini में API Key जोड़ें।');
 
@@ -125,8 +125,14 @@ ${JSON.stringify(dataSummary, null, 2)}
 
 User Question: "${question}"
 
-Provide a concise, helpful, and professional answer in Hindi or Hinglish (or English if the question was in English).
-Highlight important numbers, amounts in ₹, and party names in bold. If calculating totals or pending counts, base it strictly on the provided real data.`;
+MANDATORY LANGUAGE RULE:
+You MUST generate the entire answer EXCLUSIVELY in ${language}.
+- Do NOT use or mix any Urdu script or words.
+- If language is "English", use clean, fluent English only.
+- If language is "Hinglish", use Hindi written in English (Latin) script.
+- If an Indian regional language is selected (e.g. Hindi, Gujarati, Marathi, Bengali, Tamil, Telugu, Kannada, Malayalam, Punjabi, Odia), generate pure, professional sentences only in that language and script.
+
+Highlight key financial numbers, amounts in ₹, and party names in bold. All calculations and responses must strictly reflect the real data provided above.`;
 
       const responseText = await generateWithFallback(ai, prompt, false);
       rr = (rr + attempt + 1) % ks.length;

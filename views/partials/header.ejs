@@ -83,11 +83,24 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar-top">
-        <% if (typeof companyLogo !== 'undefined' && companyLogo) { %>
-          <div class="sidebar-brand-logo-custom" style="margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:16px;display:flex;align-items:center;justify-content:center;box-shadow:inset 1px 1px 2px rgba(255,255,255,0.22),0 4px 14px rgba(0,0,0,0.25);max-height:55px;overflow:hidden;">
-            <img src="<%= companyLogo %>" alt="Company Logo" style="max-height:38px;max-width:100%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-          </div>
-        <% } %>
+        <div id="sidebarCompanyLogoContainer" class="sidebar-brand-logo-custom" style="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? 'display:flex;' : 'display:none;' %>margin-bottom:12px;padding:8px 12px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);border-radius:16px;align-items:center;justify-content:center;box-shadow:inset 1px 1px 2px rgba(255,255,255,0.22),0 4px 14px rgba(0,0,0,0.25);max-height:55px;overflow:hidden;">
+          <img id="sidebarCompanyLogoImg" src="<%= (typeof companyLogo !== 'undefined' && companyLogo) ? companyLogo : '' %>" alt="Company Logo" style="max-height:38px;max-width:100%;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+        </div>
+        <script>
+          (function() {
+            var c = document.getElementById('sidebarCompanyLogoContainer');
+            var img = document.getElementById('sidebarCompanyLogoImg');
+            if (c && img && !img.getAttribute('src')) {
+              var local = localStorage.getItem('gstui_company_logo');
+              if (local) {
+                img.src = local;
+                c.style.display = 'flex';
+              }
+            } else if (c && img && img.getAttribute('src')) {
+              c.style.display = 'flex';
+            }
+          })();
+        </script>
         <div class="brand-3d">
           <div class="brand-logo">₹</div>
           <div class="brand-copy">
