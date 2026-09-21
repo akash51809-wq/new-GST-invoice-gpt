@@ -213,50 +213,41 @@
 }
 
 /* ==========================================================================
-   WhatsApp Round 3D Button Prototype with Smooth Right-Expanding Box
+   Modern 3D Round Settings Buttons Suite & Right-Expanding Cards
    ========================================================================== */
-.settings-shortcut.whatsapp-round-3d {
+.settings-shortcut.btn-round-3d {
   width: 52px !important;
   height: 52px !important;
+  min-width: 52px !important;
   border-radius: 50% !important;
-  background: linear-gradient(145deg, #2ae06f, #25D366 45%, #128C7E) !important;
-  border: 2px solid #34D399 !important;
-  box-shadow: 0 5px 0 #065f46, 0 8px 16px rgba(18, 140, 126, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
-  color: #ffffff !important;
   position: relative !important;
   overflow: visible !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  cursor: pointer;
+  cursor: pointer !important;
   transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease !important;
   z-index: 15;
+  border-style: solid !important;
+  border-width: 2px !important;
+  padding: 0 !important;
 }
 
-.settings-shortcut.whatsapp-round-3d::after {
+.settings-shortcut.btn-round-3d::after {
   display: none !important;
 }
 
-.settings-shortcut.whatsapp-round-3d:hover {
+.settings-shortcut.btn-round-3d:hover {
   transform: translateY(-3px) scale(1.06) !important;
-  box-shadow: 0 7px 0 #065f46, 0 14px 22px rgba(18, 140, 126, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
   z-index: 999 !important;
 }
 
-.settings-shortcut.whatsapp-round-3d:active {
+.settings-shortcut.btn-round-3d:active {
   transform: translateY(2px) scale(1.02) !important;
-  box-shadow: 0 2px 0 #065f46, 0 5px 9px rgba(18, 140, 126, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
 }
 
-.settings-shortcut.whatsapp-round-3d.active {
-  background: linear-gradient(145deg, #10B981, #059669 50%, #047857) !important;
-  border-color: #6EE7B7 !important;
-  box-shadow: 0 6px 0 #064E3B, 0 10px 20px rgba(5, 150, 105, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
-  outline: 3px solid #34D399;
-  outline-offset: 3px;
-}
-
-.whatsapp-3d-gloss {
+/* 3D Gloss Highlight */
+.btn-3d-gloss {
   position: absolute;
   top: 3px;
   left: 8px;
@@ -267,7 +258,8 @@
   pointer-events: none;
 }
 
-.whatsapp-round-icon {
+/* Center Icon */
+.btn-round-icon {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -278,12 +270,12 @@
   transition: transform 0.2s ease;
 }
 
-.settings-shortcut.whatsapp-round-3d:hover .whatsapp-round-icon {
-  transform: scale(1.1);
+.settings-shortcut.btn-round-3d:hover .btn-round-icon {
+  transform: scale(1.12);
 }
 
-/* Expanding Box on the Right - Vertically Thick & 3D Styled */
-.whatsapp-expand-box {
+/* Right-Expanding 3D Card (Common) */
+.btn-expand-box {
   position: absolute;
   left: calc(100% + 14px);
   top: 50%;
@@ -292,12 +284,10 @@
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  background: linear-gradient(145deg, #ffffff, #f0fdf4);
-  border: 2px solid #86efac;
   border-radius: 14px;
   padding: 13px 22px;
   min-height: 48px;
-  box-shadow: 0 12px 28px rgba(22, 101, 52, 0.22), 0 4px 10px rgba(15, 23, 42, 0.08), inset 0 1px 0 #ffffff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.2), 0 4px 10px rgba(15, 23, 42, 0.08), inset 0 1px 0 #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -307,8 +297,8 @@
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease, visibility 0.22s ease;
 }
 
-/* Left Pointer Arrow pointing back to the round button */
-.whatsapp-expand-box::before {
+/* Left Pointer Arrow */
+.btn-expand-box::before {
   content: '';
   position: absolute;
   left: -7px;
@@ -317,23 +307,274 @@
   width: 12px;
   height: 12px;
   background: #ffffff;
-  border-left: 2px solid #86efac;
-  border-bottom: 2px solid #86efac;
 }
 
-.whatsapp-expand-title {
+.settings-shortcut.btn-round-3d:hover .btn-expand-box {
+  transform: translateY(-50%) scaleX(1);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.btn-expand-title {
   font-size: 16px;
   font-weight: 800;
-  color: #15803d;
   letter-spacing: 0.2px;
   line-height: 1;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-/* Trigger smooth expansion on hover */
-.settings-shortcut.whatsapp-round-3d:hover .whatsapp-expand-box {
-  transform: translateY(-50%) scaleX(1);
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+/* 1. Theme Company (Royal Blue) */
+.settings-shortcut.theme-company {
+  background: linear-gradient(145deg, #3b82f6, #2563eb 45%, #1d4ed8) !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 5px 0 #1e40af, 0 8px 16px rgba(37, 99, 235, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-company:hover {
+  box-shadow: 0 7px 0 #1e40af, 0 14px 22px rgba(37, 99, 235, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-company:active {
+  box-shadow: 0 2px 0 #1e40af, 0 5px 9px rgba(37, 99, 235, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-company.active {
+  background: linear-gradient(145deg, #2563eb, #1d4ed8 50%, #1e40af) !important;
+  border-color: #93c5fd !important;
+  box-shadow: 0 6px 0 #172554, 0 10px 20px rgba(30, 64, 175, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+.theme-company .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #eff6ff);
+  border: 2px solid #93c5fd;
+}
+.theme-company .btn-expand-box::before {
+  border-left: 2px solid #93c5fd;
+  border-bottom: 2px solid #93c5fd;
+}
+.theme-company .btn-expand-title {
+  color: #1d4ed8;
+}
+
+/* 2. Theme Google Drive (Drive Emerald Teal) */
+.settings-shortcut.theme-drive {
+  background: linear-gradient(145deg, #059669, #0d9488 45%, #0f766e) !important;
+  border-color: #34d399 !important;
+  box-shadow: 0 5px 0 #064e3b, 0 8px 16px rgba(13, 148, 136, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-drive:hover {
+  box-shadow: 0 7px 0 #064e3b, 0 14px 22px rgba(13, 148, 136, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-drive:active {
+  box-shadow: 0 2px 0 #064e3b, 0 5px 9px rgba(13, 148, 136, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-drive.active {
+  background: linear-gradient(145deg, #0d9488, #0f766e 50%, #115e59) !important;
+  border-color: #6ee7b7 !important;
+  box-shadow: 0 6px 0 #042f2e, 0 10px 20px rgba(13, 148, 136, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #34d399;
+  outline-offset: 3px;
+}
+.theme-drive .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #f0fdf4);
+  border: 2px solid #86efac;
+}
+.theme-drive .btn-expand-box::before {
+  border-left: 2px solid #86efac;
+  border-bottom: 2px solid #86efac;
+}
+.theme-drive .btn-expand-title {
+  color: #065f46;
+}
+
+/* 3. Theme Gmail (Google Red) */
+.settings-shortcut.theme-gmail {
+  background: linear-gradient(145deg, #ef4444, #ea4335 45%, #b91c1c) !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 5px 0 #991b1b, 0 8px 16px rgba(234, 67, 53, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-gmail:hover {
+  box-shadow: 0 7px 0 #991b1b, 0 14px 22px rgba(234, 67, 53, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-gmail:active {
+  box-shadow: 0 2px 0 #991b1b, 0 5px 9px rgba(234, 67, 53, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-gmail.active {
+  background: linear-gradient(145deg, #dc2626, #b91c1c 50%, #991b1b) !important;
+  border-color: #fca5a5 !important;
+  box-shadow: 0 6px 0 #7f1d1d, 0 10px 20px rgba(220, 38, 38, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #f87171;
+  outline-offset: 3px;
+}
+.theme-gmail .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #fef2f2);
+  border: 2px solid #fca5a5;
+}
+.theme-gmail .btn-expand-box::before {
+  border-left: 2px solid #fca5a5;
+  border-bottom: 2px solid #fca5a5;
+}
+.theme-gmail .btn-expand-title {
+  color: #b91c1c;
+}
+
+/* 4. Theme Gemini AI (Purple Violet) */
+.settings-shortcut.theme-gemini {
+  background: linear-gradient(145deg, #a855f7, #7c3aed 45%, #4f46e5) !important;
+  border-color: #c084fc !important;
+  box-shadow: 0 5px 0 #4c1d95, 0 8px 16px rgba(124, 58, 237, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-gemini:hover {
+  box-shadow: 0 7px 0 #4c1d95, 0 14px 22px rgba(124, 58, 237, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-gemini:active {
+  box-shadow: 0 2px 0 #4c1d95, 0 5px 9px rgba(124, 58, 237, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-gemini.active {
+  background: linear-gradient(145deg, #9333ea, #6d28d9 50%, #581c87) !important;
+  border-color: #e9d5ff !important;
+  box-shadow: 0 6px 0 #3b0764, 0 10px 20px rgba(147, 51, 234, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #c084fc;
+  outline-offset: 3px;
+}
+.theme-gemini .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #faf5ff);
+  border: 2px solid #d8b4fe;
+}
+.theme-gemini .btn-expand-box::before {
+  border-left: 2px solid #d8b4fe;
+  border-bottom: 2px solid #d8b4fe;
+}
+.theme-gemini .btn-expand-title {
+  color: #6b21a8;
+}
+
+/* 5. Theme Email Template (Warm Amber Orange) */
+.settings-shortcut.theme-template {
+  background: linear-gradient(145deg, #fbbf24, #f59e0b 45%, #d97706) !important;
+  border-color: #fde047 !important;
+  box-shadow: 0 5px 0 #92400e, 0 8px 16px rgba(245, 158, 11, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-template:hover {
+  box-shadow: 0 7px 0 #92400e, 0 14px 22px rgba(245, 158, 11, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-template:active {
+  box-shadow: 0 2px 0 #92400e, 0 5px 9px rgba(245, 158, 11, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-template.active {
+  background: linear-gradient(145deg, #d97706, #b45309 50%, #78350f) !important;
+  border-color: #fef08a !important;
+  box-shadow: 0 6px 0 #451a03, 0 10px 20px rgba(217, 119, 6, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #fbbf24;
+  outline-offset: 3px;
+}
+.theme-template .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #fffbeb);
+  border: 2px solid #fde68a;
+}
+.theme-template .btn-expand-box::before {
+  border-left: 2px solid #fde68a;
+  border-bottom: 2px solid #fde68a;
+}
+.theme-template .btn-expand-title {
+  color: #b45309;
+}
+
+/* 6. Theme WhatsApp (WhatsApp Green) */
+.settings-shortcut.theme-whatsapp,
+.settings-shortcut.whatsapp-round-3d {
+  background: linear-gradient(145deg, #2ae06f, #25D366 45%, #128C7E) !important;
+  border-color: #34D399 !important;
+  box-shadow: 0 5px 0 #065f46, 0 8px 16px rgba(18, 140, 126, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #ffffff !important;
+}
+.settings-shortcut.theme-whatsapp:hover,
+.settings-shortcut.whatsapp-round-3d:hover {
+  box-shadow: 0 7px 0 #065f46, 0 14px 22px rgba(18, 140, 126, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-whatsapp:active,
+.settings-shortcut.whatsapp-round-3d:active {
+  box-shadow: 0 2px 0 #065f46, 0 5px 9px rgba(18, 140, 126, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-whatsapp.active,
+.settings-shortcut.whatsapp-round-3d.active {
+  background: linear-gradient(145deg, #10B981, #059669 50%, #047857) !important;
+  border-color: #6EE7B7 !important;
+  box-shadow: 0 6px 0 #064E3B, 0 10px 20px rgba(5, 150, 105, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #34D399;
+  outline-offset: 3px;
+}
+.theme-whatsapp .btn-expand-box,
+.whatsapp-expand-box {
+  background: linear-gradient(145deg, #ffffff, #f0fdf4);
+  border: 2px solid #86efac;
+}
+.theme-whatsapp .btn-expand-box::before,
+.whatsapp-expand-box::before {
+  border-left: 2px solid #86efac;
+  border-bottom: 2px solid #86efac;
+}
+.theme-whatsapp .btn-expand-title,
+.whatsapp-expand-title {
+  color: #15803d;
+}
+
+/* 7. Theme Security (Cyber Shield Blue/Slate) */
+.settings-shortcut.theme-security {
+  background: linear-gradient(145deg, #0284c7, #0369a1 45%, #0c4a6e) !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 5px 0 #082f49, 0 8px 16px rgba(2, 132, 199, 0.38), inset 0 2px 2px rgba(255, 255, 255, 0.75), inset 0 -2px 3px rgba(0, 0, 0, 0.25) !important;
+  color: #fff !important;
+}
+.settings-shortcut.theme-security:hover {
+  box-shadow: 0 7px 0 #082f49, 0 14px 22px rgba(2, 132, 199, 0.45), inset 0 2px 2px rgba(255, 255, 255, 0.85), inset 0 -2px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.settings-shortcut.theme-security:active {
+  box-shadow: 0 2px 0 #082f49, 0 5px 9px rgba(2, 132, 199, 0.3), inset 0 2px 3px rgba(0, 0, 0, 0.3) !important;
+}
+.settings-shortcut.theme-security.active {
+  background: linear-gradient(145deg, #0369a1, #075985 50%, #0c4a6e) !important;
+  border-color: #7dd3fc !important;
+  box-shadow: 0 6px 0 #032b43, 0 10px 20px rgba(3, 105, 161, 0.4), inset 0 2px 3px rgba(255, 255, 255, 0.8) !important;
+  outline: 3px solid #38bdf8;
+  outline-offset: 3px;
+}
+.theme-security .btn-expand-box {
+  background: linear-gradient(145deg, #ffffff, #f0f9ff);
+  border: 2px solid #7dd3fc;
+}
+.theme-security .btn-expand-box::before {
+  border-left: 2px solid #7dd3fc;
+  border-bottom: 2px solid #7dd3fc;
+}
+.theme-security .btn-expand-title {
+  color: #0369a1;
+}
+
+/* Modern Lock Settings Pill Button */
+.settings-lock-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 23px;
+  background: linear-gradient(145deg, #f8fafc, #e2e8f0);
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(15, 23, 42, 0.08), inset 0 1px 0 #ffffff;
+  transition: all 0.2s ease;
+}
+.settings-lock-btn:hover {
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(15, 23, 42, 0.12), inset 0 1px 0 #ffffff;
 }
