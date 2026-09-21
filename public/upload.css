@@ -352,3 +352,12 @@ body.upload-active .sidebar,body:has(#upload) .sidebar{display:flex!important;vi
 body:has(#upload) .main{margin-left:110px!important;padding-top:28px!important;transition:margin-left .34s cubic-bezier(.2,.8,1),padding .25s ease!important}
 body:has(#upload) .sidebar:hover~.main{margin-left:286px!important}
 @media(max-width:760px){body:has(#upload) .main{margin-left:0!important}}
+
+.upload-specs-hint {
+  display: inline-block !important;
+  margin-top: 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 750 !important;
+  color: #334155 !important;
+  letter-spacing: 0.2px !important;
+}

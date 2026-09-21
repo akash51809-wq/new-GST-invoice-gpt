@@ -78,7 +78,9 @@ app.use(session({
   }
 }));
 
-// CSRF Token Generation for every session
+let cachedCompanyLogo = '';
+
+// CSRF Token Generation for every session & Global Locals
 app.use((req, res, next) => {
   if (req.session) {
     if (!req.session.csrfToken) {
@@ -88,6 +90,7 @@ app.use((req, res, next) => {
   } else {
     res.locals.csrfToken = '';
   }
+  res.locals.companyLogo = cachedCompanyLogo || process.env.COMPANY_LOGO || (fs.existsSync(path.join(__dirname, 'public', 'logo.png')) ? '/logo.png' : '');
   next();
 });
 
@@ -150,7 +153,7 @@ const logoFileFilter = (req, file, cb) => {
 
 const uploadLogo = multer({
   dest: TMP,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2 MB limit
   fileFilter: logoFileFilter
 });
 
@@ -174,6 +177,43 @@ async function sendSecurityAlertWhatsApp(alertInfo) {
   }
 }
 
+// Auto WhatsApp Send Function for verified invoices
+async function sendInvoiceWhatsApp(partyMobile, invoice, partyName) {
+  const apiUrl = process.env.WHATSAPP_API_URL;
+  if (!apiUrl || !partyMobile) return;
+  try {
+    const compName = process.env.COMPANY_NAME || 'Easy Recharge Solution';
+    const invNum = invoice.invoiceNumber || 'N/A';
+    const invTotal = invoice.invoiceAmount ? '₹ ' + Math.round(invoice.invoiceAmount).toLocaleString('en-IN') : 'N/A';
+    const msg = `नमस्ते ${partyName || ''},\nआपकी टैक्स इनवॉइस #${invNum} (${invTotal}) स्वीकृत और तैयार है।\nसप्रेम धन्यवाद,\n${compName}`;
+    const invLink = invoice.driveFileId ? `https://drive.google.com/file/d/${invoice.driveFileId}/view` : '';
+
+    let targetUrl = apiUrl
+      .replace(/\{\{mobile_number\}\}/g, encodeURIComponent(partyMobile))
+      .replace(/\{\{message\}\}/g, encodeURIComponent(msg))
+      .replace(/\{\{company_name\}\}/g, encodeURIComponent(compName))
+      .replace(/\{\{invoice_number\}\}/g, encodeURIComponent(invNum))
+      .replace(/\{\{invoice_link\}\}/g, encodeURIComponent(invLink));
+
+    if (typeof fetch === 'function') {
+      await fetch(targetUrl, {
+        method: process.env.WHATSAPP_REQUEST_TYPE || 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: partyMobile,
+          message: msg,
+          invoiceNumber: invNum,
+          companyName: compName,
+          invoiceLink: invLink
+        })
+      });
+      console.log(`[Auto WhatsApp] Notification sent to ${partyMobile} for invoice #${invNum}`);
+    }
+  } catch (err) {
+    console.warn('[Auto WhatsApp Error]:', err.message);
+  }
+}
+
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const requireAuth = (req, res, next) => {
   if (!req.session || !req.session.userId) return res.redirect('/login');
@@ -188,6 +228,16 @@ async function boot() {
     await migrateLegacyTokens();
   } catch (migErr) {
     console.warn('[Startup Migration Warning]:', migErr.message);
+  }
+
+  // Load persistent Company Logo from MongoDB
+  try {
+    const dbLogo = await Setting.findOne({ key: 'COMPANY_LOGO' });
+    if (dbLogo && dbLogo.value) {
+      cachedCompanyLogo = dbLogo.value;
+    }
+  } catch (logoErr) {
+    console.warn('[Company Logo Init Warning]:', logoErr.message);
   }
 
   // Auto-upgrade weak or default SESSION_SECRET
@@ -649,6 +699,19 @@ app.post('/invoice/:id/verify', requireAuth, csrfProtect, asyncRoute(async (req,
     console.error('Verify auto-email error:', emailErr.message);
   }
 
+  // Auto-WhatsApp workflow trigger on invoice verify
+  try {
+    if (process.env.AUTO_WHATSAPP === 'true') {
+      const party = inv.partyId;
+      const mobile = (party && party.mobile) || '';
+      if (mobile) {
+        await sendInvoiceWhatsApp(mobile, inv, party ? party.name : '');
+      }
+    }
+  } catch (waErr) {
+    console.error('Verify auto-WhatsApp error:', waErr.message);
+  }
+
   res.redirect('/reports/pending');
 }));
 
@@ -828,7 +891,7 @@ async function renderSettings(req, res, activeTab = 'company') {
     pageTitle: 'Settings',
     pageHeading: 'Settings',
     companyName: process.env.COMPANY_NAME || 'Easy Recharge Solution',
-    companyLogo: process.env.COMPANY_LOGO || '',
+    companyLogo: cachedCompanyLogo || process.env.COMPANY_LOGO || (fs.existsSync(path.join(__dirname, 'public', 'logo.png')) ? '/logo.png' : ''),
     autoEmail: process.env.AUTO_EMAIL !== 'false',
     autoWhatsApp: process.env.AUTO_WHATSAPP === 'true',
     googleClientId: process.env.GOOGLE_CLIENT_ID || '',
@@ -953,10 +1016,15 @@ app.post('/settings/company', requireAuth, (req, res, next) => {
     AUTO_WHATSAPP: req.body.autoWhatsApp ? 'true' : 'false'
   };
   if (req.file) {
+    const mime = req.file.mimetype || 'image/png';
+    const fileBuf = fs.readFileSync(req.file.path);
+    const base64Data = `data:${mime};base64,${fileBuf.toString('base64')}`;
+    await Setting.findOneAndUpdate({ key: 'COMPANY_LOGO' }, { value: base64Data }, { upsert: true });
+    cachedCompanyLogo = base64Data;
     const dest = path.join(__dirname, 'public', 'logo.png');
-    fs.copyFileSync(req.file.path, dest);
+    try { fs.copyFileSync(req.file.path, dest); } catch (e) {}
     try { fs.unlinkSync(req.file.path); } catch (e) {}
-    updates.COMPANY_LOGO = '/logo.png';
+    updates.COMPANY_LOGO = base64Data;
   }
   await saveEnv(updates);
   res.redirect('/settings/company?saved=1');
@@ -1033,6 +1101,23 @@ app.get('/reports/export.csv', requireAuth, asyncRoute(async (req, res) => {
   ]);
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', 'attachment; filename=invoices.csv');
+  res.send(rows.map(r => r.map(csvEscape).join(',')).join('\n'));
+}));
+
+app.get('/parties/export.csv', requireAuth, asyncRoute(async (req, res) => {
+  const parties = await Party.find().sort({ name: 1 });
+  const rows = [['Party Name', 'GSTIN', 'Email', 'Mobile', 'Created Date']];
+  for (const p of parties) {
+    rows.push([
+      p.name || '',
+      p.gstin || '',
+      p.email || '',
+      p.mobile || '',
+      p.createdAt ? p.createdAt.toISOString().slice(0, 10) : ''
+    ]);
+  }
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename=party_list.csv');
   res.send(rows.map(r => r.map(csvEscape).join(',')).join('\n'));
 }));
 
