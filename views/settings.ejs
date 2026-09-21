@@ -240,20 +240,27 @@
           </div>
         </div>
 
-        <div class="google-connect-row" style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="google-connect-row" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
           <button type="submit" class="settings-action-btn drive-save-btn" id="drive-save-btn">
             <span>✓</span> Save Credentials
           </button>
-          <a href="/auth/google" class="google-connect-btn" style="text-decoration:none;">
-            <span class="google-g">G</span> Connect Google Account
-          </a>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="google-test-btn" onclick="testGoogleConnection()" style="height:44px;padding:0 16px;border-radius:12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:12px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.2s;">
+              <span class="test-spinner" style="display:none;">⏳</span>
+              <span>⚡ Test Live Connection</span>
+            </button>
+            <a href="/auth/google" class="google-connect-btn" style="text-decoration:none;">
+              <span class="google-g">G</span> Connect Google Account
+            </a>
+          </div>
         </div>
       </div>
     </form>
     <div class="drive-status <%= isDriveConnected ? 'connected' : '' %>" id="google-drive-status">
       <span class="drive-status-dot"></span>
-      <span><%= isDriveConnected ? 'Google Drive account is connected and active.' : 'Google Drive account is not connected. Click Connect Google Account above.' %></span>
+      <span id="google-drive-status-text"><%= isDriveConnected ? 'Google Drive account is connected and active.' : 'Google Drive account is not connected. Click Connect Google Account above.' %></span>
     </div>
+    <div id="google-test-result-box" style="display:none;margin-top:12px;padding:14px 18px;border-radius:14px;font-size:12.5px;line-height:1.5;"></div>
   </div>
 
   <!-- Panel 3: Gmail Setting -->
@@ -290,12 +297,19 @@
           <button type="submit" class="primary" style="height:44px;padding:0 22px;font-size:12px;font-weight:700;border-radius:12px;background:linear-gradient(145deg,#fb7185,#e11d48 58%,#be123c);color:#fff;border:none;cursor:pointer;box-shadow:0 5px 0 #9f1239,0 9px 16px rgba(225,29,72,.23);">
             <span>✓</span> Save Sender Name
           </button>
-          <a href="/auth/google" class="gmail-connect-btn" style="text-decoration:none;">
-            <span>G</span> Authorize Gmail
-          </a>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="google-test-btn" onclick="testGoogleConnection()" style="height:44px;padding:0 16px;border-radius:12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;font-size:12px;font-weight:750;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:.2s;">
+              <span class="test-spinner" style="display:none;">⏳</span>
+              <span>⚡ Test Live Connection</span>
+            </button>
+            <a href="/auth/google" class="gmail-connect-btn" style="text-decoration:none;">
+              <span>G</span> Authorize Gmail
+            </a>
+          </div>
         </div>
       </div>
     </form>
+    <div id="gmail-test-result-box" style="display:none;margin-top:12px;padding:14px 18px;border-radius:14px;font-size:12.5px;line-height:1.5;"></div>
   </div>
 
   <!-- Panel 4: Gemini Setting -->
@@ -620,6 +634,83 @@ function toggleSecretVisibility(id, btn) {
   const isPass = input.type === 'password';
   input.type = isPass ? 'text' : 'password';
   btn.textContent = isPass ? '🔒' : '👁';
+}
+
+async function testGoogleConnection() {
+  const btns = document.querySelectorAll('.google-test-btn');
+  const spinners = document.querySelectorAll('.test-spinner');
+  const driveResultBox = document.getElementById('google-test-result-box');
+  const gmailResultBox = document.getElementById('gmail-test-result-box');
+  const driveStatusText = document.getElementById('google-drive-status-text');
+  const driveStatusEl = document.getElementById('google-drive-status');
+
+  btns.forEach(b => { b.disabled = true; b.style.opacity = '0.7'; });
+  spinners.forEach(s => { s.style.display = 'inline'; });
+
+  try {
+    const res = await fetch('/api/google/test-status');
+    const data = await res.json();
+
+    let html = '';
+    let isSuccess = data.connected && data.drive?.ok && data.gmail?.ok;
+    let bgColor = isSuccess ? '#DCFCE7' : '#FEF3C7';
+    let borderColor = isSuccess ? '#86EFAC' : '#FCD34D';
+    let textColor = isSuccess ? '#15803D' : '#92400E';
+
+    if (!data.connected) {
+      bgColor = '#FEE2E2';
+      borderColor = '#FCA5A5';
+      textColor = '#991B1B';
+      html = `
+        <div style="font-weight:800;font-size:13px;margin-bottom:6px;">❌ Google Account Not Connected</div>
+        <div>${data.message || 'Google OAuth tokens are missing or expired.'}</div>
+        <div style="margin-top:8px;">
+          👉 <strong>समाधान:</strong> ऊपर दिए गए <strong>"Connect Google Account"</strong> या <strong>"Authorize Gmail"</strong> बटन पर क्लिक करके Google अकाउंट ऑथराइज करें।
+        </div>
+      `;
+    } else {
+      html = `
+        <div style="font-weight:800;font-size:13.5px;margin-bottom:8px;color:${textColor};">
+          ${isSuccess ? '✅ Google Drive और Gmail दोनों सफलतापूर्वक कनेक्टेड और लाइव हैं!' : '⚠️ आंशिक कनेक्शन (Partial Connection)'}
+        </div>
+        <div style="display:grid;gap:6px;">
+          <div><strong>Account:</strong> ${data.account || 'Google Workspace User'}</div>
+          <div><strong>Google Drive:</strong> ${data.drive?.ok ? '🟢 Active & Ready' : '🔴 ' + (data.drive?.message || 'Error')}</div>
+          <div><strong>Gmail API:</strong> ${data.gmail?.ok ? '🟢 Ready to send emails' : '🔴 ' + (data.gmail?.message || 'Error')}</div>
+        </div>
+      `;
+      if (driveStatusText) {
+        driveStatusText.textContent = `Google Drive account is connected and active (${data.account || 'Connected'}).`;
+      }
+      if (driveStatusEl) {
+        driveStatusEl.classList.add('connected');
+      }
+    }
+
+    [driveResultBox, gmailResultBox].forEach(box => {
+      if (box) {
+        box.style.display = 'block';
+        box.style.background = bgColor;
+        box.style.border = `1px solid ${borderColor}`;
+        box.style.color = textColor;
+        box.innerHTML = html;
+      }
+    });
+
+  } catch (err) {
+    [driveResultBox, gmailResultBox].forEach(box => {
+      if (box) {
+        box.style.display = 'block';
+        box.style.background = '#FEE2E2';
+        box.style.border = '1px solid #FCA5A5';
+        box.style.color = '#991B1B';
+        box.innerHTML = `<div>❌ कनेक्शन टेस्ट में त्रुटि हुई: ${err.message}</div>`;
+      }
+    });
+  } finally {
+    btns.forEach(b => { b.disabled = false; b.style.opacity = '1'; });
+    spinners.forEach(s => { s.style.display = 'none'; });
+  }
 }
 </script>
 

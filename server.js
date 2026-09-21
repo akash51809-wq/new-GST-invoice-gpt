@@ -1104,16 +1104,79 @@ app.post('/settings/whatsapp', requireAuth, csrfProtect, asyncRoute(async (req, 
   res.redirect('/settings/whatsapp?saved=1');
 }));
 
+function getGoogleRedirectUri(req) {
+  if (process.env.GOOGLE_REDIRECT_URI && process.env.GOOGLE_REDIRECT_URI.trim() && !process.env.GOOGLE_REDIRECT_URI.includes('localhost')) {
+    return process.env.GOOGLE_REDIRECT_URI.trim();
+  }
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  return `${proto}://${host}/auth/google/callback`;
+}
+
 app.get('/auth/google', requireAuth, (req, res) => {
-  const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
-  const scopes = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/gmail.send'];
+  const redirectUri = getGoogleRedirectUri(req);
+  const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri);
+  const scopes = [
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/userinfo.email'
+  ];
   res.redirect(o.generateAuthUrl({ access_type: 'offline', prompt: 'consent', scope: scopes }));
 });
+
 app.get('/auth/google/callback', requireAuth, asyncRoute(async (req, res) => {
-  const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI);
+  const redirectUri = getGoogleRedirectUri(req);
+  const o = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri);
   const { tokens } = await o.getToken(req.query.code);
   await saveGoogleTokens(tokens);
   res.redirect('/settings/google?saved=1');
+}));
+
+app.get('/api/google/test-status', requireAuth, asyncRoute(async (req, res) => {
+  const tokens = await getGoogleTokens();
+  if (!tokens) {
+    return res.json({
+      connected: false,
+      message: 'Google tokens are not configured or expired. Please click "Connect Google Account" or "Authorize Gmail" to authenticate.'
+    });
+  }
+
+  const redirectUri = getGoogleRedirectUri(req);
+  const oAuth2Client = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, redirectUri);
+  oAuth2Client.setCredentials(tokens);
+
+  let driveStatus = { ok: false, message: 'Not checked' };
+  let gmailStatus = { ok: false, message: 'Not checked' };
+
+  try {
+    const drive = google.drive({ version: 'v3', auth: oAuth2Client });
+    const driveRes = await drive.about.get({ fields: 'user(displayName, emailAddress)' });
+    driveStatus = {
+      ok: true,
+      user: driveRes.data.user?.emailAddress || driveRes.data.user?.displayName || 'Connected',
+      message: 'Google Drive is connected and active.'
+    };
+  } catch (err) {
+    driveStatus = { ok: false, message: err.message };
+  }
+
+  try {
+    const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
+    await oAuth2Client.getAccessToken();
+    gmailStatus = {
+      ok: true,
+      message: 'Gmail API is authenticated and ready to transmit emails.'
+    };
+  } catch (err) {
+    gmailStatus = { ok: false, message: err.message };
+  }
+
+  return res.json({
+    connected: driveStatus.ok || gmailStatus.ok,
+    drive: driveStatus,
+    gmail: gmailStatus,
+    account: driveStatus.user || null
+  });
 }));
 
 app.get('/reports/export.csv', requireAuth, asyncRoute(async (req, res) => {
